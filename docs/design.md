@@ -32,6 +32,7 @@ The orchestra's name, logo and brand colors are **not available yet** (see [open
 ### Emails
 11. DES-11: **Email design.** All emails (password recovery, password changed, contact form messages) share one simple template with a plain header (the name or logo), body text and a footer with the orchestra's name. Every email is sent in two versions: plain text and simple HTML. The HTML version uses system fonts, inline styles, no scripts, no tracking pixels and no remote images except an optional logo, and works with images switched off. The subject lines, sender name and the reply-to address follow [hosting](hosting.md), HOS-21.
 12. DES-12: **Email checks.** The emails are checked in a few mail clients (for example a webmail client and a phone) and for deliverability (SPF, DKIM, DMARC and spam score) before launch, as described in the [instructions](instructions.md).
+13. DES-13: **Confirmation dialogs.** One shared dialog (and confirmation page) for destructive actions, as described in the [plan](PLAN.md#confirming-destructive-actions): a title, a text that names the item, "Cancel" first with the initial focus, and a warning-styled action button with an icon or text that makes it clear (not color alone). The dialog works with a keyboard and a screen reader, and has the same look everywhere.
 
 ## Content and data
 - The design tokens file, the base stylesheet, the logo, favicon and social image files, and the email templates (HTML and plain text), all in the repository.
@@ -50,6 +51,7 @@ This document has no inputs of its own. The name in the configuration must be 1 
 - **Print (DES-10):** a print stylesheet test checks that menu and footer decoration are hidden on a public page.
 - **Emails (DES-11):** every email has a plain text and an HTML version, the HTML contains no script, tracking pixel or remote image (except the logo) and is readable without images; the contents are checked with the email test double.
 - **Accessibility:** automatic checks with axe on all pages (see [plan](PLAN.md#automatic-tests)); the manual check is in the [instructions](instructions.md).
+- **Confirmation dialogs (DES-13):** a browser test opens the dialog, checks the title, the named item, the order and focus of the buttons, that Escape closes it, and that the focus returns to the button that opened it.
 
 ## Additional requirements
 - Design choices must keep the performance budgets in the [plan](PLAN.md#performance-and-seo): the base stylesheet and all page styles together stay small, and there are no font files unless a brand font is chosen.

@@ -58,8 +58,9 @@ New editable texts can be added later by a developer. Admins can only edit exist
 
 ### Image library
 15. EDT-15: The image library shows all uploaded images as thumbnails, with their alt text, size and upload date.
-16. EDT-16: Admins can delete an image from the library, after a confirmation step. If the image is still used in one of the editable texts, the confirmation names those texts. Images are only deleted by hand; unused images are never deleted automatically. Deleting is permanent: the image file is removed from storage and cannot be restored.
+16. EDT-16: Admins can delete an image from the library, after a confirmation step (the dialog says that a deleted image cannot be restored). If the image is still used in one of the editable texts, the confirmation names those texts. Images are only deleted by hand; unused images are never deleted automatically. Deleting is permanent: the image file is removed from storage and cannot be restored.
 17. EDT-17: The image library shows which images are not used in any editable text (for example with an "Unused" label or filter), so admins can easily clean them up.
+18. EDT-18: Saving a text that is empty (clearing it) also needs a confirmation step. It says which text is cleared, what happens on the page (for example that the audition section is hidden), and that no earlier version is kept.
 
 ## Content and data
 - **Editable text:** key (for example `about`, `become-a-member`, `audition`, `agenda`), cleaned HTML, last changed date. No history of earlier versions is kept.
@@ -92,6 +93,7 @@ All rules are checked in the browser and on the server (see [input validation](P
 - **Validation:** every rule in the table above, with valid input, boundary values (for example exactly 10 MB and just over, 250 and 251 characters of alt text) and invalid input, including a file renamed to `.jpg` that is not an image.
 - **Visible on the page:** a saved text shows up on its public page within the cache time (EDT-8).
 - **Accessibility:** the editor is usable with only a keyboard, and the edit pages and image library pages have no WCAG 2.2 AA violations.
+- **Confirmations (EDT-16, EDT-18):** deleting an image and clearing a text show the confirmation dialog; Cancel and Escape change nothing; the confirm button performs the action; the requests without the confirmation field are refused.
 
 ## Additional requirements
 - **Security (safe HTML only):** the server cleans every text when it is saved, using a maintained HTML sanitizer library with an allowlist. Only the elements and attributes needed for the formatting in EDT-4 are kept. Removed:

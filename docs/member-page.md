@@ -40,10 +40,10 @@ This feature has two pages:
 10. MEM-10: Admins can add a song with at least a title. A new song is active.
 11. MEM-11: The page shows all songs, with active and archived songs clearly separated (for example, two lists or a filter).
 12. MEM-12: Admins can archive an active song, and unarchive an archived song, with a single click. Archiving only hides the song from the member page; the song and all its files are kept, so the song can be made current again at any time.
-13. MEM-13: Admins can permanently delete a song. Archiving is the normal way to take a song off the member page; deleting is for songs that will never be used again. Deleting removes the song and all its files. It requires a confirmation step that names the song and states that this cannot be undone.
+13. MEM-13: Admins can permanently delete a song (always with the confirmation dialog of the [plan](PLAN.md#confirming-destructive-actions)). Archiving is the normal way to take a song off the member page; deleting is for songs that will never be used again. Deleting removes the song and all its files. It requires a confirmation step that names the song and states that this cannot be undone.
 14. MEM-14: Admins can add or remove files on both active and archived songs.
 15. MEM-15: Admins can add one or more files to a song, of type sheet music, audio or lyrics, each with a display name.
-16. MEM-16: Admins can remove a single file from a song, after a confirmation step.
+16. MEM-16: Admins can remove a single file from a song, after a confirmation step (the dialog names the file and the song).
 17. MEM-17: Uploads are checked for file type and size, both in the browser and on the server:
     - Sheet music: PDF (.pdf)
     - Audio: MP3 (.mp3)
@@ -90,6 +90,7 @@ All rules are checked in the browser and on the server (see [input validation](P
 - **Caching:** both pages send `Cache-Control: private` or `no-store`.
 - **Phone layout and accessibility:** an end-to-end test at phone width, and an accessibility check with no WCAG 2.2 AA violations (MEM-6).
 - **Editing (MEM-20, MEM-21):** an admin changes the title and notes of an active and an archived song and renames a file; the changes show on the member page right away (for active songs); invalid values are refused; a member cannot send these requests; each change is in the audit trail.
+- **Confirmations:** deleting a song and removing a file each show the confirmation dialog with the name; Cancel and Escape change nothing; the confirm button performs the action; the request without the confirmation field, and as a `GET`, is refused (MEM-13, MEM-16).
 
 ## Additional requirements
 - The member page and song management page are never cached publicly (`Cache-Control: private` or `no-store`).

@@ -72,6 +72,7 @@ Keep the code easy to understand, change and test by building the website as a *
 14. ARC-14: **Fast startup.** Dependency injection resolves at build time (Quarkus). Clients such as Firestore are created lazily, startup code only checks the configuration, and libraries that rely on heavy reflection or classpath scanning are avoided (HOS-2, the cold start budget in the plan).
 15. ARC-15: **Ready to split.** Components do not share mutable state or classes outside their `api`, so a component could later move into its own service by replacing its `api` calls with remote calls. This is not planned.
 16. ARC-16: **The structure is enforced and documented.** The rules above are checked by architecture tests in the pipeline (see Automatic tests). The component table in this document is kept up to date when a component or feature is added, and each new feature document says which component it belongs to.
+17. ARC-17: **Destructive actions are marked.** Endpoints that delete or remove something are annotated with `@Destructive`. A filter in `platform` refuses a request to such an endpoint that is not a `POST` with the confirmation field (see the [plan](PLAN.md#confirming-destructive-actions)). The dialog and the confirmation page are shared page parts (ARC-13).
 
 ## Content and data
 Package layout (example for one component):
@@ -106,6 +107,7 @@ This document has no inputs of its own. It sets how all other inputs are validat
 - **Validation (ARC-9):** a test checks that the HTML attributes in the templates use the same values as the server rules.
 - **Configuration (ARC-11):** invalid or missing configuration stops the application with a clear message that does not show secret values.
 - **Startup (ARC-14):** the container test measures the start time against the cold start budget in the plan.
+- **Destructive actions (ARC-17):** every `web` method that calls a delete or remove operation of an `api` must carry `@Destructive`, and a test sends each such request without the confirmation field and as a `GET`, which must be refused.
 
 ## Additional requirements
 - Prefer simple code over patterns: an interface is only added when there is a second implementation (such as a fake) or a boundary (`api`). No framework of our own, and no generic base classes shared between components.

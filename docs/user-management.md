@@ -48,7 +48,7 @@ Let admins manage who has access to the secure section: add people with only an 
 
 ### Removing users and changing roles
 9. USR-9: Admins can remove a user with the member role, after a confirmation step that names the user. Removing a user deletes their account and all their sessions, so they lose access right away (see [login](login.md), LOG-11).
-10. USR-10: Admins can make a member an admin, after a confirmation step. The role is read from the user record on every request, so the new admin has admin access right away.
+10. USR-10: Admins can make a member an admin, after a confirmation step (a rights change always asks for confirmation, like a removal). The role is read from the user record on every request, so the new admin has admin access right away.
 11. USR-11: Admins cannot remove a user who is an admin, and cannot take admin rights away from an admin. The page does not show these actions to admins, and the server rejects them, even if the request is sent directly.
 12. USR-12: The master can remove an admin, and can take admin rights away from an admin (the user then becomes a member), after a confirmation step. As with USR-9 and USR-10, the change takes effect right away.
 13. USR-13: Nobody can remove the master account, change its role, or give the master role to another account from the website. The server rejects these requests.
@@ -110,6 +110,7 @@ These run against the Firestore emulator and a test double for email, so no real
 - **Validation:** every rule in the table above, with valid input, boundary values (for example 11 and 12 characters for a new password) and invalid input.
 - **Accessibility:** no WCAG 2.2 AA violations on the user management, password recovery and set new password pages.
 - **Recovery email status (USR-24):** the overview shows the date of the last recovery email; a failing email service (test double) gives the admin an error message and a log entry.
+- **Confirmations (USR-9, USR-10, USR-12):** removing a user, making an admin and taking away admin rights each show the confirmation dialog with the email address; Cancel and Escape change nothing; the request without the confirmation field is refused.
 
 ## Additional requirements
 - **The website manages accounts and passwords itself** (decided): users are stored in the database (Firestore), passwords are hashed with Argon2id, a unique salt and a pepper from the environment variable `PASSWORD_PEPPER` (see [login](login.md), LOG-16 to LOG-22), and sessions are stored in the database. No external authentication provider is used.

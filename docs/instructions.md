@@ -10,6 +10,8 @@ Practical instructions for the people who run the website: the admins and the ow
 1. Open the website and choose "Log in" in the menu. Sessions last at most one day, so log in again when asked.
 2. Forgot your password? On the login page choose "Forgot password?" and follow the email. When you are logged in you can change your password on "My account".
 
+Whenever you delete or remove something, the website asks you to confirm first. Read the message: it names what will be removed and says whether it can be undone. Choose "Cancel" if you are not sure.
+
 ### Users (User management)
 1. Choose "User management" in the menu.
 2. To add someone, type their email address and choose add. They receive an email with a link to choose their own password. If they did not get it, check their spam folder, then choose "Send again" in the list.

@@ -43,6 +43,7 @@ Show everyone when and where the orchestra performs. The agenda is one free text
 - Only admins and the master can save the agenda text; members and anonymous visitors are refused (AGE-4).
 - A saved change is visible on the public page within the cache time (AGE-8).
 - An accessibility check finds no WCAG 2.2 AA violations on the page.
+- Clearing the agenda text asks for confirmation (see [content editor](content-editor.md), EDT-18); Cancel changes nothing.
 
 ## Additional requirements
 - **Security:** the text is cleaned on the server with the safe HTML allowlist of the [content editor](content-editor.md).

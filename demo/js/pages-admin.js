@@ -108,8 +108,10 @@ App.actions['ed-image'] = async () => {
   if (fd) { const im = st().images.find(i => i.id === +fd.get('img')); $('#wys').focus(); document.execCommand('insertHTML', false, `<img class="${fd.get('size')} ${fd.get('al')}" src="${im.src}" alt="${fd.get('deco') ? '' : esc(fd.get('alt'))}">`); }
 };
 App.actions['ed-preview'] = () => { const r = sanitize(edHtml()); infoDlg('Preview', `<div class="content">${r.html || '<p class="hint">(empty)</p>'}</div>`); };
-App.actions['ed-save'] = el => {
+App.actions['ed-save'] = async el => {
   const r = sanitize(edHtml()), t = st().texts[el.dataset.key];
+  const isEmpty = !r.html.replace(/<[^>]*>/g, '').trim() && !/<img/i.test(r.html);
+  if (isEmpty && !await confirmDlg('Clear “' + t.title + '”?', '<p>The text will be empty' + (el.dataset.key === 'audition' ? ', so the audition section is hidden on the page' : el.dataset.key === 'agenda' ? ', so the page shows “no performances planned”' : ', so the page shows a placeholder message') + '. <strong>No earlier version is kept.</strong></p>', 'Clear text')) return;
   t.html = r.html.replace(/^(<p><br><\/p>|<br>)$/, ''); t.changed = today(); save();
   toast('Saved' + (r.removed.length ? ' (removed: ' + r.removed.join(', ') + ')' : '') + '. The change shows on the website within about a minute.'); App.go('#/edit-pages');
 };

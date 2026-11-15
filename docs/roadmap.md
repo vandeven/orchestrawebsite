@@ -23,7 +23,7 @@ The order in which the website is built, and when something counts as finished. 
 ## Definition of done
 A requirement (or change) is done when all of this is true:
 1. The behavior in the feature document is implemented, in the right component and following the [architecture](architecture.md) rules.
-2. Tests exist and pass in the pipeline: unit or component tests, every validation rule (valid, boundary and invalid input), access control for every role, and, where it applies, an end-to-end test and an accessibility check.
+2. Tests exist and pass in the pipeline: unit or component tests, every validation rule (valid, boundary and invalid input), access control for every role, a confirmation test for every action that deletes or removes something, and, where it applies, an end-to-end test and an accessibility check.
 3. Admin actions write audit entries, and no secret or personal data ends up in the logs ([logging](logging.md)).
 4. All scans, the formatting check, the coverage rule and the performance budgets pass.
 5. The feature document is up to date (requirements, validation, tests, status), a line is added to the status log in the [plan](PLAN.md#status-log), and open questions that were answered are closed.

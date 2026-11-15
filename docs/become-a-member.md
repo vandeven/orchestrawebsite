@@ -80,6 +80,7 @@ All rules are checked in the browser and on the server (see [input validation](P
   - Messages are not stored in the database (BAM-17).
 - The page sends the short public cache time for anonymous visitors, also with the contact form on it.
 - An accessibility check finds no WCAG 2.2 AA violations, including the form's error messages.
+- Clearing the audition text asks for confirmation (see [content editor](content-editor.md), EDT-18); Cancel changes nothing.
 
 ## Additional requirements
 - **Security:** both texts are cleaned on the server with the safe HTML allowlist of the [content editor](content-editor.md).
