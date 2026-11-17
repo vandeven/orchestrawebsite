@@ -15,13 +15,13 @@ Keep the code easy to understand, change and test by building the website as a *
 
 | Component | Owns | Feature documents |
 |-----------|------|-------------------|
-| `platform` | Shared basics: configuration, clock and Amsterdam time, request ID, security headers, rate limiting, error handling, the validation rules, random IDs, and the interfaces to Cloud Storage and email | [hosting](hosting.md), [security hardening](security-hardening.md) |
+| `platform` | Shared basics: configuration, clock and Amsterdam time, request ID, security headers, rate limiting, error handling (the error mapper and the error pages), the validation rules, random IDs, and the interfaces to Cloud Storage and email | [hosting](hosting.md), [security hardening](security-hardening.md) |
 | `audit` | Application logging helpers and the admin audit trail | [logging](logging.md) |
 | `accounts` | Users, roles, login and logout, the My account page, sessions, password hashing, password recovery, the master account setup | [login](login.md), [my account](my-account.md), [user management](user-management.md) |
 | `content` | Editable texts, the HTML sanitizer, the image library and the editor pages | [content editor](content-editor.md) |
 | `songs` | Songs and their files, signed download and upload URLs, the member page and the song management page | [member page](member-page.md) |
 | `contact` | The contact form: checking, rate limiting and sending the email to the admins | [become a member](become-a-member.md) (BAM-12 to BAM-17) |
-| `site` | Web only: the page layout, menu and footer, the About, Become a member, Agenda and legal pages, error pages, `robots.txt`, `sitemap.xml` and `security.txt` | [about](about.md), [agenda](agenda.md), [become a member](become-a-member.md), [legal pages](legal-pages.md) |
+| `site` | Web only: the page layout, menu and footer, the About, Become a member, Agenda and legal pages, `robots.txt`, `sitemap.xml` and `security.txt` | [about](about.md), [agenda](agenda.md), [become a member](become-a-member.md), [legal pages](legal-pages.md) |
 
 ## Functional requirements
 1. ARC-1: **One deployable.** The application is one Quarkus application built as one container (HOS-1). Components are separated by packages and rules, not by separate services.
