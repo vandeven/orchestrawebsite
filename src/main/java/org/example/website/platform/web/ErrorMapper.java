@@ -9,8 +9,8 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.Map;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.example.website.platform.api.ApplicationError;
+import org.example.website.platform.api.PlatformConfig;
 import org.example.website.platform.internal.RequestIdFilter;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
@@ -61,8 +61,7 @@ public class ErrorMapper {
 
     @Inject CurrentVertxRequest currentRequest;
 
-    @ConfigProperty(name = "website.name")
-    String websiteName;
+    @Inject PlatformConfig config;
 
     @ServerExceptionMapper
     public Response expected(ApplicationError error) {
@@ -108,11 +107,12 @@ public class ErrorMapper {
         }
         String page =
                 errorPage
-                        .data("name", websiteName)
+                        .data("name", config.name())
                         .data("status", status)
                         .data("title", text[0])
                         .data("message", text[1])
                         .data("requestId", requestId)
+                        .data("version", status == 500 ? config.version() : null)
                         .render();
         return response.type(MediaType.TEXT_HTML_TYPE).entity(page).build();
     }

@@ -138,4 +138,20 @@ class ErrorHandlingTest {
                                                 r.getThrown().getMessage())),
                 "the error is logged with its exception");
     }
+
+    @Test
+    void theVersionIsOnlyShownOnThe500Page() {
+        given().accept("text/html")
+                .get("/test-only/errors/crash")
+                .then()
+                .body(containsString("version <code>dev</code>"));
+        given().accept("text/html")
+                .get("/test-only/errors/denied")
+                .then()
+                .body(not(containsString("version")));
+        given().accept("text/html")
+                .get("/does-not-exist")
+                .then()
+                .body(not(containsString("version")));
+    }
 }

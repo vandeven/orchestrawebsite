@@ -8,7 +8,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.example.website.platform.api.PlatformConfig;
 
 /** Temporary first page, replaced by the About page in phase 2. */
 @Path("/")
@@ -18,12 +18,11 @@ public class PageResource {
     @Location("site/placeholder.html")
     Template placeholder;
 
-    @ConfigProperty(name = "website.name")
-    String name;
+    @Inject PlatformConfig config;
 
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance home() {
-        return placeholder.data("name", name);
+        return placeholder.data("name", config.name());
     }
 }

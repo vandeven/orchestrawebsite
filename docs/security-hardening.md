@@ -61,7 +61,7 @@ Add protections on top of the basics (hashing, sessions, CSRF, rate limits, scan
 - **Served files:** `/.well-known/security.txt`.
 
 ## Input validation
-- **`PUBLIC_BASE_URL`:** required, an `https://` URL with only a host (no path, query or credentials), at most 200 characters. `http://localhost` is only accepted in the test profile. The application refuses to start otherwise.
+- **`PUBLIC_BASE_URL`:** required, an `https://` URL with only a host (no path, query or credentials), at most 200 characters. `http://localhost` is only accepted in the test and dev profiles. The application refuses to start otherwise.
 - **Host headers:** `Host` and `X-Forwarded-Host` values from the browser are never used to build URLs (HRD-1).
 - **IDs in URLs and forms:** must have the UUID format, otherwise the request is refused with a 404 before any database lookup (HRD-3).
 - **Contact form fields:** line breaks and control characters are removed from the subject and sender address, and the usual length limits apply (HRD-7).
