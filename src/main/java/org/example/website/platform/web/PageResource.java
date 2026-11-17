@@ -8,10 +8,13 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import org.example.website.platform.api.Access;
+import org.example.website.platform.api.AccessLevel;
 import org.example.website.platform.api.PlatformConfig;
 
 /** Temporary first page, replaced by the About page in phase 2. */
 @Path("/")
+@Access(AccessLevel.PUBLIC)
 public class PageResource {
 
     @Inject

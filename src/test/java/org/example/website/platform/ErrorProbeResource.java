@@ -5,7 +5,9 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import org.example.website.platform.api.Access;
 import org.example.website.platform.api.AccessDenied;
+import org.example.website.platform.api.AccessLevel;
 import org.example.website.platform.api.Conflict;
 import org.example.website.platform.api.InvalidInput;
 import org.example.website.platform.api.ResourceNotFound;
@@ -13,6 +15,7 @@ import org.example.website.platform.api.ServiceUnavailable;
 
 /** Test only: endpoints that fail in every way the website must handle. */
 @Path("/test-only/errors")
+@Access(AccessLevel.PUBLIC)
 public class ErrorProbeResource {
 
     public static final String SECRET = "secret-internal-detail-4711";
