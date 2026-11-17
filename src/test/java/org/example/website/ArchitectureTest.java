@@ -8,12 +8,23 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
 /** Architecture rules from docs/architecture.md. More rules are added with each component. */
-@AnalyzeClasses(packages = "org.example.website", importOptions = ImportOption.DoNotIncludeTests.class)
+@AnalyzeClasses(
+        packages = "org.example.website",
+        importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
 
     @ArchTest
-    static final ArchRule platformDependsOnNoOtherComponent = noClasses()
-            .that().resideInAPackage("..platform..")
-            .should().dependOnClassesThat().resideInAnyPackage(
-                    "..audit..", "..accounts..", "..content..", "..songs..", "..contact..", "..site..");
+    static final ArchRule platformDependsOnNoOtherComponent =
+            noClasses()
+                    .that()
+                    .resideInAPackage("..platform..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage(
+                            "..audit..",
+                            "..accounts..",
+                            "..content..",
+                            "..songs..",
+                            "..contact..",
+                            "..site..");
 }
