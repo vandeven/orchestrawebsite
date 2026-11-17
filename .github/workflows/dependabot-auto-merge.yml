@@ -1,0 +1,33 @@
+# Turns on auto-merge for Dependabot patch and minor updates (UPD-6 to UPD-9). GitHub itself merges
+# only after every required check has passed and the branch protection rules are met (UPD-7, UPD-8).
+name: Dependabot auto-merge
+
+on: pull_request_target
+
+permissions:
+  contents: read
+
+jobs:
+  auto-merge:
+    name: Enable auto-merge
+    runs-on: ubuntu-24.04
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == github.event.pull_request.base.repo.full_name
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Read what Dependabot updated
+        id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      # Patch updates and minor updates are merged by themselves, except a Quarkus minor update (UPD-9)
+      - name: Enable auto-merge
+        if: >-
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          (steps.metadata.outputs.update-type == 'version-update:semver-minor' &&
+          steps.metadata.outputs.dependency-group != 'quarkus')
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge --auto --squash "$PR_URL"

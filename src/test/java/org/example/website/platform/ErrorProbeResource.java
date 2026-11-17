@@ -18,7 +18,7 @@ import org.example.website.platform.api.ServiceUnavailable;
 @Access(AccessLevel.PUBLIC)
 public class ErrorProbeResource {
 
-    public static final String SECRET = "secret-internal-detail-4711";
+    public static final String SECRET = "internal-detail-4711";
 
     @GET
     @Path("denied")

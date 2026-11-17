@@ -6,6 +6,8 @@ package org.example.website.platform.api;
  */
 public abstract class ApplicationError extends RuntimeException {
 
+    private static final long serialVersionUID = 1L;
+
     private final int status;
 
     protected ApplicationError(int status, String logMessage) {
