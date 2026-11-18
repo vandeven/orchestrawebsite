@@ -11,7 +11,7 @@ import jakarta.ws.rs.core.Response;
 import java.util.Map;
 import org.example.website.platform.api.ApplicationError;
 import org.example.website.platform.api.PlatformConfig;
-import org.example.website.platform.internal.RequestIdFilter;
+import org.example.website.platform.api.RequestIds;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 
@@ -93,7 +93,7 @@ public class ErrorMapper {
 
     private Response respond(int status) {
         RoutingContext context = currentRequest.getCurrent();
-        String requestId = context == null ? null : context.get(RequestIdFilter.MDC_KEY);
+        String requestId = context == null ? null : context.get(RequestIds.KEY);
         String[] text = textFor(status);
         String accept = context == null ? null : context.request().getHeader("Accept");
 

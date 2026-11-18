@@ -1,0 +1,48 @@
+package org.example.website;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import java.util.UUID;
+import org.example.website.accounts.api.LoginResult;
+import org.example.website.accounts.api.LoginService;
+import org.example.website.accounts.api.Role;
+import org.example.website.accounts.api.SessionCookie;
+import org.example.website.accounts.api.UserService;
+import org.example.website.accounts.api.UserSummary;
+
+/** Test only: creates users and real sessions through the public API of accounts. */
+@ApplicationScoped
+public class TestAccounts {
+
+    public static final String MASTER_EMAIL = "master@example.test";
+    public static final String MASTER_PASSWORD = "FAKE-NOT-A-SECRET-test-master-password";
+    public static final String PASSWORD = "FAKE-NOT-A-SECRET-correct-horse-battery";
+
+    /** The address of the application under test, as a browser sends it in the Origin header. */
+    public static final String ORIGIN = "http://localhost:8081";
+
+    @Inject UserService users;
+    @Inject LoginService login;
+
+    /** A new user with a password. */
+    public UserSummary newUser(Role role) {
+        UserSummary user = users.createUser("user-" + UUID.randomUUID() + "@example.test", role);
+        users.setPassword(user.id(), PASSWORD);
+        return users.find(user.id()).orElseThrow(); // as stored now, with a password
+    }
+
+    /** The session token of a freshly logged in user with the given role. */
+    public String sessionToken(Role role) {
+        if (role == Role.MASTER) {
+            return ((LoginResult.LoggedIn) login.login(MASTER_EMAIL, MASTER_PASSWORD))
+                    .sessionToken();
+        }
+        UserSummary user = newUser(role);
+        return ((LoginResult.LoggedIn) login.login(user.email(), PASSWORD)).sessionToken();
+    }
+
+    /** The value of the Cookie header for a freshly logged in user with the given role. */
+    public String cookie(Role role) {
+        return SessionCookie.NAME + "=" + sessionToken(role);
+    }
+}

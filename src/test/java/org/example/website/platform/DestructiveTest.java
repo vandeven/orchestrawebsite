@@ -4,6 +4,7 @@ import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.quarkus.test.junit.QuarkusTest;
+import org.example.website.TestAccounts;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -21,15 +22,28 @@ class DestructiveTest {
     @Test
     void aConfirmedPostPerformsTheAction() {
         int before = deletions();
-        given().formParam("confirm", "yes").post(PATH).then().statusCode(200);
+        given().header("Origin", TestAccounts.ORIGIN)
+                .formParam("confirm", "yes")
+                .post(PATH)
+                .then()
+                .statusCode(200);
         assertEquals(before + 1, deletions());
     }
 
     @Test
     void aPostWithoutTheConfirmationFieldIsRefusedAndNothingHappens() {
         int before = deletions();
-        given().accept("text/html").post(PATH).then().statusCode(400);
-        given().accept("text/html").formParam("other", "yes").post(PATH).then().statusCode(400);
+        given().header("Origin", TestAccounts.ORIGIN)
+                .accept("text/html")
+                .post(PATH)
+                .then()
+                .statusCode(400);
+        given().header("Origin", TestAccounts.ORIGIN)
+                .accept("text/html")
+                .formParam("other", "yes")
+                .post(PATH)
+                .then()
+                .statusCode(400);
         assertEquals(before, deletions());
     }
 
@@ -37,7 +51,11 @@ class DestructiveTest {
     void anyOtherConfirmationValueIsRefused() {
         int before = deletions();
         for (String value : new String[] {"", "no", "true", "YES", "yes ", "1", "on"}) {
-            given().formParam("confirm", value).post(PATH).then().statusCode(400);
+            given().header("Origin", TestAccounts.ORIGIN)
+                    .formParam("confirm", value)
+                    .post(PATH)
+                    .then()
+                    .statusCode(400);
         }
         assertEquals(before, deletions());
     }
@@ -45,10 +63,15 @@ class DestructiveTest {
     @Test
     void aGetRequestIsRefusedAndNothingHappens() {
         int before = deletions();
-        given().get(PATH).then().statusCode(405);
-        given().queryParam("confirm", "yes").get(PATH).then().statusCode(405);
+        given().header("Origin", TestAccounts.ORIGIN).get(PATH).then().statusCode(405);
+        given().header("Origin", TestAccounts.ORIGIN)
+                .queryParam("confirm", "yes")
+                .get(PATH)
+                .then()
+                .statusCode(405);
         // Even a destructive endpoint wrongly declared as GET is refused by the guard.
-        given().queryParam("confirm", "yes")
+        given().header("Origin", TestAccounts.ORIGIN)
+                .queryParam("confirm", "yes")
                 .get("/test-only/destructive/delete-by-get")
                 .then()
                 .statusCode(405);
@@ -58,7 +81,11 @@ class DestructiveTest {
     @Test
     void aConfirmationInTheQueryStringOfAPostDoesNotCount() {
         int before = deletions();
-        given().queryParam("confirm", "yes").post(PATH).then().statusCode(400);
+        given().header("Origin", TestAccounts.ORIGIN)
+                .queryParam("confirm", "yes")
+                .post(PATH)
+                .then()
+                .statusCode(400);
         assertEquals(before, deletions());
     }
 }

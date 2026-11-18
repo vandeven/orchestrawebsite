@@ -5,6 +5,7 @@ import io.vertx.ext.web.RoutingContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import java.util.UUID;
+import org.example.website.platform.api.RequestIds;
 import org.jboss.logging.MDC;
 
 /**
@@ -14,8 +15,8 @@ import org.jboss.logging.MDC;
 @ApplicationScoped
 public class RequestIdFilter {
 
-    public static final String HEADER = "X-Request-ID";
-    public static final String MDC_KEY = "requestId";
+    static final String HEADER = RequestIds.HEADER;
+    static final String MDC_KEY = RequestIds.KEY;
 
     /** Registered with a high priority, so it runs before all other filters. */
     void register(@Observes Filters filters) {

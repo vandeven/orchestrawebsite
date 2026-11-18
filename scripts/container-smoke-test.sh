@@ -19,7 +19,11 @@ pass() { echo "ok:   $1"; }
 
 start=$(date +%s.%N)
 docker run -d --name "$name" -p "$port:8080" \
-  -e PUBLIC_BASE_URL=https://example.org --memory 512m "$image" >/dev/null
+  -e PUBLIC_BASE_URL=https://example.org \
+  -e PASSWORD_PEPPER=FAKE-NOT-A-SECRET-smoke-test-pepper-0123456789abcdef \
+  -e MASTER_EMAIL=master@example.test -e MASTER_PASSWORD=FAKE-NOT-A-SECRET-smoke-master \
+  -e ACCOUNTS_ALLOW_IN_MEMORY_STORAGE=true \
+  --memory 512m "$image" >/dev/null
 
 ready=false
 for _ in $(seq 1 200); do

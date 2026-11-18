@@ -378,6 +378,15 @@ textarea:disabled {
   content: "Error: ";
 }
 
+/* A small button under a field (for example "Show password"), and links under a form */
+.field-toggle {
+  margin: var(--space-2) 0 0;
+}
+
+.form-links {
+  margin: var(--space-5) 0 0;
+}
+
 /* Messages: an icon-free label in words, not only a color (DES-8) */
 .alert {
   margin: 0 0 var(--space-4);

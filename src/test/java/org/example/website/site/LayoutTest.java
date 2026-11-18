@@ -7,7 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
 import java.util.List;
+import org.example.website.TestAccounts;
+import org.example.website.accounts.api.Role;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -23,10 +26,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 @QuarkusTest
 class LayoutTest {
 
-    private static Document page(String path, String level) {
+    @Inject TestAccounts accounts;
+
+    private Document page(String path, String level) {
         var request = given().accept("text/html");
         if (level != null) {
-            request = request.header("X-Test-Level", level);
+            request = request.header("Cookie", accounts.cookie(Role.valueOf(level)));
         }
         return Jsoup.parse(request.get(path).then().extract().asString());
     }

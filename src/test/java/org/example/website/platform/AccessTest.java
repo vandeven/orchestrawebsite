@@ -8,6 +8,9 @@ import static org.hamcrest.Matchers.not;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.RestAssured;
 import io.restassured.specification.RequestSpecification;
+import jakarta.inject.Inject;
+import org.example.website.TestAccounts;
+import org.example.website.accounts.api.Role;
 import org.example.website.platform.api.AccessLevel;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -17,9 +20,17 @@ import org.junit.jupiter.params.provider.CsvSource;
 @QuarkusTest
 class AccessTest {
 
-    private static RequestSpecification as(String level) {
-        RequestSpecification spec = given().redirects().follow(false).accept("text/html");
-        return level.equals("ANONYMOUS") ? spec : spec.header("X-Test-Level", level);
+    @Inject TestAccounts accounts;
+
+    private RequestSpecification as(String level) {
+        RequestSpecification spec =
+                given().redirects()
+                        .follow(false)
+                        .accept("text/html")
+                        .header("Origin", TestAccounts.ORIGIN);
+        return level.equals("ANONYMOUS")
+                ? spec
+                : spec.header("Cookie", accounts.cookie(Role.valueOf(level)));
     }
 
     /** level of the visitor, page, expected status: every role against every access level. */

@@ -72,6 +72,60 @@ On 2026-11-17 the packaged application (`java -jar target/quarkus-app/quarkus-ru
 - `LOG_LEVEL=TRACE`: refused;
 - a valid address, `LOG_LEVEL=debug` and `APP_VERSION=abc1234-2026-11-17`: starts, logs a warning that DEBUG is not accepted, every JSON log line has `"version":"abc1234-2026-11-17"`, and the health check and a 404 wrote no log lines.
 
+## Phase 1: Accounts
+
+> **Not safe to deploy yet.** Login exists, but there is **no rate limiting on failed logins (LOG-13)**, and users and sessions are only stored in memory (the Firestore stores do not exist). The application refuses to start in production unless `ACCOUNTS_ALLOW_IN_MEMORY_STORAGE` is set, which only tests, development and the container smoke test do. Do not put this on a public address before LOG-13 and the Firestore stores are built.
+
+### Slice 1: passwords, users, sessions, login and logout
+
+| Item | Requirements | Status | Where | Tests |
+|------|--------------|--------|-------|-------|
+| Password hashing: Argon2id (19 MiB, 2 iterations, 1 lane), a random 16 byte salt per password, a pepper mixed in with HMAC-SHA-256, constant-time comparison, settings written in the hash string, rehash after login when the settings are older, at most 4 hashes at the same time (a request that waits more than 3 s gets the 503 page) | LOG-16, LOG-17, LOG-18, LOG-20, LOG-23 (HOS-24) | Done | `accounts/internal/Argon2PasswordHasher` | `Argon2PasswordHasherTest`: settings, salt, pepper change, broken hash strings, upgrade flag, concurrency limit, hash time guard |
+| `PASSWORD_PEPPER` (at least 32 characters), `MASTER_EMAIL`, `MASTER_PASSWORD` checked at startup; the application refuses to start, never showing values | LOG-19, ARC-11 | Done | `AccountsConfig`, `AccountsConfigRules`, `AccountsStartup` | `AccountsConfigRulesTest` (boundaries); a missing variable stops Quarkus' own startup check |
+| Users and the master account: create users without a password, a unique address whatever the case, no master from the website, set password (12 to 128 characters) that ends all sessions, the master account created or updated from the environment (only one master, a previous master becomes admin) | USR-2, USR-3, USR-4, USR-13, USR-14, USR-15 (not the once-per-deployment job), USR-21 | Partial | `accounts/api` (`UserService`, `Role`, `UserSummary`, `AccountsRules`), `UserServiceImpl`, `MasterAccountSetup` | `UserServiceTest`, `MasterAccountSetupTest` |
+| Login: the same answer and the same work for a wrong password, an unknown address and an account without a password; field errors next to the fields; the address stays and the password is emptied; return page (a path on this website only); already logged in goes to the member page | LOG-1 to LOG-7, LOG-13 (the same work, not the limits), LOG-15 | Done | `accounts/web/LoginResource`, `templates/accounts/login.html`, `js/login.js`, `platform/api/ReturnPath` | `LoginTest`, `LoginSecurityTest`, `ReturnPathTest` |
+| Sessions: a random 256 bit token, only its SHA-256 hash stored, the cookie `__Host-session` (`HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, 24 hours), a new token at every login, the old session ended, the user record read on every request so a removed user or a changed role counts at once | LOG-9, LOG-10, LOG-11 | Done | `LoginServiceImpl`, `SessionTokens`, `SessionVisitorAccess`, `accounts/api` (`LoginService`, `CurrentUser`, `SessionCookie`) | `SessionTest`, `LoginTest` |
+| Logout: a POST, ends the session on the server, clears the cookie, sends `Clear-Site-Data`, goes to the home page; fine without a session | LOG-9, HRD-8 | Done | `LoginResource` | `LoginTest` |
+| `@Access` now uses the real session (`SessionVisitorAccess` replaces the default "everybody is anonymous") | ARC-7 | Done | `accounts/internal/SessionVisitorAccess` | `AccessTest` and `LayoutTest` use real sessions, not a test header |
+| Requests that do not come from this website are refused: `Origin` must be our own address, or `Sec-Fetch-Site: same-origin`; a request with neither is refused | LOG-14 (first layer), ARC-10 | Partial | `platform/internal/CrossSiteRequestFilter` | `LoginSecurityTest` (other sites, `null`, other ports, other schemes, no information, logout from another site) |
+| Responses for logged-in visitors: `Cache-Control: private, no-store` and `Vary: Cookie`; the login page is `no-store` | LOG-12 | Done | `platform/internal/PrivateCacheFilter` | `LoginTest`, `LoginSecurityTest` |
+| Security logging: a failed login is logged with a hash of the address, never the address or the password; a refused cross-site request is logged without the values | LGG-4, LGG-5, LGG-18 | Partial | `platform/api/LogSafe`, `LoginServiceImpl`, `CrossSiteRequestFilter` | `LoginSecurityTest` (the password, the address and the origin are not in any log record) |
+| The in-memory stores for tests and local work, refused unless switched on | ARC-6 | Done | `accounts/internal/InMemoryStorage` | `MasterAccountSetupTest` |
+| A clock that tests can set | ARC-6 | Done | `platform/internal/ClockProducer` | `TestClock` in `SessionTest` (a session lasts exactly 24 hours) |
+| Temporary member page, so that "log in, land on the member page" works; replaced in phase 3 | LOG-4 | Partial | `site/web/MemberHomeResource` | `LoginTest` |
+| Architecture rules: every class is in a component, the allowed dependencies between components, other components only use `api`, web classes never use `internal`, `api` never uses `internal` or `web` | ARC-2, ARC-3, ARC-4, ARC-6 | Done | `ArchitectureTest` | Each rule was shown to fail on a planted violation |
+
+### Phase 1: left out on purpose (to do in the next slices)
+
+| Item | Why it waits |
+|------|--------------|
+| **Rate limiting of failed logins: growing delays per account and visitor, per account in total, per visitor, the 429 message, counters in the database** (LOG-13) | The next slice. **Blocks any public deployment** |
+| The Firestore stores for users and sessions, the session TTL policy, the emulator and the seed command (HOS-3, LOG-11) | Next slice after the limits; until then everything is in memory |
+| The password recovery page and the set new password page, the recovery token, the email (USR-16 to USR-21, HRD-1, HRD-2); the "Forgot password?" link points to `/forgot-password`, which gives the 404 page | Needs the `Mailer` interface and the email template |
+| The list of very common passwords (LOG-22) | Comes with the set new password page |
+| User management pages: overview, add, remove, make admin, remove admin, the confirmation steps, the recovery email status (USR-1, USR-5 to USR-13, USR-22 to USR-24) | Next slices |
+| My account page: change password, end other sessions, the "password changed" email (ACC-1 to ACC-9) | After user management |
+| The master account job that runs once per deployment (HOS-19, USR-15). In production the master is only set up when `ACCOUNTS_MASTER_SETUP_ON_START=true`, so **in production nobody can log in until the job exists** | Needs `infra/` and the deployment workflow |
+| The audit trail for logins and admin actions (LGG-9 to LGG-12, HRD-9: the alert on master logins); the `audit` component does not exist yet | Next slices |
+| A token in every form on top of the origin check (LOG-14) | Comes with the first logged-in form |
+| `Cache-Control: public, max-age=60` for anonymous visitors of public pages (plan: Layout and navigation) | Comes with the public pages |
+| Logging the client address as a hash (LGG-5), needs the trusted proxy setting | Comes with the rate limits, which need the address too |
+| Accessibility checks with axe and the end-to-end test (log in, member page, log out) in a real browser (LOG-1 to LOG-9, Automatic tests) | Playwright and axe are not set up yet |
+| The test that counters work across two application instances, and that delays and counters expire (LOG-13) | Comes with the rate limits |
+| The password is not normalized (Unicode NFKC) before hashing | Decide together with the set new password page |
+
+### Phase 1: decisions and differences from the documents
+
+- **Cross-site protection is an origin check first:** `login.md` asks for a CSRF token. The anonymous login form has no session to bind a token to, and a second cookie would break the "one cookie" promise on the legal pages, so the first layer checks where the request comes from (`Origin`, or `Sec-Fetch-Site`). Browsers always send one of them with a POST. A token for logged-in forms follows.
+- **Status codes of the login form:** a wrong login gives 200 with the general message (the same for every failure); a format error gives 400. A request with a value above Quarkus' limit for one form field (2 KB) gets 413 with the friendly error page.
+- **Argon2 library:** Bouncy Castle (`bcprov-jdk18on`), pure Java, no native code, which suits the container and the license rules (MIT-style).
+- **The master account is not created at startup in production** (`accounts.master-setup-on-start` is off), because USR-15 says it runs once per deployment. Tests and development switch it on.
+- **The in-memory stores need an explicit switch** (`ACCOUNTS_ALLOW_IN_MEMORY_STORAGE`), so they can never be used by accident. The container smoke test sets it.
+- **Test values:** secrets for tests and local work contain `FAKE-NOT-A-SECRET`; Gitleaks allows that marker.
+- **Cookie details:** the cookie has an extra `Version=1` attribute written by the REST framework, which browsers ignore. Responses for logged-in visitors have two `Vary` headers (one from Quarkus, one ours), which is allowed.
+- **Where the build runs:** on the shared drive `mvn clean` can fail (files in `target/` that cannot be deleted). The builds in this phase were run from a clean copy of the repository outside the drive, which also proves that a fresh checkout builds.
+- **Timing tests** compare the fastest of 15 runs, with a wide margin, because the median made the test fail on a busy machine. They were shown to fail when the hash is skipped for unknown addresses.
+
 ## Pipeline: left out on purpose (to do later)
 
 | Item | Why it waits |

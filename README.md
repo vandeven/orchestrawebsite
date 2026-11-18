@@ -15,6 +15,7 @@ Specification phase. The application, the pipeline and `infra/` do not exist yet
 ## Run it locally (when the application exists)
 - `./mvnw quarkus:dev` starts the application with the Firestore and Cloud Storage emulators and fake secrets from the example configuration file.
 - The seed command fills the emulators with fake users (one per role), songs with tiny dummy files, texts and images.
+- In development and tests the application uses in-memory stores and fake secrets (all containing `FAKE-NOT-A-SECRET`), and creates the master account `master@example.test` at startup. The password is `accounts.master-password` in `application.properties` for the dev profile. Nothing is kept between restarts.
 - `./mvnw verify` runs the Enforcer rules (pinned plugin versions, Java and Maven versions), the tests, the architecture tests, the formatting check (Spotless) and the coverage check (at least 80% of lines, JaCoCo).
 - `./mvnw spotless:apply` fixes the formatting.
 

@@ -8,4 +8,8 @@ useDefault = true
 description = "Test marker, not a secret"
 # The error tests put this text in an internal error message and then check that it never appears in
 # a response. An earlier version of the marker started with "secret-", which looks like a key.
-regexes = ['''(secret-)?internal-detail-4711''']
+regexes = [
+  '''(secret-)?internal-detail-4711''',
+  # Fake values for tests, local work and the container smoke test. They all contain this marker.
+  '''FAKE-NOT-A-SECRET''',
+]
