@@ -24,10 +24,29 @@
     <findsecbugs.version>1.14.0</findsecbugs.version>
     <cyclonedx-plugin.version>2.9.3</cyclonedx-plugin.version>
     <jsoup.version>1.24.1</jsoup.version>
+    <!-- Security overrides of versions managed by the Quarkus BOM. Remove each one as soon as the
+         Quarkus BOM has the same or a newer version (see docs/implementation-status.md). -->
+    <jackson-bom.version>2.22.3</jackson-bom.version>
+    <guava.version>33.7.2-jre</guava.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
+      <!-- Imported first, so it wins over the Jackson version of the Quarkus BOM (GHSA-7hhh-6rmp-j9qf,
+           GHSA-p6pp-m3f8-5c89, fixed in 2.22.3). Vert.x brings jackson-core into the application. -->
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>${jackson-bom.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <!-- Only used by the Quarkus test tooling, not shipped (GHSA-xxph-c9ww-hj94, fixed in 33.7.2) -->
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${guava.version}</version>
+      </dependency>
       <dependency>
         <groupId>${quarkus.platform.group-id}</groupId>
         <artifactId>${quarkus.platform.artifact-id}</artifactId>
