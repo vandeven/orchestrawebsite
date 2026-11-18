@@ -2,12 +2,16 @@ package org.example.website.accounts.internal;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.UnaryOperator;
 import org.example.website.platform.api.ServiceUnavailable;
 import org.jboss.logging.Logger;
 
@@ -18,7 +22,7 @@ import org.jboss.logging.Logger;
  * Until the Firestore stores exist, a production start without that switch fails.
  */
 @ApplicationScoped
-class InMemoryStorage implements UserRepository, SessionRepository {
+class InMemoryStorage implements UserRepository, SessionRepository, AttemptStore {
 
     private static final Logger LOG = Logger.getLogger(InMemoryStorage.class);
 
@@ -26,7 +30,13 @@ class InMemoryStorage implements UserRepository, SessionRepository {
     private final Map<String, UUID> userIdByEmail = new ConcurrentHashMap<>();
     private final Map<String, SessionRecord> sessions = new ConcurrentHashMap<>();
 
+    private record Counter(AttemptCounter value, Instant expiresAt) {}
+
+    private final Map<String, Counter> counters = new ConcurrentHashMap<>();
+
     @Inject AccountsConfig config;
+
+    @Inject Clock clock;
 
     private void checkAllowed() {
         if (!config.allowInMemoryStorage()) {
@@ -106,5 +116,43 @@ class InMemoryStorage implements UserRepository, SessionRepository {
     public void deleteAllForUser(UUID userId) {
         checkAllowed();
         sessions.values().removeIf(session -> session.userId().equals(userId));
+    }
+
+    // Login counters
+
+    @Override
+    public AttemptCounter get(String key) {
+        checkAllowed();
+        Counter counter = counters.get(key);
+        return counter == null || !counter.expiresAt().isAfter(clock.instant())
+                ? AttemptCounter.EMPTY
+                : counter.value();
+    }
+
+    @Override
+    public AttemptCounter update(String key, Duration ttl, UnaryOperator<AttemptCounter> change) {
+        checkAllowed();
+        Instant now = clock.instant();
+        return counters.compute(
+                        key,
+                        (k, old) -> {
+                            AttemptCounter base =
+                                    old == null || !old.expiresAt().isAfter(now)
+                                            ? AttemptCounter.EMPTY
+                                            : old.value();
+                            return new Counter(change.apply(base), now.plus(ttl));
+                        })
+                .value();
+    }
+
+    @Override
+    public void reset(String key) {
+        checkAllowed();
+        counters.remove(key);
+    }
+
+    /** For tests: the keys of all counters, to check that they hold no address. */
+    java.util.Set<String> counterKeys() {
+        return java.util.Set.copyOf(counters.keySet());
     }
 }

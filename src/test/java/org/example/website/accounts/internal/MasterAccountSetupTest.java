@@ -55,6 +55,36 @@ class MasterAccountSetupTest {
         public boolean allowInMemoryStorage() {
             return inMemory;
         }
+
+        @Override
+        public java.time.Duration firstDelay() {
+            return java.time.Duration.ofSeconds(1);
+        }
+
+        @Override
+        public java.time.Duration maxDelay() {
+            return java.time.Duration.ofMinutes(5);
+        }
+
+        @Override
+        public java.time.Duration window() {
+            return java.time.Duration.ofHours(1);
+        }
+
+        @Override
+        public int accountFailuresPerWindow() {
+            return 100;
+        }
+
+        @Override
+        public java.time.Duration accountSlowdown() {
+            return java.time.Duration.ofSeconds(30);
+        }
+
+        @Override
+        public int visitorFailuresPerWindow() {
+            return 200;
+        }
     }
 
     private final Config config = new Config();
@@ -64,6 +94,7 @@ class MasterAccountSetupTest {
 
     MasterAccountSetupTest() {
         storage.config = config;
+        storage.clock = Clock.fixed(Instant.parse("2026-11-18T10:00:00Z"), ZoneOffset.UTC);
         setup.users = storage;
         setup.sessions = storage;
         setup.hasher = hasher;

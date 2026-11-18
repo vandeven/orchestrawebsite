@@ -21,6 +21,15 @@ public class TestAccounts {
     /** The address of the application under test, as a browser sends it in the Origin header. */
     public static final String ORIGIN = "http://localhost:8081";
 
+    private static final java.util.concurrent.atomic.AtomicInteger COUNTER =
+            new java.util.concurrent.atomic.AtomicInteger();
+
+    /** A new visitor address for every call, so failed logins of different tests do not add up. */
+    public static String randomAddress() {
+        int n = COUNTER.incrementAndGet();
+        return "10." + (n >> 16 & 255) + "." + (n >> 8 & 255) + "." + (n & 255);
+    }
+
     @Inject UserService users;
     @Inject LoginService login;
 

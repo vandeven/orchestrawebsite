@@ -69,25 +69,25 @@ class ConfigRulesTest {
 
     @Test
     void nameLengthBoundary() {
-        assertTrue(ConfigRules.problems("a", GOOD_URL, "INFO", false).isEmpty());
-        assertTrue(ConfigRules.problems("a".repeat(100), GOOD_URL, "INFO", false).isEmpty());
-        assertEquals(1, ConfigRules.problems("a".repeat(101), GOOD_URL, "INFO", false).size());
-        assertEquals(1, ConfigRules.problems("", GOOD_URL, "INFO", false).size());
-        assertEquals(1, ConfigRules.problems("   ", GOOD_URL, "INFO", false).size());
-        assertEquals(1, ConfigRules.problems(null, GOOD_URL, "INFO", false).size());
+        assertTrue(ConfigRules.problems("a", GOOD_URL, "INFO", false, 0).isEmpty());
+        assertTrue(ConfigRules.problems("a".repeat(100), GOOD_URL, "INFO", false, 0).isEmpty());
+        assertEquals(1, ConfigRules.problems("a".repeat(101), GOOD_URL, "INFO", false, 0).size());
+        assertEquals(1, ConfigRules.problems("", GOOD_URL, "INFO", false, 0).size());
+        assertEquals(1, ConfigRules.problems("   ", GOOD_URL, "INFO", false, 0).size());
+        assertEquals(1, ConfigRules.problems(null, GOOD_URL, "INFO", false, 0).size());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"DEBUG", "INFO", "WARNING", "ERROR", "debug", "Info", " warning "})
     void acceptsTheFourLogLevelsInAnyCase(String level) {
-        assertTrue(ConfigRules.problems("Name", GOOD_URL, level, false).isEmpty());
+        assertTrue(ConfigRules.problems("Name", GOOD_URL, level, false, 0).isEmpty());
     }
 
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {"TRACE", "WARN", "FATAL", "OFF", "ALL", "verbose", "INFO;rm"})
     void refusesOtherLogLevels(String level) {
-        assertEquals(1, ConfigRules.problems("Name", GOOD_URL, level, false).size());
+        assertEquals(1, ConfigRules.problems("Name", GOOD_URL, level, false, 0).size());
     }
 
     @Test
@@ -103,8 +103,17 @@ class ConfigRulesTest {
     }
 
     @Test
+    void proxyHopsBoundary() {
+        for (int hops : new int[] {0, 1, 2}) {
+            assertTrue(ConfigRules.problems("Name", GOOD_URL, "INFO", false, hops).isEmpty());
+        }
+        assertEquals(1, ConfigRules.problems("Name", GOOD_URL, "INFO", false, -1).size());
+        assertEquals(1, ConfigRules.problems("Name", GOOD_URL, "INFO", false, 3).size());
+    }
+
+    @Test
     void reportsEveryProblemWithoutShowingValues() {
-        var problems = ConfigRules.problems("", "http://secret-host.example", "LOUD", false);
+        var problems = ConfigRules.problems("", "http://secret-host.example", "LOUD", false, 0);
         assertEquals(3, problems.size());
         problems.forEach(p -> {
             assertFalse(p.contains("secret-host"));

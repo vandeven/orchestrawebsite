@@ -26,7 +26,11 @@ public class PlatformStartup {
         boolean production = LaunchMode.current() == LaunchMode.NORMAL;
         List<String> problems =
                 ConfigRules.problems(
-                        config.name(), config.publicBaseUrl(), config.logLevel(), !production);
+                        config.name(),
+                        config.publicBaseUrl(),
+                        config.logLevel(),
+                        !production,
+                        config.clientIpProxyHops());
         if (!problems.isEmpty()) {
             LOG.errorf("Configuration check failed: %s", String.join("; ", problems));
             throw new IllegalStateException(

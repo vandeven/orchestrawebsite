@@ -11,9 +11,21 @@ public interface LoginService {
 
     /**
      * Checks the credentials and starts a session. The same work is done whether or not the address
-     * has an account, so the response time does not reveal it (LOG-13).
+     * has an account, so the response time does not reveal it (LOG-13). Too many failures give
+     * {@link LoginResult.Throttled} before anything is checked.
+     *
+     * @param clientAddress the visitor's address (from the platform), only used to build hashed
+     *     counters; null when it is not known
      */
-    LoginResult login(String email, String password);
+    LoginResult login(String email, String password, String clientAddress);
+
+    /**
+     * A login without a known visitor address, for callers that are not a web request. Only the
+     * limit for the account in total applies.
+     */
+    default LoginResult login(String email, String password) {
+        return login(email, password, null);
+    }
 
     /**
      * The user a session token belongs to, read fresh on every call so role changes count at once.

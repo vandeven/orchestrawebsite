@@ -21,13 +21,22 @@ class LoginServiceImpl implements LoginService {
     @Inject SessionRepository sessions;
     @Inject PasswordHasher hasher;
     @Inject Clock clock;
+    @Inject LoginThrottle throttle;
 
     /** A hash of a random password, checked when there is nothing real to check (LOG-13). */
     private volatile String dummyHash;
 
     @Override
-    public LoginResult login(String email, String password) {
+    public LoginResult login(String email, String password, String clientAddress) {
         String normalized = AccountsRules.normalizeEmail(email);
+        // Too many failures: refused before anything is looked up or hashed (LOG-13)
+        var wait = throttle.waitTime(normalized, clientAddress);
+        if (wait.isPresent()) {
+            LOG.warnf(
+                    "Login refused: too many failed attempts (address %s)",
+                    LogSafe.hash(normalized));
+            return new LoginResult.Throttled(wait.get());
+        }
         boolean wellFormed =
                 AccountsRules.validEmail(normalized) && password != null && !password.isEmpty();
         // The same password check runs for an unknown address, an account without a password and a
@@ -40,6 +49,7 @@ class LoginServiceImpl implements LoginService {
 
         if (!wellFormed || !hasPassword || !passwordMatches) {
             LOG.warnf("Failed login (address %s)", LogSafe.hash(normalized));
+            throttle.recordFailure(normalized, clientAddress);
             return new LoginResult.Failed();
         }
 
@@ -50,6 +60,8 @@ class LoginServiceImpl implements LoginService {
         Instant now = clock.instant();
         updated = updated.withLastLogin(now);
         users.update(updated);
+
+        throttle.recordSuccess(normalized, clientAddress);
 
         // Every login gets a new token, so a token from before the login is never valid (no
         // fixation)

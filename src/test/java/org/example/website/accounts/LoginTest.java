@@ -35,6 +35,7 @@ class LoginTest {
                 .follow(false)
                 .accept("text/html")
                 .header("Origin", TestAccounts.ORIGIN)
+                .header("X-Forwarded-For", TestAccounts.randomAddress())
                 .contentType("application/x-www-form-urlencoded");
     }
 

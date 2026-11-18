@@ -2,6 +2,7 @@ package org.example.website.accounts.internal;
 
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
+import java.time.Duration;
 
 /** Configuration of the accounts component (ARC-11). Checked when the application starts. */
 @ConfigMapping(prefix = "accounts")
@@ -26,4 +27,31 @@ interface AccountsConfig {
     /** Allow the in-memory stores. Never switched on for a real deployment. */
     @WithDefault("false")
     boolean allowInMemoryStorage();
+
+    /**
+     * The wait after the first failed login of an account from one visitor; it doubles after that
+     * (LOG-13).
+     */
+    @WithDefault("PT1S")
+    Duration firstDelay();
+
+    /** The longest wait of that kind. */
+    @WithDefault("PT5M")
+    Duration maxDelay();
+
+    /** The counting period of the failure limits. The counters expire after it. */
+    @WithDefault("PT1H")
+    Duration window();
+
+    /** Failed logins for one account from all visitors together before it is slowed down. */
+    @WithDefault("100")
+    int accountFailuresPerWindow();
+
+    /** The time between attempts for a slowed down account. */
+    @WithDefault("PT30S")
+    Duration accountSlowdown();
+
+    /** Failed logins from one visitor across all accounts before that visitor is refused. */
+    @WithDefault("200")
+    int visitorFailuresPerWindow();
 }

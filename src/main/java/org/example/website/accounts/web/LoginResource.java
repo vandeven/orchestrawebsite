@@ -18,6 +18,7 @@ import org.example.website.accounts.api.LoginService;
 import org.example.website.accounts.api.SessionCookie;
 import org.example.website.platform.api.Access;
 import org.example.website.platform.api.AccessLevel;
+import org.example.website.platform.api.ClientAddress;
 import org.example.website.platform.api.ReturnPath;
 import org.jboss.resteasy.reactive.RestCookie;
 import org.jboss.resteasy.reactive.RestForm;
@@ -33,6 +34,7 @@ public class LoginResource {
     static final String DEFAULT_PAGE = "/members";
 
     static final String GENERAL_ERROR = "Email address or password is incorrect";
+    static final String TOO_MANY_ATTEMPTS = "Too many attempts, try again in a moment";
 
     @Inject
     @Location("accounts/login.html")
@@ -40,6 +42,7 @@ public class LoginResource {
 
     @Inject LoginService loginService;
     @Inject CurrentUser currentUser;
+    @Inject ClientAddress clientAddress;
 
     @GET
     @Path("login")
@@ -73,7 +76,16 @@ public class LoginResource {
             return page(400, shownEmail, emailError, passwordError, null, returnTo);
         }
 
-        LoginResult result = loginService.login(email, password);
+        LoginResult result =
+                loginService.login(email, password, clientAddress.current().orElse("unknown"));
+        if (result instanceof LoginResult.Throttled throttled) {
+            // HTTP 429 with the wait (LOG-13). The address stays; the password is not shown again.
+            long seconds = Math.max(1, (throttled.retryAfter().toMillis() + 999) / 1000);
+            return Response.fromResponse(
+                            page(429, shownEmail, null, null, TOO_MANY_ATTEMPTS, returnTo))
+                    .header("Retry-After", seconds)
+                    .build();
+        }
         if (result instanceof LoginResult.LoggedIn loggedIn) {
             // A session from before the login is ended, so it cannot be used afterwards
             if (oldSessionToken != null) {

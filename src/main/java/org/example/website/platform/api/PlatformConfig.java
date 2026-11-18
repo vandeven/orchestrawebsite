@@ -20,4 +20,12 @@ public interface PlatformConfig {
     /** The version of this build: the short commit ID and the build time (HOS-35). */
     @WithDefault("dev")
     String version();
+
+    /**
+     * How many proxies in front of the application add an entry to {@code X-Forwarded-For} and are
+     * trusted: 0 uses the address of the connection, 1 is Cloud Run. Never more than the real
+     * number of proxies, or a visitor could choose their own address.
+     */
+    @WithDefault("0")
+    int clientIpProxyHops();
 }

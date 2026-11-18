@@ -74,7 +74,7 @@ On 2026-11-17 the packaged application (`java -jar target/quarkus-app/quarkus-ru
 
 ## Phase 1: Accounts
 
-> **Not safe to deploy yet.** Login exists, but there is **no rate limiting on failed logins (LOG-13)**, and users and sessions are only stored in memory (the Firestore stores do not exist). The application refuses to start in production unless `ACCOUNTS_ALLOW_IN_MEMORY_STORAGE` is set, which only tests, development and the container smoke test do. Do not put this on a public address before LOG-13 and the Firestore stores are built.
+> **Not safe to deploy yet.** Login and its rate limits exist, but users, sessions and the login counters are only stored in memory (the Firestore stores do not exist), and in production nobody can log in because the master account job does not exist. The application refuses to start in production unless `ACCOUNTS_ALLOW_IN_MEMORY_STORAGE` is set, which only tests, development and the container smoke test do. Do not put this on a public address before the Firestore stores and the master job are built.
 
 ### Slice 1: passwords, users, sessions, login and logout
 
@@ -95,11 +95,24 @@ On 2026-11-17 the packaged application (`java -jar target/quarkus-app/quarkus-ru
 | Temporary member page, so that "log in, land on the member page" works; replaced in phase 3 | LOG-4 | Partial | `site/web/MemberHomeResource` | `LoginTest` |
 | Architecture rules: every class is in a component, the allowed dependencies between components, other components only use `api`, web classes never use `internal`, `api` never uses `internal` or `web` | ARC-2, ARC-3, ARC-4, ARC-6 | Done | `ArchitectureTest` | Each rule was shown to fail on a planted violation |
 
+### Slice 2: rate limiting of failed logins (LOG-13)
+
+| Item | Requirements | Status | Where | Tests |
+|------|--------------|--------|-------|-------|
+| **One account from one visitor:** after a failed login the same visitor waits 1 second, then 2, 4, 8 and so on up to 5 minutes. It is a wait, not a lock. An attempt during the wait gets HTTP 429 with `Retry-After` and "Too many attempts, try again in a moment", also with the right password. A right password ends the waiting | LOG-13 | Done | `accounts/internal/LoginThrottle`, `LoginResult.Throttled`, `LoginResource` | `LoginThrottleTest`, `RateLimitWebTest` |
+| **One account from everybody:** after 100 failures in an hour the account is slowed down for everyone to one attempt every 30 seconds, and an `ALERT:` line is logged once | LOG-13 | Done (the email alert needs `infra/`) | `LoginThrottle` | `LoginThrottleTest` (100 visitors, the alert once, a login possible after the wait, the limit ends with the hour) |
+| **One visitor across all accounts:** after 200 failures in an hour that visitor is refused until the hour is over (password spraying); 20 members with the right password from one address are all accepted; mistakes of one member on a shared network do not slow the others | LOG-13 | Done | `LoginThrottle` | `LoginThrottleTest` |
+| The same counters exist for addresses without an account, so the waiting does not show which accounts exist; the 429 page is identical | LOG-13 | Done | `LoginThrottle` | `RateLimitWebTest` |
+| Counters kept behind an interface, shared by all instances, expiring by themselves; keys are keyed hashes (HMAC with the pepper), never an address or an IP; checks happen before any hashing | LOG-13, ARC-6, LGG-5 | Partial (in memory only) | `AttemptStore`, `InMemoryStorage`, `Fingerprints` | `LoginThrottleTest` (no address and no IP in the keys, two services sharing one store, expiry with the test clock) |
+| The visitor's address: the connection address, or with `CLIENT_IP_PROXY_HOPS=n` the n-th entry from the end of `X-Forwarded-For` (never the first, which a visitor controls); strict IPv4, IPv6 cut to its /64; invalid values give nothing | LOG-13, LGG-5 | Done | `platform/api/ClientAddress`, `platform/internal/RequestClientAddress` | `ClientAddressTest`, `RateLimitWebTest` (a forged header does not help); checked on the real container |
+| The limits are configurable (`accounts.first-delay`, `max-delay`, `window`, `account-failures-per-window`, `account-slowdown`, `visitor-failures-per-window`) with the values of the spec as defaults | LOG-13 | Done | `AccountsConfig` | by the tests with the defaults |
+
+Decisions for this slice: an attempt without a known visitor address (a caller that is not a web request) only counts toward the account limit; the web layer uses `unknown` when the address cannot be found. In production `CLIENT_IP_PROXY_HOPS` must be `1` on Cloud Run and is `0` by default, so a visitor cannot choose their own address; the test profile uses `1`. **Lesson:** after planting a bug to check a test, restoring the sources with `rsync` keeps the old timestamps and Maven does not recompile, so the next jar contains the planted bug. Always `clean` after such a check (the container check of this slice was first done on a mutated jar and then repeated on a clean one).
+
 ### Phase 1: left out on purpose (to do in the next slices)
 
 | Item | Why it waits |
 |------|--------------|
-| **Rate limiting of failed logins: growing delays per account and visitor, per account in total, per visitor, the 429 message, counters in the database** (LOG-13) | The next slice. **Blocks any public deployment** |
 | The Firestore stores for users and sessions, the session TTL policy, the emulator and the seed command (HOS-3, LOG-11) | Next slice after the limits; until then everything is in memory |
 | The password recovery page and the set new password page, the recovery token, the email (USR-16 to USR-21, HRD-1, HRD-2); the "Forgot password?" link points to `/forgot-password`, which gives the 404 page | Needs the `Mailer` interface and the email template |
 | The list of very common passwords (LOG-22) | Comes with the set new password page |
@@ -109,9 +122,10 @@ On 2026-11-17 the packaged application (`java -jar target/quarkus-app/quarkus-ru
 | The audit trail for logins and admin actions (LGG-9 to LGG-12, HRD-9: the alert on master logins); the `audit` component does not exist yet | Next slices |
 | A token in every form on top of the origin check (LOG-14) | Comes with the first logged-in form |
 | `Cache-Control: public, max-age=60` for anonymous visitors of public pages (plan: Layout and navigation) | Comes with the public pages |
-| Logging the client address as a hash (LGG-5), needs the trusted proxy setting | Comes with the rate limits, which need the address too |
 | Accessibility checks with axe and the end-to-end test (log in, member page, log out) in a real browser (LOG-1 to LOG-9, Automatic tests) | Playwright and axe are not set up yet |
-| The test that counters work across two application instances, and that delays and counters expire (LOG-13) | Comes with the rate limits |
+| The test that the counters work across two real application instances (LOG-13) | Needs the Firestore store. Today it is only shown with two services that share one store |
+| The log-based alert that emails the owner on the "ALERT:" log line, and on the visitor limit (LOG-13, LGG-14) | Needs `infra/` |
+| Recovery requests and password changes counting toward the same limits (ACC-4, HRD-7) | Come with those pages |
 | The password is not normalized (Unicode NFKC) before hashing | Decide together with the set new password page |
 
 ### Phase 1: decisions and differences from the documents

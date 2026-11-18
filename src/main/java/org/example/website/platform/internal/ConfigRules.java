@@ -25,7 +25,11 @@ final class ConfigRules {
      * @param localAddressAllowed true in the test and dev profiles, where http://localhost is fine
      */
     static List<String> problems(
-            String name, String publicBaseUrl, String logLevel, boolean localAddressAllowed) {
+            String name,
+            String publicBaseUrl,
+            String logLevel,
+            boolean localAddressAllowed,
+            int clientIpProxyHops) {
         List<String> problems = new ArrayList<>();
         if (name == null || name.isBlank() || name.length() > NAME_MAX) {
             problems.add("website.name must be 1 to " + NAME_MAX + " characters");
@@ -38,6 +42,9 @@ final class ConfigRules {
         }
         if (logLevel == null || !LOG_LEVELS.contains(logLevel.trim().toUpperCase(Locale.ROOT))) {
             problems.add("LOG_LEVEL must be one of DEBUG, INFO, WARNING or ERROR");
+        }
+        if (clientIpProxyHops < 0 || clientIpProxyHops > 2) {
+            problems.add("CLIENT_IP_PROXY_HOPS must be 0, 1 or 2");
         }
         return problems;
     }
