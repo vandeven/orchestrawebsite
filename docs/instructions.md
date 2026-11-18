@@ -2,7 +2,7 @@
 
 [← Back to plan](PLAN.md)
 
-Practical instructions for the people who run the website: the admins and the owner. Screenshots will be added in `docs/images/` when the website exists. Emergency procedures are in the [runbook](runbook.md).
+Practical instructions for the people who run the website: the admins and the owner. Screenshots will be added in `docs/images/` when the website exists. Setting up and maintaining the whole project is in the [manual](manual.md), and emergency procedures are in the [runbook](runbook.md).
 
 ## For admins
 

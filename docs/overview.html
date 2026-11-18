@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The orchestra website in plain English</title>
+<style>
+  :root{--bg:#faf8f5;--card:#fff;--text:#221d1a;--muted:#6b625b;--line:#e2d9d0;--brand:#7a1f3d;--brand2:#5a1530;--soft:#f6e9ee;--ok:#1e6b3a}
+  @media (prefers-color-scheme:dark){:root{--bg:#171413;--card:#221e1c;--text:#f1ebe6;--muted:#b4aaa2;--line:#3b3531;--brand:#e58aa8;--brand2:#f0a9c0;--soft:#2e1d24;--ok:#6fd08f}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:17px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:860px;margin:0 auto;padding:0 18px 60px}
+  header.hero{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;padding:44px 18px 38px;margin-bottom:26px}
+  header.hero .wrap{padding-bottom:0}
+  header.hero h1{margin:0 0 8px;font-size:2.1rem;line-height:1.2}
+  header.hero p{margin:0;font-size:1.1rem;opacity:.95;max-width:60ch}
+  h2{font-size:1.5rem;margin:2.2em 0 .4em;color:var(--brand2);scroll-margin-top:12px}
+  h3{font-size:1.15rem;margin:1.4em 0 .3em}
+  p,li{max-width:70ch}
+  a{color:var(--brand)}
+  nav.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 20px;margin-bottom:10px}
+  nav.toc ol{columns:2;margin:6px 0 0;padding-left:22px}
+  nav.toc li{margin:2px 0}
+  @media (max-width:600px){nav.toc ol{columns:1}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin:14px 0}
+  .card h3{margin-top:0}
+  .tag{display:inline-block;font-size:.78rem;font-weight:600;padding:2px 10px;border-radius:99px;background:var(--soft);color:var(--brand2);margin-right:4px;vertical-align:middle}
+  .tag.pub{background:#e3f3e8;color:#14532d}.tag.mem{background:#e4ecfb;color:#1e3a8a}.tag.adm{background:#f6e9ee;color:#7a1f3d}.tag.mas{background:#222;color:#ffd24d}
+  @media (prefers-color-scheme:dark){.tag.pub{background:#16311f;color:#9be3b3}.tag.mem{background:#1b2740;color:#a9c1f5}.tag.adm{background:#3a1e2a;color:#f0a9c0}}
+  .who{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+  .who .card{margin:0}
+  .who h3{margin:0 0 4px}
+  ul.tick{list-style:none;padding-left:0}
+  ul.tick li{padding-left:28px;position:relative;margin:5px 0}
+  ul.tick li::before{content:"✓";position:absolute;left:4px;color:var(--ok);font-weight:700}
+  ul.cross li::before{content:"✕";color:#a4161a}
+  ol.flow{list-style:none;counter-reset:s;padding-left:0}
+  ol.flow li{counter-increment:s;position:relative;padding:0 0 18px 48px;margin:0}
+  ol.flow li::before{content:counter(s);position:absolute;left:0;top:0;width:32px;height:32px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:700;font-size:.95rem}
+  ol.flow li::after{content:"";position:absolute;left:15px;top:36px;bottom:4px;width:2px;background:var(--line)}
+  ol.flow li:last-child::after{display:none}
+  ol.flow b{color:var(--brand2)}
+  .note{border-left:4px solid var(--brand);background:var(--soft);padding:10px 16px;border-radius:6px;margin:14px 0}
+  table{border-collapse:collapse;width:100%;background:var(--card);font-size:.95rem}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--soft)}
+  .scroll{overflow-x:auto}
+  dl{margin:0}dt{font-weight:700;margin-top:10px;color:var(--brand2)}dd{margin:0 0 0 0}
+  .grid2{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+  .grid2 .card{margin:0}
+  footer{color:var(--muted);font-size:.9rem;margin-top:40px;border-top:1px solid var(--line);padding-top:14px}
+  @media print{header.hero{background:#fff;color:#000;border-bottom:2px solid #000}nav.toc{display:none}.card{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <h1>The orchestra website, in plain English</h1>
+  <p>What the website is for, who can do what, what every page offers, and what happens behind the scenes. No technical knowledge needed.</p>
+</div></header>
+<div class="wrap">
+
+<nav class="toc" aria-label="Contents"><strong>What's in here</strong>
+<ol>
+  <li><a href="#what">What is this website?</a></li>
+  <li><a href="#who">Who uses it?</a></li>
+  <li><a href="#pages">Every page, and what you can do there</a></li>
+  <li><a href="#flows">How things work, step by step</a></li>
+  <li><a href="#behind">Behind the scenes</a></li>
+  <li><a href="#todo">What we still need</a></li>
+  <li><a href="#build">How it gets built</a></li>
+  <li><a href="#words">Small word list</a></li>
+</ol></nav>
+
+<h2 id="what">1. What is this website?</h2>
+<p>The orchestra is really two groups in one: a <strong>band</strong> and a large <strong>choir</strong>. The website does two jobs:</p>
+<div class="grid2">
+  <div class="card"><h3>🌍 A window to the outside</h3><p>Anyone can read about the orchestra, see when it performs, and find out how to join. No account needed.</p></div>
+  <div class="card"><h3>🔒 A private place for members</h3><p>Members log in to download sheet music, play recordings and get lyrics. A few members, the <em>admins</em>, keep it all up to date themselves, without needing a programmer.</p></div>
+</div>
+
+<h2 id="who">2. Who uses it?</h2>
+<p>There are four kinds of visitors. Each one can do a bit more than the one before.</p>
+<div class="who">
+  <div class="card"><h3>👀 Visitor</h3><p><span class="tag pub">Not logged in</span></p><p>Reads the public pages and can send a message through the contact form.</p></div>
+  <div class="card"><h3>🎵 Member</h3><p><span class="tag mem">Has an account</span></p><p>Everything a visitor can do, plus the member page with music, and their own account page.</p></div>
+  <div class="card"><h3>🛠️ Admin</h3><p><span class="tag adm">Trusted member</span></p><p>Everything a member can do, plus managing songs, page texts, images and people.</p></div>
+  <div class="card"><h3>👑 Master</h3><p><span class="tag mas">One account</span></p><p>Everything an admin can do, plus removing admins. This is the "owner" account.</p></div>
+</div>
+<div class="note"><strong>Good to know:</strong> there is no public sign-up. Nobody can create an account for themselves. An admin always adds new people, so only real members get in.</div>
+
+<h2 id="pages">3. Every page, and what you can do there</h2>
+<p>The menu at the top is the same everywhere, but it only shows what <em>you</em> are allowed to use. On a phone it folds into a "Menu" button.</p>
+<div class="scroll"><table>
+<thead><tr><th>Menu item</th><th>Who sees it</th></tr></thead><tbody>
+<tr><td>About · Become a member · Agenda · Log in</td><td>Everyone (Log in only when you are not logged in)</td></tr>
+<tr><td>Member page · My account · Log out</td><td>Members, admins and the master</td></tr>
+<tr><td>Song management · Edit pages · User management</td><td>Admins and the master</td></tr>
+</tbody></table></div>
+
+<h3>Public pages (anyone can open these)</h3>
+
+<div class="card"><h3>🏠 About <span class="tag pub">Public</span> <small>(this is the home page)</small></h3>
+<p>The first page people see. It tells the story of the orchestra: who you are, the band and the choir, the conductor, and when and where rehearsals take place.</p>
+<ul class="tick"><li>Read the text and look at photos</li><li>Admins can rewrite the whole text and swap the photos themselves</li></ul></div>
+
+<div class="card"><h3>✉️ Become a member <span class="tag pub">Public</span></h3>
+<p>For people who would like to join the choir. It has three parts:</p>
+<ul class="tick"><li>A general text about joining</li><li>An <strong>audition</strong> section (dates, how to sign up). When there are no auditions, admins empty the text and the whole section disappears</li><li>A <strong>contact form</strong>: the visitor fills in their email address, a subject and a message. The message is sent by email to all admins and the master. The website does <em>not</em> keep the message. The admin simply replies to the email</li></ul></div>
+
+<div class="card"><h3>📅 Agenda <span class="tag pub">Public</span></h3>
+<p>One free text with the upcoming performances: dates, times and places. Admins write it in their own words. When it is empty, the page says "There are no performances planned at the moment."</p></div>
+
+<div class="card"><h3>🔑 Log in <span class="tag pub">Public</span></h3>
+<p>Members type their email address and password. If something is wrong, the website only says "Email address or password is incorrect". It never says which of the two, so strangers cannot find out who has an account.</p>
+<ul class="tick"><li>A button to show or hide the password while typing</li><li>A "Forgot password?" link</li><li>If you tried to open a members page before logging in, you land on that page after logging in</li></ul></div>
+
+<div class="card"><h3>📨 Forgot password, and Choose a new password <span class="tag pub">Public</span></h3>
+<p>You type your email address and get an email with a one-time link. The link works for <strong>1 hour</strong> and only once. On the page that opens, you choose a new password (at least 12 characters, not a very common one).</p></div>
+
+<div class="card"><h3>📜 Privacy, Cookies, Terms of use <span class="tag pub">Public</span></h3>
+<p>Short, clear pages in the footer: what personal data the website uses and for how long, which (single) cookie is used, and the rules for the music files (members only, please don't share).</p></div>
+
+<h3>Pages for logged-in people</h3>
+
+<div class="card"><h3>🎼 Member page <span class="tag mem">Members</span></h3>
+<p>A list of all songs the orchestra is working on right now. Every song shows its files, grouped:</p>
+<ul class="tick"><li><strong>Sheet music</strong> (PDF), with clear names like "Soprano" or "Trumpet 1". Everyone sees every part</li><li><strong>Audio</strong> (MP3): play it right on the page, or download it</li><li><strong>Lyrics</strong> (text file): download only</li></ul>
+<p>It works well on a phone. A short reminder says the files are for members only. Old songs that have been <em>archived</em> are not shown to members.</p></div>
+
+<div class="card"><h3>👤 My account <span class="tag mem">Members</span></h3>
+<p>Shows your own email address and role. Here you can change your own password: type the current one, then the new one twice. Afterwards you stay logged in on this device, you are logged out everywhere else, and you get an email telling you the password was changed (in case it wasn't you).</p></div>
+
+<h3>Pages for admins</h3>
+
+<div class="card"><h3>🎶 Song management <span class="tag adm">Admins</span></h3>
+<ul class="tick"><li><strong>Add a song</strong> (it is visible to members straight away)</li><li><strong>Edit</strong> the title and notes</li><li><strong>Add files</strong> (PDF, MP3 or text, up to 15 MB each), <strong>rename</strong> them or <strong>remove</strong> them</li><li><strong>Archive</strong> a song: members no longer see it, but nothing is lost and you can bring it back with one click</li><li><strong>Delete</strong> a song for good (only after a confirmation that names the song)</li></ul></div>
+
+<div class="card"><h3>✏️ Edit pages <span class="tag adm">Admins</span></h3>
+<p>A list of the four texts admins can change: <em>About</em>, <em>Become a member</em>, <em>Audition</em> and <em>Agenda</em>, each with the date it was last changed. Opening one shows an editor that works a bit like a word processor:</p>
+<ul class="tick"><li>Headings, bold, italic, lists, links, simple tables, quotes and text alignment</li><li>Add pictures, choose their size and position, and always give them a short description for people who cannot see them</li><li>A <strong>preview</strong> shows exactly how it will look before you save</li><li>After saving, the change appears on the website within about a minute</li></ul>
+<div class="note"><strong>Careful:</strong> the website does not remember older versions of a text. Copy the old text somewhere before rewriting a big one.</div></div>
+
+<div class="card"><h3>🖼️ Image library <span class="tag adm">Admins</span></h3>
+<p>All uploaded pictures in one place, with their descriptions. Upload new ones (JPEG, PNG or WebP), see which ones are not used anywhere, and delete the ones you no longer need. Deleting asks you to confirm and shows where the picture is still used. <strong>A deleted picture cannot be restored.</strong> Only use photos of people who agreed to it.</p></div>
+
+<div class="card"><h3>👥 User management <span class="tag adm">Admins</span></h3>
+<ul class="tick"><li><strong>Add a person</strong> by typing just an email address. They automatically get an email to choose their own password. Admins never see or know anyone's password</li><li>See an <strong>overview of everyone</strong>: role, date added, last login, and when the last email was sent. "Never logged in" means the person has not chosen a password yet</li><li><strong>Send the email again</strong> if it got lost</li><li><strong>Remove</strong> a member who leaves (they lose access immediately)</li><li><strong>Make a member an admin</strong></li></ul>
+<p>Only the <strong>master</strong> can also remove an admin or take admin rights away. That way admins cannot lock each other out. Nobody can remove or change the master from the website.</p></div>
+
+<h3>Other bits</h3>
+<ul class="tick"><li><strong>Friendly error pages</strong> ("Page not found", "No access") with a short reference number that makes a problem easy to report.</li><li><strong>Cookie notice:</strong> one short message, because the site only uses one cookie, to keep you logged in. There is no tracking.</li></ul>
+
+<h2 id="flows">4. How things work, step by step</h2>
+
+<div class="grid2">
+<div class="card"><h3>🙋 A new member gets access</h3>
+<ol class="flow">
+<li><b>An admin</b> types the new member's email address.</li>
+<li>The website <b>emails them</b> a one-time link.</li>
+<li>They <b>choose their own password</b>.</li>
+<li>They <b>log in</b> and see the member page.</li>
+</ol></div>
+
+<div class="card"><h3>🔁 Someone forgets their password</h3>
+<ol class="flow">
+<li>On the login page: <b>"Forgot password?"</b></li>
+<li>They type their email address. The site always answers the same, whether or not an account exists.</li>
+<li>If there is an account, an <b>email</b> arrives with a link (valid 1 hour).</li>
+<li>They <b>choose a new password</b> and log in.</li>
+</ol></div>
+
+<div class="card"><h3>🎧 A member prepares a rehearsal</h3>
+<ol class="flow">
+<li>They <b>log in</b>.</li>
+<li>On the <b>member page</b> they find the song.</li>
+<li>They <b>play the recording</b> on the page, and <b>download</b> their own part.</li>
+<li>The download link only works for a short time, and only for logged-in members.</li>
+</ol></div>
+
+<div class="card"><h3>➕ An admin adds a new song</h3>
+<ol class="flow">
+<li>Open <b>Song management</b>, add the title.</li>
+<li><b>Add the files</b>: parts, recordings, lyrics. Give each a clear name.</li>
+<li>Members can <b>see it immediately</b>.</li>
+<li>When the song is over, <b>archive</b> it. It disappears for members but stays safe.</li>
+</ol></div>
+
+<div class="card"><h3>📝 An admin updates the agenda</h3>
+<ol class="flow">
+<li>Open <b>Edit pages</b> and choose <b>Agenda</b>.</li>
+<li>Change the text in the editor.</li>
+<li>Click <b>Preview</b> to check how it looks.</li>
+<li><b>Save.</b> Within about a minute everyone sees the new text.</li>
+</ol></div>
+
+<div class="card"><h3>💬 Someone wants to join the choir</h3>
+<ol class="flow">
+<li>A visitor reads <b>Become a member</b>.</li>
+<li>They fill in the <b>contact form</b>.</li>
+<li>The message is <b>emailed to all admins</b> (and the master).</li>
+<li>An admin <b>replies</b> from their own email. The website keeps no copy of the message.</li>
+</ol></div>
+
+<div class="card"><h3>👋 Someone leaves the orchestra</h3>
+<ol class="flow">
+<li>An admin opens <b>User management</b>.</li>
+<li>Clicks <b>Remove</b> next to the name and <b>confirms</b> in the pop-up.</li>
+<li>The account is gone and <b>access stops at once</b>, even on a phone that is still logged in.</li>
+</ol></div>
+
+<div class="card"><h3>🔐 Logging in and out</h3>
+<ol class="flow">
+<li>You log in with email and password.</li>
+<li>You stay logged in for <b>at most 1 day</b>, then you log in again.</li>
+<li>After <b>several wrong passwords</b>, the website makes you wait a little before trying again.</li>
+<li>Click <b>Log out</b> and you are fully out.</li>
+</ol></div>
+</div>
+
+<h2 id="behind">5. Behind the scenes</h2>
+<p>These are the "quality" promises of the website, explained simply.</p>
+<div class="grid2">
+<div class="card"><h3>🛡️ Safe</h3><ul class="tick">
+<li>Passwords are <strong>never stored in readable form</strong>. They are scrambled in a way that cannot be reversed, with an extra secret ingredient that is kept outside the database.</li>
+<li>Music files sit in a <strong>private store</strong>. Members only get a link that expires after a short time.</li>
+<li>Every rule is checked on the website's side, so nobody can bypass it by being clever.</li>
+<li>Admins cannot do things that only the master may do, even by trying.</li>
+<li>Whenever something is deleted or removed, the website <strong>always asks you to confirm first</strong>, tells you exactly what will happen, and says whether it can be undone.</li>
+<li>Lots of automatic security checks run before every update goes live.</li></ul></div>
+
+<div class="card"><h3>🔎 Traceable</h3><ul class="tick">
+<li>Every change an admin makes is written to a <strong>logbook</strong>: who did what, and when. For rights changes it records who changed whose rights.</li>
+<li>The logbook (and normal logs) are kept for <strong>30 days</strong>, then removed.</li>
+<li>Passwords and secrets never end up in the logbook.</li></ul></div>
+
+<div class="card"><h3>🙈 Private</h3><ul class="tick">
+<li>Only the personal data that is really needed: an email address and a role.</li>
+<li>No tracking, no advertising, nothing loaded from other websites.</li>
+<li>Data is stored in the <strong>European Union</strong> (the Netherlands).</li>
+<li>People can ask what is stored about them, or have it removed. This is answered within a month.</li>
+<li>Photos of people are only used with their permission.</li></ul></div>
+
+<div class="card"><h3>♿ For everyone</h3><ul class="tick">
+<li>Works on <strong>phones, tablets and computers</strong>.</li>
+<li>Can be used with just a keyboard, and works with screen readers.</li>
+<li>Clear colours with good contrast, including a dark mode that follows your device.</li>
+<li>Written in <strong>English</strong>, with all dates and times in <strong>Amsterdam time</strong>, written out clearly, like "Saturday 13 December 2026, 20:00".</li></ul></div>
+
+<div class="card"><h3>⚡ Fast and cheap</h3><ul class="tick">
+<li>Pages are light and load quickly, even on a mobile connection.</li>
+<li>The website "sleeps" when nobody is using it, so you <strong>pay almost nothing</strong> when it is quiet. It only costs when people actually use it.</li>
+<li>A limit on how much it can scale up protects against a surprise bill, and an alert warns about spending.</li>
+<li>All tools used are free. The only cost you can't avoid is probably the <strong>domain name</strong> (about €10 a year).</li></ul></div>
+
+<div class="card"><h3>🔧 Reliable</h3><ul class="tick">
+<li>Many <strong>automatic tests</strong> check every feature before anything changes on the live website.</li>
+<li>A new version is first started <strong>in the background and tested</strong>. Only if it passes does it replace the old one. If not, nobody notices anything.</li>
+<li>Updates to the building blocks of the website happen automatically, with extra care for big ones.</li>
+<li>If the website goes down, the owner gets an alert. Going back to the previous version takes one command.</li>
+<li>No promise of 100% uptime. It is a volunteer orchestra's website, not a bank. Short interruptions can happen.</li></ul></div>
+
+<div class="card"><h3>💾 Backups</h3><ul class="tick">
+<li>The database (people, texts, song information) is backed up <strong>every week</strong> and kept for 30 days.</li>
+<li>Music files that are removed by mistake can be restored for <strong>7 days</strong>.</li></ul>
+<div class="note"><strong>Important:</strong> the music files and pictures are <em>not</em> backed up automatically. Admins keep the originals of everything they upload, on their own computer or a shared drive.</div></div>
+
+<div class="card"><h3>🤝 Not dependent on one person</h3><ul class="tick">
+<li>Everything is written down: how it works, how to fix problems, and step-by-step instructions for admins.</li>
+<li>At least <strong>two owners</strong> have access to the online accounts, so the site does not depend on one person.</li>
+<li>The whole setup can be rebuilt from the instructions if it ever has to be.</li></ul></div>
+</div>
+
+<h2 id="todo">6. What we still need from the orchestra</h2>
+<p>The website cannot go live until these are provided. Until then, placeholders are used.</p>
+<div class="scroll"><table>
+<thead><tr><th>What</th><th>Why we need it</th></tr></thead><tbody>
+<tr><td><strong>A domain name</strong> (the website address)</td><td>The proper web address, and for emails to arrive reliably instead of ending up in spam. This is the biggest one.</td></tr>
+<tr><td>The orchestra's name, logo and colours</td><td>Header, emails, and the look of the site</td></tr>
+<tr><td>The foundation's official name, address and registration number</td><td>Shown in the footer and legal pages</td></tr>
+<tr><td>An email address for privacy questions, and one for people who want to join</td><td>Privacy page, "Become a member" page</td></tr>
+<tr><td>A second owner for the online accounts</td><td>So the website does not depend on one person</td></tr>
+<tr><td>Who the first admins and members are</td><td>To create the first accounts</td></tr>
+<tr><td>The first texts and photos (with permission of the people in them)</td><td>About, Become a member, audition and agenda texts</td></tr>
+<tr><td>Social media addresses, and the first songs and files</td><td>Footer, and the member page</td></tr>
+</tbody></table></div>
+
+<h2 id="build">7. How it gets built</h2>
+<ol class="flow">
+<li><b>Foundation.</b> The workshop: the safety checks, the automatic tests, and a first empty page that goes live the right way.</li>
+<li><b>Accounts.</b> Logging in, passwords, adding people, and "My account".</li>
+<li><b>Public site.</b> The About, Become a member and Agenda pages, the editor for admins, and the legal pages.</li>
+<li><b>Music.</b> Songs, files, and the member page with downloads and playing recordings.</li>
+<li><b>Launch.</b> Final safety checks, a test of the backups, checking that emails arrive, filling in all the real content, and going live.</li>
+</ol>
+<p>There is also a <strong>clickable demo</strong> (the <code>demo</code> folder): open <code>index.html</code> in a browser and click around as a visitor, member, admin or master. Nothing in it is real, it only shows how the pages and flows feel.</p>
+
+<h2 id="words">8. Small word list</h2>
+<dl>
+<dt>Admin</dt><dd>A trusted member who can manage songs, texts, pictures and people.</dd>
+<dt>Master</dt><dd>The one owner account. Like an admin, plus it can remove admins.</dd>
+<dt>Archive</dt><dd>Hide a song from members without deleting anything. It can be brought back any time.</dd>
+<dt>Preview</dt><dd>A look at how a text will appear on the website, before saving it.</dd>
+<dt>Alt text</dt><dd>A short description of a picture, for people who cannot see it (for example someone using a screen reader).</dd>
+<dt>Cookie</dt><dd>A tiny note the website leaves in your browser. This site only uses one, to remember that you are logged in.</dd>
+<dt>Audit trail / logbook</dt><dd>The list of who changed what and when, kept for 30 days.</dd>
+<dt>Backup</dt><dd>A spare copy of the data, in case something is lost.</dd>
+<dt>Domain name</dt><dd>The address of the website, like <em>youroffice.org</em>.</dd>
+</dl>
+
+<footer>Summary of the project documents in the <code>docs</code> folder. The detailed technical version is in <code>docs/PLAN.md</code>. Names, texts and details are placeholders until the orchestra provides the real ones.</footer>
+</div>
+</body>
+</html>

@@ -7,7 +7,7 @@ Everything that the project still needs from the orchestra. These are inputs, no
 | # | Item | Needed for | Provided by | Launch blocker | Status |
 |---|------|-----------|-------------|----------------|--------|
 | 1 | Domain name, and who manages DNS | Custom domain (HOS-5), email sender with SPF, DKIM and DMARC (HOS-21), CORS (HOS-17), HSTS and domain security (HRD-16), `PUBLIC_BASE_URL` | Owner | Yes | Open |
-| 2 | The orchestra's name | Header, titles, emails, legal pages, social image (DES-1) | Owner | Yes | Open |
+| 2 | The orchestra's name | Header, titles, emails, legal pages, social image (DES-1) | Owner | Yes | Placeholder `PLACEHOLDER_NAME` is used until the real name is provided |
 | 3 | Logo and brand colors (and a brand font, if wanted) | Design tokens and logo (DES-1 to DES-4) | Owner | No (placeholders are used) | Open |
 | 4 | Legal name, address and registration number of the foundation | Footer and legal pages (LEG-8) | Owner | Yes | Open |
 | 5 | Contact address for privacy requests | Privacy page (LEG-3) | Owner | Yes | Open |

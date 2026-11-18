@@ -25,7 +25,7 @@ The Google Cloud project has at least two owners (see [hosting](hosting.md), HOS
 4. The restore is tried before launch and every year after (see [security hardening](security-hardening.md), HRD-14).
 
 ## Set up or rebuild the infrastructure from the repository
-These are the steps that cannot be code (see [infrastructure](infrastructure.md), INF-9). Do them in this order, with an owner account that has two-step verification.
+The complete first-time setup is in the [manual](manual.md), Part A. These are the steps that cannot be code (see [infrastructure](infrastructure.md), INF-9). Do them in this order, with an owner account that has two-step verification.
 1. Create the Google Cloud project, link billing and set the budget alert contact.
 2. Create the private state bucket for OpenTofu in `europe-west4` (versioning on, public access prevention on).
 3. Run the first `tofu apply` from `infra/` with your own credentials. This creates everything else, including the keyless GitHub login (Workload Identity Federation).
