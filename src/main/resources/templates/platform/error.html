@@ -4,10 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light dark">
   <title>{title} - {name}</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
 </head>
 <body>
-  <main>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-brand" href="/">{name}</a>
+    </div>
+  </header>
+  <main class="site-main">
     <h1>{title}</h1>
     <p>{message}</p>
     {#if requestId}<p>Code: <code>{requestId}</code>{#if version}, version <code>{version}</code>{/if}</p>{/if}

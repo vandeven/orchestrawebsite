@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{#insert title}{cdi:site.name}{/insert}</title>
+  <meta name="description" content="{#insert description}{cdi:site.name}{/insert}">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <script src="/js/menu.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-brand" href="/">{cdi:site.name}</a>
+      <nav class="site-nav" aria-label="Main menu" data-site-nav>
+        <button class="site-nav-toggle" type="button" aria-expanded="false" aria-controls="main-menu" data-site-nav-toggle>Menu</button>
+        <ul class="site-nav-list" id="main-menu">
+          {#for item in cdi:site.menu(currentPath)}
+          <li>
+            {#if item.post}
+            <form class="site-nav-form" method="post" action="{item.href}">
+              <button class="site-nav-button" type="submit">{item.label}</button>
+            </form>
+            {#else}
+            <a class="site-nav-link" href="{item.href}"{#if item.current} aria-current="page"{/if}>{item.label}</a>
+            {/if}
+          </li>
+          {/for}
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main class="site-main" id="content" tabindex="-1">
+    {#insert content}{/insert}
+  </main>
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <p>&copy; {cdi:site.name}</p>
+      <ul class="site-footer-list">
+        <li><a href="/privacy">Privacy</a></li>
+        <li><a href="/cookies">Cookies</a></li>
+        <li><a href="/terms">Terms of use</a></li>
+      </ul>
+    </div>
+  </footer>
+</body>
+</html>

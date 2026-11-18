@@ -1,0 +1,75 @@
+/*
+ * Design tokens (DES-2, DES-3). Every color, size and space of the website is defined here, once.
+ * A rebrand only changes this file and the logo. Nothing else may use a fixed color value (a test
+ * fails the build when it does). The colors are placeholders until the brand colors are provided.
+ *
+ * Light mode is the default; dark mode follows the visitor's system setting. All text and
+ * interface colors reach WCAG 2.2 AA contrast (a test checks every pair below, in both modes).
+ */
+:root {
+  color-scheme: light dark;
+
+  /* Colors */
+  --color-bg: #faf8f5;
+  --color-surface: #ffffff;
+  --color-text: #1f1a1c;
+  --color-text-muted: #5c5256;
+  --color-brand: #7a1f3d;
+  --color-brand-dark: #5e1730;
+  --color-on-brand: #ffffff;
+  --color-link: #7a1f3d;
+  --color-border: #857a7e;
+  --color-focus: #0b57d0;
+  --color-success: #1b6e3c;
+  --color-success-bg: #e7f4ec;
+  --color-warning: #7a4f00;
+  --color-warning-bg: #fff4d6;
+  --color-error: #b00020;
+  --color-error-bg: #fdeaed;
+
+  /* Typography (DES-4): the system font stack, nothing to download */
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --line-height: 1.5;
+
+  /* Space, shape and layout */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2.5rem;
+  --radius: 0.375rem;
+  --shadow: 0 1px 3px rgb(0 0 0 / 20%);
+  --color-backdrop: rgb(0 0 0 / 60%); /* behind dialogs; dark enough in both modes */
+  --content-width: 40rem; /* about 70 characters per line, in rem so every part lines up */
+  --target-size: 2.75rem; /* 44 px: the smallest touch target (DES-7) */
+  --focus-width: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #171214;
+    --color-surface: #221b1e;
+    --color-text: #f1eaec;
+    --color-text-muted: #b8aab0;
+    --color-brand: #b04466;
+    --color-brand-dark: #8e3452;
+    --color-on-brand: #ffffff;
+    --color-link: #f0a3bc;
+    --color-border: #8c7e84;
+    --color-focus: #8ab4f8;
+    --color-success: #6fcf97;
+    --color-success-bg: #12301f;
+    --color-warning: #f2c35b;
+    --color-warning-bg: #3a2c06;
+    --color-error: #ff8a9b;
+    --color-error-bg: #3d1219;
+    --shadow: 0 1px 3px rgb(0 0 0 / 60%);
+  }
+}
