@@ -17,7 +17,7 @@ Define all Google Cloud infrastructure as code in the repository, with **OpenTof
 1. INF-1: All Google Cloud resources of the website are defined in OpenTofu code in the folder `infra/`. Nothing is created or changed by hand in the console, except the bootstrap steps in INF-9. A difference between the code and the real project is a bug (see INF-7).
 2. INF-2: The code defines at least:
     - the Cloud Run service (limits, service account, secret references) and the master account setup and migration jobs
-    - Firestore (native mode, `europe-west4`, TTL policies, deletion protection, security rules that deny client access) and the backup schedule and bucket
+    - Firestore (native mode, `europe-west4`, TTL policies, deletion protection, security rules that deny client access) and the backup schedule (Firestore's own scheduled backups)
     - the member files bucket and the images bucket (public access prevention, soft delete, CORS, lifecycle rules)
     - Artifact Registry and its cleanup policy
     - Secret Manager entries (without values, see INF-3)
@@ -44,9 +44,9 @@ Define all Google Cloud infrastructure as code in the repository, with **OpenTof
     - our own policies, written as code in `infra/policy/` (for example with Conftest and OPA) against the plan, which turn the requirements into automatic rules:
       - every resource is in `europe-west4` (HOS-3, HOS-11), Firestore has deletion protection (HRD-13)
       - Cloud Run: minimum instances 0, maximum at most 3, 512 MiB, no public access to anything else than the service itself (HOS-23)
-      - the member files bucket has public access prevention, no `allUsers` or `allAuthenticatedUsers`, and soft delete of 7 days (HOS-12, HOS-16); the images bucket only gives everyone the object viewer role (HRD-12)
+      - the member files bucket has public access prevention, no `allUsers` or `allAuthenticatedUsers`, and soft delete of 7 days (HOS-12, HOS-16); the images bucket only gives everyone the object reader role `legacyObjectReader`, which cannot list the bucket (HRD-12, HOS-22)
       - no service account keys exist, the default compute service account is not used, and the Workload Identity Federation only accepts this repository and the main branch (HRD-12)
-      - the backup bucket is private with a 30 day lifecycle rule (HOS-10, HRD-14)
+      - the backup schedule keeps backups for 30 days (HOS-10, HRD-14)
       - Artifact Registry keeps 5 images (HOS-25), the uptime check and its alert exist (HOS-29), the required log alerts exist (LGG-16), and the budget alert exists (HOS-9)
       - none of the resource types with a fixed monthly cost in HOS-26 (load balancers, Cloud CDN, Cloud SQL, VPC connectors, Redis, reserved IP addresses), and at most the expected number of secrets (HOS-27)
     - The policies have their own tests (INF-8 tests below). A plan that breaks a policy cannot be applied.
@@ -67,7 +67,7 @@ Folder layout:
 infra/
   versions.tf  providers.tf  variables.tf  prod.tfvars  outputs.tf  README.md
   cloud_run.tf  firestore.tf  storage.tf  artifact_registry.tf  secrets.tf
-  iam.tf  workload_identity.tf  monitoring.tf  budget.tf  backup.tf
+  iam.tf  data.tf  run.tf  monitoring.tf  (workload identity, backups and the budget are in these)
   tests/    (OpenTofu tests with `tofu test`)
   policy/   (Rego policies and their tests)
   .terraform.lock.hcl

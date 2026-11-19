@@ -218,6 +218,10 @@ Decisions and findings:
 
 Not done in `infra/`: the Cloud Run jobs for the master setup and migrations (the application has no job mode), the custom domain mapping (no domain), CORS and domain security (HRD-16), the Firestore indexes (none are needed yet), and the exact roles of the read-only and apply accounts have only been reasoned out: the first real `plan` may show a missing permission, and it is added then. The uptime check and the budget settings (EUR 10 a month, warnings at 50, 90 and 100 percent) are my defaults and can be changed in `variables.tf`.
 
+## Manual steps: where they are documented
+
+Everything that has to be done by a person, and cannot be code, is in [manual.md](manual.md), with a progress table at the start of Part A. It was brought up to date on 2026-11-19 with: the project and billing checks, the enabled APIs, the state bucket with its check, the `TF_VAR_` environment variables, `tofu init`, `plan` and `apply` with what to look for, the lock file, the outputs that go into GitHub variables and secrets, the exact names of the required checks, Part B for the code as it is now, the regeneration of the PDF, the sandbox push credential and the tool versions. The runbook has the new restore procedure (Firestore's own backups restore into a new database) and the rebuild steps. **The restore procedure, the permissions of the read-only and apply accounts, and the first `tofu plan` are untested**; each says so where it is described. When a step is added to the code that needs a person, add it to the manual in the same change.
+
 ## Pipeline: left out on purpose (to do later)
 
 | Item | Why it waits |

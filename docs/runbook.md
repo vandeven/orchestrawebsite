@@ -19,19 +19,25 @@ The Google Cloud project has at least two owners (see [hosting](hosting.md), HOS
 3. Check the website, then fix the problem in the repository. Do not merge automatic updates until it is fixed (see [automatic updates](automatic-updates.md), UPD-11).
 
 ## Restore data from a backup
-1. Find the export in the private backup bucket (HOS-10, retention 30 days).
-2. Import it into Firestore: `gcloud firestore import gs://BACKUP_BUCKET/EXPORT_PATH`. This overwrites documents with the same IDs, so check which collections you need first.
-3. Files removed by mistake from the member files bucket can be restored within the soft delete period: `gcloud storage restore gs://BUCKET/OBJECT` (HOS-16). Deleted images cannot be restored (HOS-22).
-4. The restore is tried before launch and every year after (see [security hardening](security-hardening.md), HRD-14).
+The database has Firestore's own scheduled backups (every Sunday, kept 30 days, [hosting](hosting.md), HOS-10). A restore always creates a **new** database next to the live one; nothing is overwritten. **These steps have to be tried once before launch (see below): until then they are untested.**
+1. List the backups: `gcloud firestore backups list --location=europe-west4`. Note the name of the backup you want (`projects/orchestrawebsite/locations/europe-west4/backups/BACKUP_ID`).
+2. Restore it into a new database: `gcloud firestore databases restore --source-backup=BACKUP_NAME --destination-database=restored-YYYYMMDD`.
+3. Look at what you need in the console (Firestore, choose the database `restored-YYYYMMDD`). If you only need some documents, copy them by hand or export the collection from the restored database to a temporary bucket and import it into `(default)`: `gcloud firestore export gs://TEMP_BUCKET/PATH --database=restored-YYYYMMDD --collection-ids=COLLECTION` and then `gcloud firestore import gs://TEMP_BUCKET/PATH --database="(default)"` (this overwrites documents with the same IDs, so check which collections you need first). Delete the temporary bucket afterwards.
+4. If the whole live database is gone: restore into a new database, switch the application to it (the `FIRESTORE_DATABASE` setting, once the application has it), and rebuild `(default)` later.
+5. Delete the restored database when you are done: `gcloud firestore databases delete --database=restored-YYYYMMDD` (the live database has deletion protection; a restored one does not).
+6. Files removed by mistake from the member files bucket can be restored within the soft delete period: `gcloud storage restore gs://BUCKET/OBJECT` (HOS-16). Deleted images cannot be restored (HOS-22).
+7. The restore is tried before launch and every year after (see [security hardening](security-hardening.md), HRD-14). Write the result, and any step that differs from this text, in the status log.
 
 ## Set up or rebuild the infrastructure from the repository
-The complete first-time setup is in the [manual](manual.md), Part A. These are the steps that cannot be code (see [infrastructure](infrastructure.md), INF-9). Do them in this order, with an owner account that has two-step verification.
-1. Create the Google Cloud project, link billing and set the budget alert contact.
-2. Create the private state bucket for OpenTofu in `europe-west4` (versioning on, public access prevention on).
-3. Run the first `tofu apply` from `infra/` with your own credentials. This creates everything else, including the keyless GitHub login (Workload Identity Federation).
-4. Add the secret values to the empty Secret Manager entries: `PASSWORD_PEPPER` (at least 32 random characters), `MASTER_PASSWORD` and the Brevo API key.
-5. Let the application pipeline deploy the first version (see [hosting](hosting.md), HOS-6) and run the master account setup job.
-6. Check the website, the uptime check and the alerts. Restore data from a backup if you are rebuilding after a disaster (see "Restore data from a backup").
+The complete first-time setup, with every command, is in the [manual](manual.md), Part A. These are the steps that cannot be code (see [infrastructure](infrastructure.md), INF-9). Do them in this order, with an owner account that has two-step verification.
+1. Create the Google Cloud project, link billing and enable the APIs (manual A2). For a new project, use a new project ID and change it in `infra/prod.tfvars`, `infra/backend.hcl` and the manual.
+2. Create the private state bucket for OpenTofu in `europe-west4` (versioning on, public access prevention on) and put its name in `infra/backend.hcl` and `prod.tfvars` (manual A3, step 1).
+3. Set the three `TF_VAR_...` values, run `tofu init`, `plan` and the first `apply` from `infra/` with your own credentials (manual A3, steps 3 to 6). This creates everything else, including the keyless GitHub login (Workload Identity Federation).
+4. Put the outputs and the three secrets in GitHub (manual A3, step 8).
+5. Add the secret values to the empty Secret Manager entries: `PASSWORD_PEPPER` (at least 32 random characters), `MASTER_PASSWORD` and the Brevo API key (manual A4).
+6. Let the application pipeline deploy the first version (see [hosting](hosting.md), HOS-6) and run the master account setup job.
+7. Check the website, the uptime check and the alerts. Restore data from a backup if you are rebuilding after a disaster (see "Restore data from a backup").
+A rebuild in a new project is tried once before launch and then once a year (see [instructions](instructions.md)).
 
 ## Infrastructure drift alert
 The weekly drift check failed: the real project differs from the code in `infra/`. Look at the plan in the workflow run. Either put the console change in the code through a pull request, or revert it. Do not ignore it: the policy checks only protect what is in the code.
