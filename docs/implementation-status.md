@@ -161,12 +161,27 @@ Decisions and findings for this slice:
 - **Admins cannot remove themselves** (an admin is not a member), and nobody can change the master. There is no "last admin" check because the master always exists.
 - Planted bugs that the new tests catch: admins may remove or demote admins, sessions not ended on removal, refused attempts not audited.
 
+### Slice 5: My account (ACC-1 to ACC-9)
+
+| Item | Requirements | Status | Where | Tests |
+|------|--------------|--------|-------|-------|
+| The page `/account` for every logged-in role (visitors are sent to the login page), never cached, showing the email address and the role read only | ACC-1, ACC-2 | Done | `accounts/web/AccountResource`, `templates/accounts/account.html` | `AccountWebTest` |
+| Changing the password: the current password must be right; the new password follows the rules (12 to 128 characters, not a common password, different from the current one, the two entries equal), with a message next to each field and the passwords never shown again; all other sessions end; this device gets a new session token | ACC-3, ACC-5, ACC-6 | Done | `accounts/api/AccountService`, `AccountServiceImpl` | `AccountServiceTest`, `AccountWebTest` (all boundaries: 11, 12, 128, 129) |
+| A wrong current password gives one general error and changes nothing; it counts toward the same limits as failed logins (and the other way round), so the wait is shared and gives HTTP 429 | ACC-4, LOG-13 | Done | `AccountServiceImpl`, `LoginThrottle` | `AccountServiceTest`, `AccountWebTest` |
+| The email about the change: the time in Amsterdam time, what to do if it was not you, no link and no password; a failed email does not undo the change and is logged as an alert | ACC-7 | Done | `AccountServiceImpl` | `AccountServiceTest` |
+| The master sees no form and a direct request is refused | ACC-8 | Done | `AccountResource`, `AccountServiceImpl` | `AccountServiceTest`, `AccountWebTest` |
+| Requests from another site are refused (origin check); no password in any log or page; a password change is logged as a security event with a hash of the address | ACC-9, LGG-4, LGG-5 | Partial (origin check, no token yet) | `CrossSiteRequestFilter`, `AccountServiceImpl` | `AccountWebTest`, `AccountServiceTest` |
+
+Decisions and findings:
+- **The new session keeps the expiry of the old one.** A password change gives a new token but does not give another day (LOG-10); the first thing a test caught when this was planted as a bug.
+- **Planted bugs the new tests catch:** an extended session, a wrong current password that is not counted, the master not refused, and the old session token that stays valid.
+- **Not checked by eye:** the member version of the page (with the form) was not looked at in a browser, only the master version; the form uses the same field markup as the login and set new password pages. A small style for definition lists was added after looking at the master page.
+
 ### Phase 1: left out on purpose (to do in the next slices)
 
 | Item | Why it waits |
 |------|--------------|
 | The Firestore stores for users and sessions, the session TTL policy, the emulator and the seed command (HOS-3, LOG-11) | Next slice after the limits; until then everything is in memory |
-| My account page: change password, end other sessions, the "password changed" email (ACC-1 to ACC-9) | After user management |
 | The master account job that runs once per deployment (HOS-19, USR-15). In production the master is only set up when `ACCOUNTS_MASTER_SETUP_ON_START=true`, so **in production nobody can log in until the job exists** | Needs `infra/` and the deployment workflow |
 | The rest of the audit trail: song, file, text and image actions (LGG-9) come with those features; the ready-made log queries for the owner (LGG-15); the log-based alerts, among them the one on master logins (HRD-9, LGG-16); and the audit entry for a refused request to an admin page, which is only logged as a warning because `platform` cannot call `audit` (LGG-11) | Come with those features and with `infra/` |
 | A token in every form on top of the origin check (LOG-14) | Comes with the first logged-in form |
