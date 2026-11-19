@@ -78,6 +78,14 @@ jobs:
         with:
           tofu_version: ${{ env.TOFU_VERSION }}
           tofu_wrapper: false
+      # TEMPORARY (remove once the login works): shows which identity GitHub gives this job, to
+      # compare with the bindings in iam.tf. Only the claims are printed, never the token.
+      - name: Show the identity of this job
+        run: |
+          token=$(curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=debug" | jq -r .value)
+          echo "$token" | jq -R 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | @base64d | fromjson
+            | {sub, repository, repository_owner, event_name, ref, job_workflow_ref}'
       - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
