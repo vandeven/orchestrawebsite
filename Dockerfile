@@ -1,7 +1,7 @@
 # Runtime image for the Quarkus application (HOS-1, SEC-9).
 # Build the application first with ./mvnw package; the pipeline does this before building the image.
 # The base image is pinned by digest, and Dependabot updates it (SEC-3, SEC-4).
-FROM eclipse-temurin:21-jre-alpine@sha256:ac05c3c42b7c2f1a52c9bd52f01041fa1958231b15ebeae7420429cbc5baf474
+FROM eclipse-temurin:25-jre-alpine@sha256:e1898fd6a11fc965a994d8ace186fd3585aeb636cf8f05f47a723fcfee0b0918
 
 # Set by the pipeline to the short commit ID and the build time (HOS-35)
 ARG APP_VERSION=dev
