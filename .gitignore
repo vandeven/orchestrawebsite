@@ -27,3 +27,11 @@ target/
 *.iml
 .idea/
 .vscode/
+
+# OpenTofu: the downloaded providers, local state and plans never go in the repository (INF-3)
+infra/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+errored_test.tfstate

@@ -207,6 +207,17 @@ Decisions and findings:
 - **Where the build runs:** on the shared drive `mvn clean` can fail (files in `target/` that cannot be deleted). The builds in this phase were run from a clean copy of the repository outside the drive, which also proves that a fresh checkout builds.
 - **Timing tests** compare the fastest of 15 runs, with a wide margin, because the median made the test fail on a busy machine. They were shown to fail when the hash is skipped for unknown addresses.
 
+## Infrastructure (`infra/`)
+
+| Item | Requirements | Status | Where | Tests |
+|------|--------------|--------|-------|-------|
+| The OpenTofu code for: Cloud Run (0 to 3 instances, 512 MiB, CPU only during requests, secrets as references, the sample image as a placeholder that an apply never resets), Firestore (native, `europe-west4`, deletion protection, cleanup of sessions, recovery links and counters, rules that deny all direct access, weekly backups kept 30 days), the private member files bucket (public access prevented, 7 days soft delete, CORS with range requests) and the public images bucket (read without listing, no soft delete), Artifact Registry (keeps 5, deletes untagged), three empty secrets, four service accounts with their roles, the keyless GitHub login that only accepts this repository and gives each account one exact kind of job, the alerts of LGG-16, the uptime check and the budget | INF-1 to INF-3, INF-6, INF-10 to INF-13, HOS-2, HOS-3, HOS-9 to HOS-12, HOS-16, HOS-22 to HOS-25, HOS-27, HOS-29, HRD-12, HRD-13 | **Written and validated, not applied** | `infra/*.tf` | `tofu validate` against the real provider schema; `tofu test` (18 rules); `static-policies.sh` |
+| The policy checks as automatic rules, and the proof that they fail: five planted violations (a public files bucket, a listable images bucket, the owner role, a minimum of 1 instance, a wrong login binding) failed the intended checks; six planted violations of the static rules were all reported | INF-8 | Done | `infra/tests/` | itself |
+| The infrastructure pipeline: format, validate and tests on every change (no cloud login), a read-only plan on pull requests, an apply that waits for the owner's approval in the `production` environment, and a weekly drift check; the last three only run once the keyless login variables exist | INF-5, INF-7 | **The check job is the only part that can run now; plan, apply and drift have not run** | `.github/workflows/infra.yml` | `actionlint` |
+| Dependency lock file for five platforms | INF-12 | Done | `infra/.terraform.lock.hcl` | `static-policies.sh` |
+
+Not done in `infra/`: the Cloud Run jobs for the master setup and migrations (the application has no job mode), the custom domain mapping (no domain), CORS and domain security (HRD-16), the Firestore indexes (none are needed yet), and the exact roles of the read-only and apply accounts have only been reasoned out: the first real `plan` may show a missing permission, and it is added then. The uptime check and the budget settings (EUR 10 a month, warnings at 50, 90 and 100 percent) are my defaults and can be changed in `variables.tf`.
+
 ## Pipeline: left out on purpose (to do later)
 
 | Item | Why it waits |
@@ -217,9 +228,8 @@ Decisions and findings:
 | SARIF upload of the Trivy and OSV results to the Security tab (SEC-16) | Only CodeQL uploads for now |
 | Email notifications (SEC-17, UPD-12) | A GitHub setting for the owner, not code |
 | Branch protection with the required checks, "Allow auto-merge", secret scanning and push protection, Dependabot security updates (SEC-19, UPD-4, UPD-8) | Repository settings the owner turns on; the check names to require are the job names in the two workflows |
-| The `terraform` ecosystem in Dependabot (UPD-1) | Added together with `infra/` |
 | ESLint with security rules (SEC-7) | There is no JavaScript yet |
-| The deployment workflow: deploy without traffic, smoke tests against the test address, then traffic (HOS-6, SEC-15 deployment gate), the provenance attestation (HRD-15), the deployment of automatic merges (UPD-10) | Needs `infra/` and the Google Cloud project |
+| The deployment workflow: deploy without traffic, smoke tests against the test address, then traffic (HOS-6, SEC-15 deployment gate), the provenance attestation (HRD-15), the deployment of automatic merges (UPD-10) | `infra/` is written; needs the first apply and the application's Firestore stores |
 | The security header smoke tests against the deployed address and the HTTP to HTTPS redirect (SEC-13) | Same; the header checks already run on the image in `container-smoke-test.sh` |
 
 ## Not started in phase 0

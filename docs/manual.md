@@ -54,7 +54,8 @@ gcloud config set project PROJECT_ID
 gcloud services enable run.googleapis.com firestore.googleapis.com storage.googleapis.com \
   secretmanager.googleapis.com artifactregistry.googleapis.com iam.googleapis.com \
   iamcredentials.googleapis.com sts.googleapis.com cloudresourcemanager.googleapis.com serviceusage.googleapis.com \
-  logging.googleapis.com monitoring.googleapis.com billingbudgets.googleapis.com
+  logging.googleapis.com monitoring.googleapis.com billingbudgets.googleapis.com \
+  cloudbilling.googleapis.com firebaserules.googleapis.com
 ```
 - [ ] Choose the region now: everything uses `europe-west4` (Netherlands). The location of the Firestore database cannot be changed afterwards (HOS-3).
 - [ ] Add the second owner in the console (IAM), with two-step verification ([hosting](hosting.md), HOS-33).
@@ -63,15 +64,30 @@ gcloud services enable run.googleapis.com firestore.googleapis.com storage.googl
 ### A3. Bootstrap the infrastructure
 Only the state bucket is created by hand. Everything else comes from `infra/` (INF-9).
 ```
-gcloud storage buckets create gs://PROJECT_ID-tfstate --location=europe-west4 \
+gcloud storage buckets create gs://orchestrawebsite-tfstate-soljazz --location=europe-west4 \
   --uniform-bucket-level-access --public-access-prevention
-gcloud storage buckets update gs://PROJECT_ID-tfstate --versioning
+gcloud storage buckets update gs://orchestrawebsite-tfstate-soljazz --versioning
+```
+The bucket name is in `infra/backend.hcl`. If you chose another name, change it there and in `prod.tfvars`.
+
+Give the details that are not in the public repository through the environment (they are not secrets, but they are personal):
+```
+export TF_VAR_alert_email="you@example.org"
+export TF_VAR_master_email="master@example.org"
+export TF_VAR_billing_account_id="012345-6789AB-CDEF01"     # gcloud billing accounts list
+```
+Then, from the repository:
+```
 cd infra
-tofu init -backend-config="bucket=PROJECT_ID-tfstate"
+tofu init -backend-config=backend.hcl
 tofu plan -var-file=prod.tfvars     # read the plan; check it matches what you expect
 tofu apply -var-file=prod.tfvars    # the first apply uses your own credentials
 ```
-This creates Cloud Run, Firestore, both buckets, Artifact Registry, empty Secret Manager entries, the service accounts, the keyless GitHub login (Workload Identity Federation), alerts, the uptime check and the backup schedule. **(to be confirmed when `infra/` exists)**
+If `init` changed `.terraform.lock.hcl`, commit it. This creates Cloud Run (with a sample image for now), Firestore with its rules and cleanup, both buckets, Artifact Registry, empty Secret Manager entries, the service accounts, the keyless GitHub login (Workload Identity Federation), alerts, the uptime check, the backup schedule and the budget. See [infra/README.md](../infra/README.md).
+
+Your own account needs to be an owner of the project, and billing administrator of the billing account (for the budget).
+
+After the apply, put the outputs in GitHub as repository **variables** (Settings, Secrets and variables, Actions, Variables): `GCP_WORKLOAD_IDENTITY_PROVIDER` (output `workload_identity_provider`), `GCP_PLAN_SERVICE_ACCOUNT` and `GCP_APPLY_SERVICE_ACCOUNT` (from `service_accounts`, the plan and apply accounts), and the three `TF_VAR_...` values as repository **secrets**. From then on the pipeline plans pull requests, applies after your approval and checks for drift every week.
 
 ### A4. Put the secrets in
 OpenTofu only created empty entries ([infrastructure](infrastructure.md), INF-3). You add the values. Never put them in the repository, in a chat or in an email.

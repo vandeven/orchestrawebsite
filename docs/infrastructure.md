@@ -102,5 +102,13 @@ Inputs are the variables, validated with `validation` blocks in `variables.tf` (
 ## Open questions
 - Does Dependabot update OpenTofu providers through its `terraform` ecosystem, or is there an `opentofu` ecosystem by now? This is checked when the first `infra/` files exist; the check in UPD-1 covers either.
 
+## Differences from the first version of this document (decided while writing `infra/`)
+- **Backups are Firestore's own scheduled backups** (a weekly schedule kept 30 days, `google_firestore_backup_schedule`), not exports to a bucket of ours. They meet the same goal (weekly, gone after 30 days, LEG-4) with no Cloud Scheduler and no backup bucket that could be opened by mistake (HOS-10, HRD-14).
+- **The images bucket uses `roles/storage.legacyObjectReader` for everyone**, not `roles/storage.objectViewer`: the viewer role can list the bucket, and HOS-22 says nobody may browse it.
+- **The policy checks are OpenTofu tests and a shell script**, not Conftest and OPA: `infra/tests/policy.tftest.hcl` runs against a fake provider and `infra/tests/static-policies.sh` checks what is not there. They are native, need no extra tool, and are run by the pipeline before every `apply` (INF-8).
+- **Personal details are not in `prod.tfvars`** because the repository is public: the alert address, the master email and the billing account come from `TF_VAR_...` environment variables (GitHub secrets for the pipeline).
+- **The master account is set up at startup for now** (`master_setup_on_start`), because the once-per-deployment job (HOS-19) does not exist yet. Remove it when the job exists.
+- **The Cloud Run jobs** for the master setup and for migrations are not defined yet; they need the application to have a job mode.
+
 ## Status
 Draft
