@@ -96,6 +96,8 @@ class MasterAccountSetupTest {
     private final InMemoryStorage storage = new InMemoryStorage();
     private final Argon2PasswordHasher hasher = new Argon2PasswordHasher(PEPPER, 4, 3_000);
     private final MasterAccountSetup setup = new MasterAccountSetup();
+    private final List<org.example.website.audit.api.AuditEntry> audited =
+            new java.util.ArrayList<>();
 
     MasterAccountSetupTest() {
         storage.config = config;
@@ -104,6 +106,7 @@ class MasterAccountSetupTest {
         setup.sessions = storage;
         setup.hasher = hasher;
         setup.config = config;
+        setup.audit = audited::add;
         setup.clock = Clock.fixed(Instant.parse("2026-11-18T10:00:00Z"), ZoneOffset.UTC);
     }
 
@@ -114,6 +117,24 @@ class MasterAccountSetupTest {
         assertEquals(Role.MASTER, master.role());
         assertTrue(hasher.verify("FAKE-NOT-A-SECRET-master-one", master.passwordHash()));
         assertFalse(master.passwordHash().contains("FAKE-NOT-A-SECRET"));
+    }
+
+    @Test
+    void theResultOfTheSetupIsAuditedEveryTime() {
+        // LGG-9: the master account setup is part of the audit trail
+        setup.ensureMasterAccount();
+        setup.ensureMasterAccount();
+        config.masterPassword = "FAKE-NOT-A-SECRET-master-two";
+        setup.ensureMasterAccount();
+        assertEquals(
+                List.of("created", "unchanged", "updated"),
+                audited.stream().map(a -> a.details().get("outcome")).toList());
+        for (var entry : audited) {
+            assertEquals("master.setup", entry.action().code());
+            assertEquals("success", entry.result().code());
+            assertEquals("master@example.test", entry.actor().email());
+            assertEquals("MASTER", entry.actor().role());
+        }
     }
 
     @Test

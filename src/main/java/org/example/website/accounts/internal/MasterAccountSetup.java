@@ -6,6 +6,9 @@ import java.time.Clock;
 import java.util.UUID;
 import org.example.website.accounts.api.AccountsRules;
 import org.example.website.accounts.api.Role;
+import org.example.website.audit.api.AuditAction;
+import org.example.website.audit.api.AuditEntry;
+import org.example.website.audit.api.AuditTrail;
 import org.jboss.logging.Logger;
 
 /**
@@ -22,6 +25,7 @@ class MasterAccountSetup {
     @Inject PasswordHasher hasher;
     @Inject AccountsConfig config;
     @Inject Clock clock;
+    @Inject AuditTrail audit;
 
     void ensureMasterAccount() {
         String email = AccountsRules.normalizeEmail(config.masterEmail());
@@ -37,7 +41,7 @@ class MasterAccountSetup {
 
         var existing = users.findByEmail(email);
         if (existing.isEmpty()) {
-            users.insertIfEmailFree(
+            UserRecord created =
                     new UserRecord(
                             UUID.randomUUID(),
                             email,
@@ -45,8 +49,10 @@ class MasterAccountSetup {
                             hasher.hash(password),
                             clock.instant(),
                             null,
-                            null));
+                            null);
+            users.insertIfEmailFree(created);
             LOG.info("Master account setup: created");
+            audited(created, "created");
             return;
         }
         UserRecord master = existing.get();
@@ -56,6 +62,7 @@ class MasterAccountSetup {
                         && !hasher.needsRehash(master.passwordHash());
         if (master.role() == Role.MASTER && samePassword) {
             LOG.info("Master account setup: already up to date");
+            audited(master, "unchanged");
             return;
         }
         users.update(
@@ -66,5 +73,17 @@ class MasterAccountSetup {
             sessions.deleteAllForUser(master.id()); // a new password ends the old sessions
         }
         LOG.info("Master account setup: updated");
+        audited(master, "updated");
+    }
+
+    /** The result of the setup is part of the audit trail (LGG-9). */
+    private void audited(UserRecord master, String outcome) {
+        audit.record(
+                new AuditEntry(
+                        AuditAction.MASTER_SETUP,
+                        new AuditEntry.Person(master.id(), master.email(), Role.MASTER.name()),
+                        null,
+                        AuditEntry.Result.SUCCESS,
+                        java.util.Map.of("outcome", outcome)));
     }
 }

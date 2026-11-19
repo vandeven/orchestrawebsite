@@ -23,6 +23,7 @@ import jakarta.ws.rs.PUT;
 import java.util.List;
 import java.util.Map;
 import org.example.website.platform.api.Access;
+import org.example.website.platform.api.DestroysData;
 import org.example.website.platform.api.Destructive;
 import org.jboss.resteasy.reactive.RestForm;
 
@@ -185,4 +186,39 @@ class ArchitectureTest {
                                 }
                             })
                     .allowEmptyShould(true); // there are no destructive endpoints yet
+
+    /**
+     * ARC-17: a web method that calls an operation that destroys data or changes rights must be
+     * annotated with {@code @Destructive}, so the server refuses it without a confirmation.
+     */
+    @ArchTest
+    static final ArchRule webMethodsThatDestroyDataAreDestructive =
+            methods()
+                    .that()
+                    .areDeclaredInClassesThat()
+                    .resideInAPackage("..web..")
+                    .should(
+                            new ArchCondition<JavaMethod>(
+                                    "be @Destructive when they call an operation marked @DestroysData") {
+                                @Override
+                                public void check(JavaMethod method, ConditionEvents events) {
+                                    boolean destroys =
+                                            method.getMethodCallsFromSelf().stream()
+                                                    .anyMatch(call ->
+                                                            call.getTarget()
+                                                                    .resolveMember()
+                                                                    .map(target ->
+                                                                            target.isAnnotatedWith(
+                                                                                    DestroysData
+                                                                                            .class))
+                                                                    .orElse(false));
+                                    if (destroys && !method.isAnnotatedWith(Destructive.class)) {
+                                        events.add(
+                                                SimpleConditionEvent.violated(
+                                                        method,
+                                                        method.getFullName()
+                                                                + " destroys data but is not @Destructive"));
+                                    }
+                                }
+                            });
 }

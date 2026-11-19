@@ -8,7 +8,11 @@ import java.util.Optional;
 import org.example.website.accounts.api.AccountsRules;
 import org.example.website.accounts.api.LoginResult;
 import org.example.website.accounts.api.LoginService;
+import org.example.website.accounts.api.Role;
 import org.example.website.accounts.api.UserSummary;
+import org.example.website.audit.api.AuditAction;
+import org.example.website.audit.api.AuditEntry;
+import org.example.website.audit.api.AuditTrail;
 import org.example.website.platform.api.LogSafe;
 import org.jboss.logging.Logger;
 
@@ -22,6 +26,7 @@ class LoginServiceImpl implements LoginService {
     @Inject PasswordHasher hasher;
     @Inject Clock clock;
     @Inject LoginThrottle throttle;
+    @Inject AuditTrail audit;
 
     /** A hash of a random password, checked when there is nothing real to check (LOG-13). */
     private volatile String dummyHash;
@@ -69,6 +74,7 @@ class LoginServiceImpl implements LoginService {
         sessions.save(
                 new SessionRecord(
                         SessionTokens.hash(token), updated.id(), now.plus(SESSION_LIFETIME)));
+        auditAdminSession(AuditAction.AUTH_LOGIN, updated.summary());
         return new LoginResult.LoggedIn(token, updated.summary());
     }
 
@@ -99,7 +105,24 @@ class LoginServiceImpl implements LoginService {
     @Override
     public void logout(String sessionToken) {
         if (SessionTokens.looksValid(sessionToken)) {
+            userForSession(sessionToken)
+                    .ifPresent(user -> auditAdminSession(AuditAction.AUTH_LOGOUT, user));
             sessions.delete(SessionTokens.hash(sessionToken));
+        }
+    }
+
+    /**
+     * Logins and logouts of admins and the master are audited (LGG-9); those of members are not.
+     */
+    private void auditAdminSession(AuditAction action, UserSummary user) {
+        if (user.role() == Role.ADMIN || user.role() == Role.MASTER) {
+            audit.record(
+                    new AuditEntry(
+                            action,
+                            new AuditEntry.Person(user.id(), user.email(), user.role().name()),
+                            null,
+                            AuditEntry.Result.SUCCESS,
+                            java.util.Map.of()));
         }
     }
 

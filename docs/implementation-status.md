@@ -136,19 +136,44 @@ Decisions for this slice:
 - **Common passwords list:** 1,197 entries, from the NCSC list in SecLists (MIT). Some entries are odd (a `$HEX[...]` form and wrongly encoded text); they do no harm. The first attempt to build the file used a file that had been overwritten by a licence text; it was caught by checking the contents and redone.
 - **Not yet:** the notice that a password was changed is the My account slice (ACC-7). Admins resending a link and adding users (USR-5, USR-6, USR-24) are the user management slice; the service methods exist.
 
+### Slice 4: user management (USR-1 to USR-13, USR-22 to USR-24) and the audit trail
+
+| Item | Requirements | Status | Where | Tests |
+|------|--------------|--------|-------|-------|
+| The page `/users` for admins and the master (a member gets the 403 page, a visitor is sent to the login page) | USR-1 | Done | `accounts/web/UserManagementResource`, `templates/accounts/users.html` | `UserManagementWebTest` |
+| **The rules, in one place:** members can do nothing; admins can send mail to members and admins, remove members and make members admin; only the master can remove admins and take away admin rights; nobody can touch the master. The overview only shows what the actor may do, and the server checks every request again, also when it is sent directly | USR-6, USR-9 to USR-13 | Done | `accounts/internal/UserRules`, `UserManagementImpl` | `UserRulesTest` (all 9 role combinations for all 4 actions, written out), `UserManagementTest`, `UserManagementWebTest` (requests the page never offers are refused and change nothing) |
+| The overview: email, role, date added, last login ("Never logged in"), date of the last recovery email, in Amsterdam time; sorted on every column in both directions and filtered by role; unknown sort or filter values are refused (400) | USR-7, USR-8, USR-24 | Done | `UserManagementResource`, `platform/api/AmsterdamTime` | `UserManagementTest`, `UserManagementWebTest`, `AmsterdamTimeTest` (summer and winter time, both clock change nights, near midnight) |
+| Adding a user: a member without a password, the recovery email sent at once; an address that has an account gets a clear message; when the email fails the account exists and the admin sees an error | USR-2 to USR-5, USR-24 | Done | `UserManagementImpl.add` | `UserManagementTest`, `UserManagementWebTest` |
+| Sending the email again (a button, no confirmation because it is reversible); not for the master | USR-6 | Done | `UserManagementImpl.resendRecovery` | same |
+| Removing a user, making an admin and taking away admin rights: each with a confirmation (a confirmation page without JavaScript, the shared dialog with it), `@Destructive` on the POST, effect at once (sessions and recovery links removed, role read on every request) | USR-9, USR-10, USR-12, plan: Confirming destructive actions, ARC-17, DES-13 | Done | `UserManagementResource`, `templates/accounts/user-confirm.html`, `js/confirm-dialog.js` | `UserManagementWebTest` (the confirmation page names the user and has Cancel first; no confirmation, `confirm=no` or a query string value does nothing; a removed user and a demoted admin lose access on the next request), `UserManagementTest` |
+| The shared confirmation dialog: a native `<dialog>` with a title and description for screen readers, Cancel first with the focus, the action button warning-styled and named, Escape and Cancel close it, the focus returns to the link, the same question as the confirmation page | DES-13 | Done (not clicked in a real browser) | `js/confirm-dialog.js`, `base.css` | `UserManagementWebTest` (markup and script checked, not run) |
+| IDs in addresses must be UUIDs, otherwise 404 before anything is looked up | HRD-3 | Done | `UserManagementResource.userId` | `UserManagementWebTest` |
+| **The `audit` component:** a fixed list of actions, an entry with the actor and the target (ID, email, role), the result `success`, `denied` or `failed`, details such as the old and new role, `audit=true`, values cleaned of line breaks and cut at 200 characters; written by the services, also for refused attempts, once per action | LGG-9 to LGG-13, ARC-12 | Done for user management, admin logins and logouts, and the master setup | `audit/api`, `audit/internal/LogAuditTrail`, `UserManagementImpl`, `LoginServiceImpl`, `MasterAccountSetup` | `UserManagementTest` (every action: success, denied and failed; both people; the real action name for a refused member), `MasterAccountSetupTest` |
+| Table on narrow screens as cards, one page width for header, content and footer, sorting also in the form | DES-7 | Done | `base.css`, `tokens.css`, `users.html` | `StylesheetTest`, `UserManagementWebTest`; seen in a headless browser at phone and desktop width |
+| An architecture rule: a web method that calls an operation marked `@DestroysData` must be `@Destructive` | ARC-17 | Done | `platform/api/DestroysData`, `ArchitectureTest` | `ArchitectureTest` |
+
+Decisions and findings for this slice:
+- **Wrong weekday in the plan:** the example "Saturday 13 December 2026, 20:00" in `PLAN.md` was wrong, 13 December 2026 is a Sunday. The code was right and a test caught it. The text in `PLAN.md` and `overview.html` is corrected; **`docs/overview.pdf` still has the old text** and has to be regenerated from the HTML.
+- **Looking at the pages found two layout problems the tests could not see:** the page was only 40rem wide, so the nine admin menu items wrapped into three rows and the table was cut off; and on a phone the table was unusable. Now header, content and footer share a 64rem width, text and forms stay at a readable line length, and the table becomes cards under 40em.
+- **The audit trail records email addresses** of admins and users, as `LGG-10` says, unlike the rest of the logs (`LGG-5`), which only have hashes.
+- **Removing a user also removes the stored sessions and links**, not only ignores them. This is not visible from outside (a session of a missing user never works), so the test looks into the stores; a planted bug that skipped the cleanup was not caught until that check was added.
+- **Messages after an action** come from a fixed list selected by a key in the address (`?notice=removed`); a value that is not on the list shows nothing.
+- **Admins cannot remove themselves** (an admin is not a member), and nobody can change the master. There is no "last admin" check because the master always exists.
+- Planted bugs that the new tests catch: admins may remove or demote admins, sessions not ended on removal, refused attempts not audited.
+
 ### Phase 1: left out on purpose (to do in the next slices)
 
 | Item | Why it waits |
 |------|--------------|
 | The Firestore stores for users and sessions, the session TTL policy, the emulator and the seed command (HOS-3, LOG-11) | Next slice after the limits; until then everything is in memory |
-| User management pages: overview, add, remove, make admin, remove admin, the confirmation steps, the recovery email status (USR-1, USR-5 to USR-13, USR-22 to USR-24) | Next slices |
 | My account page: change password, end other sessions, the "password changed" email (ACC-1 to ACC-9) | After user management |
 | The master account job that runs once per deployment (HOS-19, USR-15). In production the master is only set up when `ACCOUNTS_MASTER_SETUP_ON_START=true`, so **in production nobody can log in until the job exists** | Needs `infra/` and the deployment workflow |
-| The audit trail for logins and admin actions (LGG-9 to LGG-12, HRD-9: the alert on master logins); the `audit` component does not exist yet | Next slices |
+| The rest of the audit trail: song, file, text and image actions (LGG-9) come with those features; the ready-made log queries for the owner (LGG-15); the log-based alerts, among them the one on master logins (HRD-9, LGG-16); and the audit entry for a refused request to an admin page, which is only logged as a warning because `platform` cannot call `audit` (LGG-11) | Come with those features and with `infra/` |
 | A token in every form on top of the origin check (LOG-14) | Comes with the first logged-in form |
 | `Cache-Control: public, max-age=60` for anonymous visitors of public pages (plan: Layout and navigation) | Comes with the public pages |
 | Brevo: a real sending test, the sender domain with SPF, DKIM and DMARC, the deliverability check (HOS-21, DES-12, open items 1 and 9) | Needs the domain and the Brevo account |
 | The cookies page lists the recovery cookie (LEG-6) | The legal pages are built in phase 2; the requirement is already updated |
+| The confirmation dialog and the phone menu have not been clicked in a real browser; the browser tests (Playwright) cover that when they exist | No browser tests yet |
 | Accessibility checks with axe and the end-to-end test (log in, member page, log out) in a real browser (LOG-1 to LOG-9, Automatic tests) | Playwright and axe are not set up yet |
 | The test that the counters work across two real application instances (LOG-13) | Needs the Firestore store. Today it is only shown with two services that share one store |
 | The log-based alert that emails the owner on the "ALERT:" log line, and on the visitor limit (LOG-13, LGG-14) | Needs `infra/` |

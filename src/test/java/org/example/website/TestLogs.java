@@ -16,6 +16,10 @@ public final class TestLogs {
                 new Handler() {
                     @Override
                     public void publish(LogRecord record) {
+                        if (record instanceof org.jboss.logmanager.ExtLogRecord extended) {
+                            extended.copyAll(); // keep the logging context: it is cleared right
+                            // after the call
+                        }
                         records.add(record);
                     }
 
@@ -49,5 +53,20 @@ public final class TestLogs {
             text.append(' ').append(record.getThrown());
         }
         return text.toString();
+    }
+
+    /** The logging context (MDC) of a record: where the audit fields and the request ID are. */
+    public static java.util.Map<String, String> context(LogRecord record) {
+        return record instanceof org.jboss.logmanager.ExtLogRecord extended
+                ? extended.getMdcCopy()
+                : java.util.Map.of();
+    }
+
+    /** The context of every audit entry among the records (marked with audit=true). */
+    public static List<java.util.Map<String, String>> audits(List<LogRecord> records) {
+        return records.stream()
+                .map(TestLogs::context)
+                .filter(mdc -> "true".equals(mdc.get("audit")))
+                .toList();
     }
 }

@@ -118,4 +118,26 @@ class StylesheetTest {
         String css = DesignTokensTest.css("base.css");
         assertTrue(css.contains(".skip-link:focus"));
     }
+
+    @Test
+    void tablesBecomeCardsOnNarrowScreens() throws IOException {
+        String css = DesignTokensTest.css("base.css");
+        assertTrue(
+                Pattern.compile(
+                                "@media \\(max-width: 40em\\)\\s*\\{[^@]*\\.table-stack td\\[data-label\\]::before",
+                                Pattern.DOTALL)
+                        .matcher(css)
+                        .find(),
+                "a label in front of every value, so nothing needs sideways scrolling");
+    }
+
+    @Test
+    void theHeaderContentAndFooterShareOnePageWidth() throws IOException {
+        String css = DesignTokensTest.css("base.css");
+        assertTrue(css.contains("var(--page-width)"));
+        assertTrue(DesignTokensTest.css("tokens.css").contains("--page-width"));
+        assertTrue(
+                css.contains(".site-main > :not(.table-wrap):not(dialog)"),
+                "text keeps a readable line length");
+    }
 }

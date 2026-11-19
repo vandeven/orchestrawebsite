@@ -1,0 +1,128 @@
+{#include site/layout}
+  {#title}User management - {cdi:site.name}{/title}
+  {#description}Add, view and remove users.{/description}
+  {#content}
+    <h1>User management</h1>
+    {#if notice}
+    <div class="alert {#if notice.error}alert-error{#else}alert-success{/if}" role="{#if notice.error}alert{#else}status{/if}">
+      <span class="alert-title">{#if notice.error}Error{#else}Done{/if}</span>
+      {notice.text}
+    </div>
+    {/if}
+
+    <h2>Add a user</h2>
+    <p>The new user gets the member role and receives an email with a link to choose their own password.</p>
+    <form method="post" action="/users" novalidate>
+      <div class="field">
+        <label for="email">Email address</label>
+        <input type="email" id="email" name="email" value="{email}" maxlength="{emailMax}" required
+               autocomplete="off" autocapitalize="none" spellcheck="false"
+               {#if emailError}aria-invalid="true" aria-describedby="email-error"{/if}>
+        {#if emailError}<p class="field-error" id="email-error">{emailError}</p>{/if}
+      </div>
+      <div class="button-row"><button type="submit" class="button">Add user</button></div>
+    </form>
+
+    <h2>Users</h2>
+    <form method="get" action="/users" class="filter-form">
+      <div class="field">
+        <label for="role">Show</label>
+        <select id="role" name="role">
+          <option value="all"{#if roleFilter == 'all'} selected{/if}>All roles</option>
+          <option value="member"{#if roleFilter == 'member'} selected{/if}>Members</option>
+          <option value="admin"{#if roleFilter == 'admin'} selected{/if}>Admins</option>
+          <option value="master"{#if roleFilter == 'master'} selected{/if}>Master</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="sort">Sort by</label>
+        <select id="sort" name="sort">
+          <option value="email"{#if sortKey == 'email'} selected{/if}>Email address</option>
+          <option value="role"{#if sortKey == 'role'} selected{/if}>Role</option>
+          <option value="added"{#if sortKey == 'added'} selected{/if}>Date added</option>
+          <option value="last-login"{#if sortKey == 'last-login'} selected{/if}>Last login</option>
+          <option value="recovery-email"{#if sortKey == 'recovery-email'} selected{/if}>Last recovery email</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="dir">Order</label>
+        <select id="dir" name="dir">
+          <option value="asc"{#if dirKey == 'asc'} selected{/if}>Ascending</option>
+          <option value="desc"{#if dirKey == 'desc'} selected{/if}>Descending</option>
+        </select>
+      </div>
+      <div class="field"><button type="submit" class="button button-secondary">Apply</button></div>
+    </form>
+    <div class="table-wrap">
+      <table class="table-stack" role="table">
+        <caption class="sr-only">Users, sorted by {sortKey} ({dirKey})</caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            {#for heading in headings}
+            <th scope="col" role="columnheader" aria-sort="{heading.ariaSort}"><a href="{heading.href}">{heading.label}</a></th>
+            {/for}
+            <th scope="col" role="columnheader">Actions</th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          {#for row in rows}
+          <tr role="row">
+            <th scope="row" role="rowheader">{row.email}</th>
+            <td role="cell" data-label="Role">{row.role}</td>
+            <td role="cell" data-label="Added">{row.added}</td>
+            <td role="cell" data-label="Last login">{row.lastLogin}</td>
+            <td role="cell" data-label="Last recovery email">{row.recoveryEmail}</td>
+            <td role="cell" data-label="Actions">
+              <div class="table-actions">
+                {#if row.actions.resendRecovery}
+                <form method="post" action="/users/{row.id}/resend" class="inline-form">
+                  <button type="submit" class="button button-secondary" aria-label="Send the recovery email again to {row.email}">Send email again</button>
+                </form>
+                {/if}
+                {#if row.actions.makeAdmin}
+                <a class="button button-secondary" href="/users/{row.id}/make-admin"
+                   aria-label="Make {row.email} an admin"
+                   data-confirm data-confirm-title="Make admin" data-confirm-button="Make admin"
+                   data-confirm-action="/users/{row.id}/make-admin"
+                   data-confirm-text="{row.email} will get all admin rights at once: they can add and remove members and make members admins. Only the master can take admin rights away again.">Make admin</a>
+                {/if}
+                {#if row.actions.makeMember}
+                <a class="button button-secondary" href="/users/{row.id}/make-member"
+                   aria-label="Take away the admin rights of {row.email}"
+                   data-confirm data-confirm-title="Take away admin rights" data-confirm-button="Take away admin rights"
+                   data-confirm-action="/users/{row.id}/make-member"
+                   data-confirm-text="{row.email} becomes a member and loses access to the admin pages at once. You can make them an admin again later.">Take away admin rights</a>
+                {/if}
+                {#if row.actions.remove}
+                <a class="button button-danger" href="/users/{row.id}/remove"
+                   aria-label="Remove user {row.email}"
+                   data-confirm data-confirm-title="Remove user" data-confirm-button="Remove user"
+                   data-confirm-action="/users/{row.id}/remove"
+                   data-confirm-text="You are about to remove {row.email}. Their account and their sessions are deleted at once and they lose access. This cannot be undone.">Remove</a>
+                {/if}
+              </div>
+            </td>
+          </tr>
+          {#else}
+          <tr role="row"><td role="cell" colspan="6">No users match this filter.</td></tr>
+          {/for}
+        </tbody>
+      </table>
+    </div>
+
+    {#if hasActions}
+    <dialog id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-text">
+      <form method="post" action="/users">
+        <h2 id="confirm-title"></h2>
+        <p id="confirm-text"></p>
+        <input type="hidden" name="confirm" value="yes">
+        <div class="button-row">
+          <button type="button" class="button button-secondary" data-confirm-cancel autofocus>Cancel</button>
+          <button type="submit" class="button button-danger" data-confirm-submit></button>
+        </div>
+      </form>
+    </dialog>
+    {/if}
+  {/content}
+  {#scripts}<script src="/js/confirm-dialog.js"></script>{/scripts}
+{/include}

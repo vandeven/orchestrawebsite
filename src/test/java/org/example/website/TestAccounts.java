@@ -77,4 +77,9 @@ public class TestAccounts {
     public long emailsTo(String email) {
         return outbox.sent().stream().filter(e -> e.to().equalsIgnoreCase(email)).count();
     }
+
+    /** The ID of the master account. */
+    public java.util.UUID masterId() {
+        return ((LoginResult.LoggedIn) login.login(MASTER_EMAIL, MASTER_PASSWORD)).user().id();
+    }
 }

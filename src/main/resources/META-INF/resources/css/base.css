@@ -114,7 +114,7 @@ svg {
 .site-footer-inner,
 .site-main {
   width: 100%;
-  max-width: calc(var(--content-width) + 2 * var(--space-4));
+  max-width: calc(var(--page-width) + 2 * var(--space-4));
   margin-inline: auto;
   padding-inline: var(--space-4);
 }
@@ -135,6 +135,11 @@ svg {
 
 .site-main:focus {
   outline: none; /* the skip link moves focus here; it is not an interactive element */
+}
+
+/* Text and forms keep a readable line length; only tables use the whole width of the page */
+.site-main > :not(.table-wrap):not(dialog) {
+  max-width: var(--content-width);
 }
 
 .site-brand {
@@ -387,6 +392,45 @@ textarea:disabled {
   margin: var(--space-5) 0 0;
 }
 
+/* Text for screen readers only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Rows of buttons in tables, and small forms next to each other */
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.table-actions .button {
+  white-space: nowrap;
+}
+
+.inline-form {
+  display: inline;
+  margin: 0;
+}
+
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3);
+}
+
+th a {
+  color: inherit;
+}
+
 /* Messages: an icon-free label in words, not only a color (DES-8) */
 .alert {
   margin: 0 0 var(--space-4);
@@ -436,6 +480,49 @@ td {
 
 th {
   font-weight: 700;
+}
+
+/*
+ * On narrow screens a table with a label on every value becomes a list of cards, so nothing needs
+ * sideways scrolling. The column headings are hidden then; the page offers the same sorting in a
+ * form. The table keeps its roles in the markup, so it is still read as a table.
+ */
+@media (max-width: 40em) {
+  .table-stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .table-stack,
+  .table-stack tbody,
+  .table-stack tr,
+  .table-stack th,
+  .table-stack td {
+    display: block;
+  }
+
+  .table-stack tr {
+    margin: 0 0 var(--space-4);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+
+  .table-stack th,
+  .table-stack td {
+    padding: var(--space-1) 0;
+    border: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .table-stack td[data-label]::before {
+    content: attr(data-label) ": ";
+    font-weight: 700;
+  }
 }
 
 /* Cards and dialogs */
