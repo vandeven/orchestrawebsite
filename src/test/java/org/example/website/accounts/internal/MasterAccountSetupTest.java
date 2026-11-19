@@ -21,7 +21,7 @@ class MasterAccountSetupTest {
     private static final String PEPPER = "FAKE-NOT-A-SECRET-pepper-0123456789abcdef-ABCDEF";
 
     /** The configuration with values that tests can change. */
-    private static final class Config implements AccountsConfig {
+    static final class Config implements AccountsConfig {
         String masterEmail = "master@example.test";
         String masterPassword = "FAKE-NOT-A-SECRET-master-one";
         boolean inMemory = true;

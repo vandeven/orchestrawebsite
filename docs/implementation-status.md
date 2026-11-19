@@ -74,7 +74,7 @@ On 2026-11-17 the packaged application (`java -jar target/quarkus-app/quarkus-ru
 
 ## Phase 1: Accounts
 
-> **Not safe to deploy yet.** Login and its rate limits exist, but users, sessions and the login counters are only stored in memory (the Firestore stores do not exist), and in production nobody can log in because the master account job does not exist. The application refuses to start in production unless `ACCOUNTS_ALLOW_IN_MEMORY_STORAGE` is set, which only tests, development and the container smoke test do. Do not put this on a public address before the Firestore stores and the master job are built.
+> **Not deployed yet.** The Firestore stores exist (slice 6) and are tested against the emulator, but they have **never run against the real Firestore**, and the real application is not deployed: Cloud Run still shows the sample page. Until the master account job exists the master is set up at startup (`ACCOUNTS_MASTER_SETUP_ON_START`). Put the real application on a public address only after the first deployment has been tried and the login checked by hand.
 
 ### Slice 1: passwords, users, sessions, login and logout
 
@@ -177,11 +177,27 @@ Decisions and findings:
 - **Planted bugs the new tests catch:** an extended session, a wrong current password that is not counted, the master not refused, and the old session token that stays valid.
 - **Not checked by eye:** the member version of the page (with the form) was not looked at in a browser, only the master version; the form uses the same field markup as the login and set new password pages. A small style for definition lists was added after looking at the master page.
 
+### Slice 6: the Firestore stores (ARC-5, ARC-6, HOS-3, LOG-11)
+
+| What | Requirements | Status | Where | Tests |
+|------|--------------|--------|-------|-------|
+| One database connection for all components: the official Firestore client, created when first used, a time limit per call (10 s), and any failure or delay becomes `ServiceUnavailable` (the 503 page) with only the kind of failure in the log | ARC-5, ARC-8, ARC-14, HOS-24 | Done | `platform/api/Database`, `platform/internal/FirestoreDatabase` | the stores tests |
+| Users: one document per user, plus one small document per address (named by a hash of the address) written in the same transaction, which is what keeps addresses unique even when two people add the same one at the same moment | USR-1, ARC-5 | Done | `accounts/internal/FirestoreUsers` | `FirestoreStoresTest` (6 parallel inserts create one user) |
+| Sessions and recovery links: documents named by the hash of the token, with `expiresAt` (which Firestore also uses to clean up, possibly a day late, so the moment is still checked on every use); deleting everything of one user in batches, also for more than 400 | LOG-10, LOG-11, USR-19 | Done | `FirestoreSessions`, `FirestoreRecoveryTokens`, `FirestoreFields` | 450 sessions deleted, the other user's kept |
+| The login counters: a transaction per change (20 attempts), shared by all instances, expired counters count as empty | LOG-13 | Done | `FirestoreAttempts` | 8 threads at once all count; expiry |
+| Choosing the store: Firestore, unless `accounts.allow-in-memory-storage` is on (tests, development, the smoke test) | ARC-6 | Done | `AccountsStorage` | existing tests unchanged |
+| The same 18 test cases run against the in-memory store and the Firestore emulator, so the fake and the real one cannot differ; the pipeline starts the emulator; `scripts/firestore-emulator.sh` starts it locally | ARC-6 | Done | `AccountStoresContract`, `InMemoryStoresTest`, `FirestoreStoresTest`, `scripts/firestore-emulator.sh`, `.github/workflows/ci.yml` | planted bugs: no address check and trusting expired counters: 3 tests failed |
+
+- **Checked by hand with the packaged container** (production mode, no in-memory switch, against the emulator): the log says `storage: firestore`, the master account is created at startup, logging in gives the redirect to `/members` and a session cookie, a wrong password is refused, and the database holds the session, the three counters and the address document. The names of the counter and address documents are hashes, no address. The smoke test passes with the library in the image (75 MB application).
+- **Never run against the real Firestore.** Only the emulator. Differences are possible, in particular in the retry behaviour under heavy contention, the speed of a call and the permissions of the service account (`roles/datastore.user`).
+- **An update replaces the whole user.** Two changes to the same user at the same moment (a login and a role change) can lose one of them, as before with the in-memory store. Not an issue at this size; a field-level update can come later.
+- **Collections:** `users`, `userEmails`, `sessions`, `recoveryTokens`, `attempts`, each document with `schemaVersion` 1. The queries only use automatic single-field indexes, so `infra/` needs no index.
+
 ### Phase 1: left out on purpose (to do in the next slices)
 
 | Item | Why it waits |
 |------|--------------|
-| The Firestore stores for users and sessions, the session TTL policy, the emulator and the seed command (HOS-3, LOG-11) | Next slice after the limits; until then everything is in memory |
+| The seed command with fake users (the emulator exists now, slice 6) | Comes with the deployment work |
 | The master account job that runs once per deployment (HOS-19, USR-15). In production the master is only set up when `ACCOUNTS_MASTER_SETUP_ON_START=true`, so **in production nobody can log in until the job exists** | Needs `infra/` and the deployment workflow |
 | The rest of the audit trail: song, file, text and image actions (LGG-9) come with those features; the ready-made log queries for the owner (LGG-15); the log-based alerts, among them the one on master logins (HRD-9, LGG-16); and the audit entry for a refused request to an admin page, which is only logged as a warning because `platform` cannot call `audit` (LGG-11) | Come with those features and with `infra/` |
 | A token in every form on top of the origin check (LOG-14) | Comes with the first logged-in form |
@@ -190,7 +206,7 @@ Decisions and findings:
 | The cookies page lists the recovery cookie (LEG-6) | The legal pages are built in phase 2; the requirement is already updated |
 | The confirmation dialog and the phone menu have not been clicked in a real browser; the browser tests (Playwright) cover that when they exist | No browser tests yet |
 | Accessibility checks with axe and the end-to-end test (log in, member page, log out) in a real browser (LOG-1 to LOG-9, Automatic tests) | Playwright and axe are not set up yet |
-| The test that the counters work across two real application instances (LOG-13) | Needs the Firestore store. Today it is only shown with two services that share one store |
+| The test that the counters work across two real application instances (LOG-13) | The store supports it (a transaction per change, tested with 8 threads); two real instances are not started in a test |
 | The log-based alert that emails the owner on the "ALERT:" log line, and on the visitor limit (LOG-13, LGG-14) | Needs `infra/` |
 | Recovery requests and password changes counting toward the same limits (ACC-4, HRD-7) | Come with those pages |
 | The password is not normalized (Unicode NFKC) before hashing | Decide together with the set new password page |

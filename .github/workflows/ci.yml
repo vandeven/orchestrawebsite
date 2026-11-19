@@ -28,9 +28,15 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
+      # The adapter tests of the Firestore stores run against the real emulator (ARC-6). It is the
+      # same image and digest as scripts/firestore-emulator.sh.
+      - name: Start the Firestore emulator
+        run: bash scripts/firestore-emulator.sh start
       # Enforcer rules, compiler warnings as errors, tests, architecture tests, formatting,
       # SpotBugs with Find Security Bugs and the 80% coverage rule
       - name: Verify
+        env:
+          FIRESTORE_EMULATOR_HOST: localhost:8086
         run: ./mvnw -B -ntp clean verify
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()

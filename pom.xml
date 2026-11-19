@@ -29,6 +29,9 @@
          Quarkus BOM has the same or a newer version (see docs/implementation-status.md). -->
     <jackson-bom.version>2.22.3</jackson-bom.version>
     <guava.version>33.7.2-jre</guava.version>
+    <!-- Versions of the Google Cloud client libraries that fit together (Firestore now, Cloud Storage
+         later). Imported after the Quarkus BOM, so where both manage a library Quarkus wins. -->
+    <google-cloud-libraries-bom.version>26.94.0</google-cloud-libraries-bom.version>
   </properties>
 
   <dependencyManagement>
@@ -55,6 +58,13 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>libraries-bom</artifactId>
+        <version>${google-cloud-libraries-bom.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -74,6 +84,11 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-logging-json</artifactId>
+    </dependency>
+    <!-- The database (ARC-5, HOS-3): the official Firestore client, created lazily (ARC-14) -->
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-firestore</artifactId>
     </dependency>
     <!-- Argon2id for the password hashes (LOG-16): pure Java, no native code, MIT-style license -->
     <dependency>

@@ -201,7 +201,7 @@ When the domain exists:
 - **Git**, **Java 21 or newer** (the code is built for Java 21; for example Temurin 21), and a browser. The Maven wrapper downloads Maven itself: use `./mvnw` in a Unix shell (Git Bash on Windows) or `mvnw.cmd` in PowerShell.
 - **Docker**, only to build and try the container image (B3).
 - **OpenTofu 1.13** and the **Google Cloud CLI**, only for `infra/` (A2, A3).
-- There is no Firestore or Cloud Storage emulator yet: the application uses in-memory stores in development and tests.
+- Docker also starts the **Firestore emulator** that the adapter tests of the stores use (B3). There is no Cloud Storage emulator yet. Development and most tests use in-memory stores, so the emulator is only needed for `FirestoreStoresTest`.
 
 ### B2. Run it locally
 ```
@@ -223,9 +223,12 @@ The script starts the image with fake settings and checks the cold start, the se
 
 ### B3. Test and check
 ```
+bash scripts/firestore-emulator.sh start         # once; needs Docker; "stop" removes it again
+export FIRESTORE_EMULATOR_HOST=localhost:8086    # in cmd: set FIRESTORE_EMULATOR_HOST=localhost:8086
 ./mvnw clean verify    # everything below, the same as the pipeline
 ./mvnw spotless:apply  # fixes the formatting
 ```
+Without `FIRESTORE_EMULATOR_HOST` the Firestore tests are skipped and the build passes without them; the pipeline always runs them. The emulator image is pinned by digest in `scripts/firestore-emulator.sh` (Dependabot does not see it: update the digest by hand now and then, and keep `scripts/firestore-emulator.sh` and the pipeline in step, they use the same script).
 `verify` runs: the Maven Enforcer rules (pinned versions), the compiler with warnings as errors, all tests, the architecture tests (ArchUnit), the formatting check, SpotBugs with Find Security Bugs, the SBOM, and the 80% coverage rule. **Always use `clean`**: a build that does not recompile can hide errors.
 - Architecture tests fail the build when a component reaches into another's `internal` package, a web class uses `internal`, an endpoint lacks `@Access`, or a web method that destroys data lacks `@Destructive` ([architecture](architecture.md)).
 - Browser tests (Playwright) and accessibility checks (axe) are not set up yet.
@@ -270,6 +273,8 @@ On Windows use the full path, for example `"C:\Program Files\Google\Chrome\Appli
 | Quarkus | 3.39.5 | `pom.xml` (the Quarkus platform) |
 | Maven | the wrapper's | `.mvn/wrapper/maven-wrapper.properties` |
 | Container base image | Temurin 21 JRE on Alpine, by digest | `Dockerfile` |
+| Firestore emulator image | by digest | `scripts/firestore-emulator.sh` |
+| Google Cloud client libraries | BOM 26.94.0 | `pom.xml` |
 | OpenTofu | 1.13 (at least 1.13.0, below 1.14) | `infra/versions.tf` |
 | Google provider | 8.12.0 | `infra/versions.tf` and `infra/.terraform.lock.hcl` |
 | GitHub Actions | by commit hash | `.github/workflows/` |

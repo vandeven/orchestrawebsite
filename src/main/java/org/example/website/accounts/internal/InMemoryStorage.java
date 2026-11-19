@@ -1,6 +1,7 @@
 package org.example.website.accounts.internal;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Typed;
 import jakarta.inject.Inject;
 import java.time.Clock;
 import java.time.Duration;
@@ -19,9 +20,9 @@ import org.jboss.logging.Logger;
  * The in-memory stores for tests and local work (ARC-6). They lose everything when the application
  * stops, so they are only used when {@code accounts.allow-in-memory-storage} is switched on, which
  * is the case for tests, development and the container smoke test, and never for a real deployment.
- * Until the Firestore stores exist, a production start without that switch fails.
  */
 @ApplicationScoped
+@Typed(InMemoryStorage.class) // reached through AccountsStorage, which chooses between this and Firestore
 class InMemoryStorage
         implements UserRepository, SessionRepository, AttemptStore, RecoveryTokenRepository {
 

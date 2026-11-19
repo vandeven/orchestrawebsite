@@ -33,7 +33,9 @@ class AccountsStartup {
                     "Invalid configuration, the application does not start: "
                             + String.join("; ", problems));
         }
-        LOG.info("Accounts configuration check passed");
+        LOG.infof(
+                "Accounts configuration check passed (storage: %s)",
+                config.allowInMemoryStorage() ? "in memory" : "firestore");
         if (config.masterSetupOnStart()) {
             masterSetup.ensureMasterAccount();
         }
