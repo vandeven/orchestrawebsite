@@ -45,7 +45,7 @@ Define all Google Cloud infrastructure as code in the repository, with **OpenTof
       - every resource is in `europe-west4` (HOS-3, HOS-11), Firestore has deletion protection (HRD-13)
       - Cloud Run: minimum instances 0, maximum at most 3, 512 MiB, no public access to anything else than the service itself (HOS-23)
       - the member files bucket has public access prevention, no `allUsers` or `allAuthenticatedUsers`, and soft delete of 7 days (HOS-12, HOS-16); the images bucket only gives everyone the object reader role `legacyObjectReader`, which cannot list the bucket (HRD-12, HOS-22)
-      - no service account keys exist, the default compute service account is not used, and the Workload Identity Federation only accepts this repository and the main branch (HRD-12)
+      - no service account keys exist, the default compute service account is not used, and the Workload Identity Federation only accepts this repository and the main branch (HRD-12). The identity is matched with the numeric IDs of the owner and the repository that GitHub puts in every job (`OWNER@ID/REPOSITORY@ID`), so a renamed or re-created repository cannot take it over
       - the backup schedule keeps backups for 30 days (HOS-10, HRD-14)
       - Artifact Registry keeps 5 images (HOS-25), the uptime check and its alert exist (HOS-29), the required log alerts exist (LGG-16), and the budget alert exists (HOS-9)
       - none of the resource types with a fixed monthly cost in HOS-26 (load balancers, Cloud CDN, Cloud SQL, VPC connectors, Redis, reserved IP addresses), and at most the expected number of secrets (HOS-27)

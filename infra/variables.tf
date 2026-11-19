@@ -29,6 +29,26 @@ variable "github_repository" {
   }
 }
 
+variable "github_owner_id" {
+  description = "The numeric ID of the GitHub account or organisation that owns the repository. GitHub puts it in the identity of every job (OWNER@ID/REPOSITORY@ID), and it makes the login immune to a renamed or re-created repository (HRD-12). Find it with: gh api repos/OWNER/REPOSITORY --jq .owner.id"
+  type        = string
+
+  validation {
+    condition     = can(regex("^[0-9]+$", var.github_owner_id))
+    error_message = "Use the number only."
+  }
+}
+
+variable "github_repository_id" {
+  description = "The numeric ID of the repository. Find it with: gh api repos/OWNER/REPOSITORY --jq .id"
+  type        = string
+
+  validation {
+    condition     = can(regex("^[0-9]+$", var.github_repository_id))
+    error_message = "Use the number only."
+  }
+}
+
 variable "site_name" {
   description = "The name of the orchestra, shown on pages and in email (DES-1)."
   type        = string

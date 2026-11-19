@@ -52,13 +52,15 @@ override_resource {
 }
 
 variables {
-  project_id         = "orchestrawebsite"
-  region             = "europe-west4"
-  state_bucket       = "example-state-bucket"
-  github_repository  = "owner/repository"
-  alert_email        = "owner@example.test"
-  master_email       = "master@example.test"
-  billing_account_id = "012345-6789AB-CDEF01"
+  project_id           = "orchestrawebsite"
+  region               = "europe-west4"
+  state_bucket         = "example-state-bucket"
+  github_repository    = "owner/repository"
+  github_owner_id      = "111"
+  github_repository_id = "222"
+  alert_email          = "owner@example.test"
+  master_email         = "master@example.test"
+  billing_account_id   = "012345-6789AB-CDEF01"
 }
 
 # --- Cloud Run (HOS-2, HOS-23, INF-13) ---
@@ -273,19 +275,19 @@ run "the_pipeline_logs_in_without_keys_and_only_from_this_repository" {
     error_message = "GitHub is the only issuer."
   }
   assert {
-    condition     = endswith(google_service_account_iam_member.apply_from_production.member, "/subject/repo:owner/repository:environment:production")
+    condition     = endswith(google_service_account_iam_member.apply_from_production.member, "/subject/repo:owner@111/repository@222:environment:production")
     error_message = "Apply is only possible from the protected production environment (INF-6)."
   }
   assert {
-    condition     = endswith(google_service_account_iam_member.deploy_from_main.member, "/subject/repo:owner/repository:ref:refs/heads/main")
+    condition     = endswith(google_service_account_iam_member.deploy_from_main.member, "/subject/repo:owner@111/repository@222:ref:refs/heads/main")
     error_message = "A deployment is only possible from the main branch (HRD-12)."
   }
   assert {
-    condition     = endswith(google_service_account_iam_member.plan_from_pull_requests.member, "/subject/repo:owner/repository:pull_request")
+    condition     = endswith(google_service_account_iam_member.plan_from_pull_requests.member, "/subject/repo:owner@111/repository@222:pull_request")
     error_message = "Plan runs for pull requests of this repository only (INF-6)."
   }
   assert {
-    condition     = endswith(google_service_account_iam_member.plan_from_main.member, "/subject/repo:owner/repository:ref:refs/heads/main") && google_service_account_iam_member.plan_from_main.service_account_id == google_service_account_iam_member.plan_from_pull_requests.service_account_id
+    condition     = endswith(google_service_account_iam_member.plan_from_main.member, "/subject/repo:owner@111/repository@222:ref:refs/heads/main") && google_service_account_iam_member.plan_from_main.service_account_id == google_service_account_iam_member.plan_from_pull_requests.service_account_id
     error_message = "The weekly drift check uses the read-only account (INF-7)."
   }
   assert {
@@ -393,4 +395,12 @@ run "a_wrong_repository_is_refused" {
     github_repository = "no-slash"
   }
   expect_failures = [var.github_repository]
+}
+
+run "ids_that_are_not_numbers_are_refused" {
+  command = plan
+  variables {
+    github_owner_id = "vandeven"
+  }
+  expect_failures = [var.github_owner_id]
 }

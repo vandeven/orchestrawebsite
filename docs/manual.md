@@ -144,6 +144,8 @@ tofu providers lock -platform=windows_amd64 -platform=linux_amd64 -platform=linu
 
    From then on the infrastructure workflow plans pull requests, applies after your approval and checks for drift every week ([infra/README.md](../infra/README.md)).
 
+**The GitHub identity has numbers in it.** GitHub writes the numeric IDs of the owner and the repository into the identity of every job (`repo:vandeven@1215166/orchestrawebsite@1440075518:pull_request`), and the login rules match that exactly. They are `github_owner_id` and `github_repository_id` in `infra/prod.tfvars` (find them with `gh api repos/OWNER/REPOSITORY --jq '.owner.id, .id'`, or read them from the output of a failed login: a 403 `getAccessToken denied` with the right bindings means the identity differs). A changed binding has to be applied from your own computer, because the pipeline cannot log in until it is right.
+
 **Permission errors.** The roles of the read-only and the apply account were worked out on paper (INF-6). If the first `plan` or a later pipeline run says a permission is missing, add the role in `infra/iam.tf` through a pull request and say so in the status log. Do not give them the owner role.
 
 ### A4. Put the secrets in
