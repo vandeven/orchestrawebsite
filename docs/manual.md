@@ -41,11 +41,12 @@ Tick a step off here and in its own list below. "Reported" means the owner said 
 | A1 Two-step verification, GitHub repository, Brevo account | Not reported |
 | A2 Google Cloud project `orchestrawebsite` created | Done (reported 2026-11-19) |
 | A2 Billing linked to the project | Not reported: check with the command in A2 |
-| A2 APIs enabled | `sts.googleapis.com` reported; the rest: check with the command in A2. Two more were added later: `cloudbilling` and `firebaserules` |
+| A2 APIs enabled | Done (reported 2026-11-19, after the first apply failed on missing APIs: use the full command in A2 before the first plan) |
 | A2 Second owner | Deferred by the owner; **still needed before launch** (HOS-33) |
 | A3 State bucket `orchestrawebsite-tfstate-soljazz` | Done (reported 2026-11-19) |
-| A3 First `tofu plan` and `tofu apply` | Not done |
-| A4 Secret values | Not done |
+| A3 First `tofu plan` and `tofu apply` | Done (2026-11-19): 70 resources created. Outputs in step 7 |
+| A3 Lock file from the real registry, GitHub variables and secrets | Not reported |
+| A4 Secret values | Not reported (Cloud Run needs them, so they were added during the apply) |
 | A5 GitHub settings | Not done |
 | A6 First deployment | Not possible yet: the application needs its Firestore stores and the deployment workflow ([implementation status](implementation-status.md)) |
 | A7 Domain and email | Not started (open items 1 and 9) |
@@ -58,7 +59,7 @@ Tick a step off here and in its own list below. "Reported" means the owner said 
 - [ ] Register the domain and choose where DNS is managed. (Until then the website runs on the default `*.run.app` address, see [hosting](hosting.md).)
 
 ### A2. Google Cloud project
-Install the Google Cloud CLI and the OpenTofu CLI on your computer (or use Cloud Shell in the console, which has the Google Cloud CLI already). The commands below are for a terminal; on Windows use PowerShell and replace the line-ending backslash with a backtick, or put each command on one line.
+Install the Google Cloud CLI and the OpenTofu CLI on your computer (or use Cloud Shell in the console, which has the Google Cloud CLI already). The commands below are for a terminal; on Windows put each command on one line (in `cmd` the line-ending backslash does not work). Commands that use `openssl`, `printf` or `grep` need Git Bash or Cloud Shell.
 
 Things to know first:
 - `PROJECT_ID` must be unique in all of Google Cloud: 6 to 30 characters, lower case letters, digits and hyphens, starting with a letter. It cannot be changed later. **This project: `orchestrawebsite`.**
@@ -73,7 +74,7 @@ gcloud projects create PROJECT_ID --name="Orchestra website"
 gcloud billing projects link PROJECT_ID --billing-account=BILLING_ACCOUNT_ID
 gcloud config set project PROJECT_ID
 ```
-Enable the APIs that OpenTofu needs to start (all in one command):
+Enable the APIs that OpenTofu needs (all in one command). **Do this before the first `plan`**: a plan only reads, so it does not notice a disabled API, and the apply then stops half way with `SERVICE_DISABLED` errors (this happened on the first run). A new API can take a few minutes to work:
 ```
 gcloud services enable run.googleapis.com firestore.googleapis.com storage.googleapis.com \
   secretmanager.googleapis.com artifactregistry.googleapis.com iam.googleapis.com \
@@ -103,9 +104,9 @@ gcloud storage buckets describe gs://orchestrawebsite-tfstate-soljazz \
 ```
 The last command must show `europe-west4`, `versioning: enabled: true`, `uniformBucketLevelAccess: enabled: true` and `publicAccessPrevention: enforced`. If the name is taken, choose another and change it in `infra/backend.hcl` and in `infra/prod.tfvars` (`state_bucket`).
 
-2. **Install OpenTofu 1.13** (the version is pinned in `infra/versions.tf`): <https://opentofu.org/docs/intro/install/>. Check with `tofu version`.
+2. **Install OpenTofu 1.13** (the version is pinned in `infra/versions.tf`): <https://opentofu.org/docs/intro/install/>. Check with `tofu version`; it must say 1.13.x. An old install (for example 1.8 alpha) is rejected with "Unsupported OpenTofu Core version": install the right one, open a **new** terminal (the old one keeps the old PATH) and check `where tofu`. Also run `gcloud auth application-default login` once: without it `init` says "could not find default credentials".
 
-3. **Give the details that are not in the public repository** through the environment. They are not secrets, but they are personal, so they are not in the files. In PowerShell write `$env:TF_VAR_alert_email = "..."` instead of `export`.
+3. **Give the details that are not in the public repository** through the environment. They are not secrets, but they are personal, so they are not in the files. In `cmd` write `set TF_VAR_alert_email=you@example.org` (no quotes, no spaces around `=`); in PowerShell `$env:TF_VAR_alert_email = "you@example.org"`. They only last for that window, so run `tofu` from the same one.
 ```
 export TF_VAR_alert_email="you@example.org"                  # where alerts go (LGG-16)
 export TF_VAR_master_email="master@example.org"              # the master account (USR-14)
@@ -118,23 +119,28 @@ Your own Google account must be an **owner of the project** and **billing admini
 cd infra
 gcloud auth application-default login
 tofu init -backend-config=backend.hcl
-tofu plan -var-file=prod.tfvars
+tofu plan -var-file=prod.tfvars -out=plan.out
 ```
-Read the plan. It should only **create** things (no changes, no deletions): the Cloud Run service, Firestore with its rules, cleanup and backup schedule, two buckets, Artifact Registry, three empty secrets, four service accounts and their roles, the GitHub login (a pool and a provider), alerts, the uptime check and the budget. If `plan` stops with a permission error, write down which one (see "Permission errors" below).
+Read the plan. (`plan.out` is a local file: never commit it. A saved plan is stale as soon as anything changes the state, for example a half-finished apply: make a new one.) It should only **create** things (no changes, no deletions): the Cloud Run service, Firestore with its rules, cleanup and backup schedule, two buckets, Artifact Registry, three empty secrets, four service accounts and their roles, the GitHub login (a pool and a provider), alerts, the uptime check and the budget. If `plan` stops with a permission error, write down which one (see "Permission errors" below).
 
-5. **Apply**, only when the plan is what you expect. The first apply uses your own credentials:
+5. **Add the secret values first** (A4: `PASSWORD_PEPPER`, `MASTER_PASSWORD`, `BREVO_API_KEY`). Cloud Run reads the secrets at version `latest`, so it cannot be created while a secret has no version. The secrets themselves are created by the apply, so the order is: apply (Cloud Run fails), add the values, plan again, apply again. It is harmless.
+
+6. **Apply**, only when the plan is what you expect. The first apply uses your own credentials:
 ```
-tofu apply -var-file=prod.tfvars
+tofu apply plan.out
 ```
-It asks you to type `yes`. The apply creates Cloud Run with a Google sample image as a placeholder (the real application is deployed later, A6).
+The apply creates Cloud Run with a Google sample image as a placeholder (the real application is deployed later, A6). Expect about 70 resources on a first run, `0 to change, 0 to destroy`.
 
-6. **If `tofu init` changed `.terraform.lock.hcl`**, commit that file (it records the checksums of the provider, INF-12).
+7. **Fix and commit the lock file** (it records the checksums of the provider, INF-12). The one in the repository was first made without access to the real registry and is rejected ("doesn't match any of the checksums"): delete `infra/.terraform.lock.hcl`, run `tofu init -backend-config=backend.hcl`, then add the platforms of the pipeline and of other computers and commit:
+```
+tofu providers lock -platform=windows_amd64 -platform=linux_amd64 -platform=linux_arm64 -platform=darwin_amd64 -platform=darwin_arm64
+```
 
-7. **Check the result:** `tofu output` lists the website address (`service_url`), the service accounts, the Workload Identity Federation provider and the buckets. Open `service_url` in a browser: it should show the Google sample page. Check in the console that the uptime check exists (Monitoring) and that you received an email asking to confirm the alert address (confirm it).
+8. **Check the result:** `tofu output` lists the website address (`service_url`), the service accounts, the Workload Identity Federation provider and the buckets. Open `service_url` in a browser: it should show the Google sample page. Check in the console that the uptime check exists (Monitoring) and that you received an email asking to confirm the alert address (confirm it).
 
-8. **Put the outputs in GitHub** so the pipeline can log in without keys. In the repository: Settings, then Secrets and variables, then Actions.
+9. **Put the outputs in GitHub** so the pipeline can log in without keys. In the repository: Settings, then Secrets and variables, then Actions.
    - *Variables* (not secret): `GCP_WORKLOAD_IDENTITY_PROVIDER` (output `workload_identity_provider`), `GCP_PLAN_SERVICE_ACCOUNT` (output `service_accounts`, the `plan` entry) and `GCP_APPLY_SERVICE_ACCOUNT` (the `apply` entry).
-   - *Secrets*: `TF_VAR_ALERT_EMAIL`, `TF_VAR_MASTER_EMAIL` and `TF_VAR_BILLING_ACCOUNT_ID` (the same three values as in step 3).
+   - *Secrets*: `TF_VAR_ALERT_EMAIL`, `TF_VAR_MASTER_EMAIL` and `TF_VAR_BILLING_ACCOUNT_ID` (the same three values as in step 3, and the same as in your environment, otherwise the pipeline plans a change).
 
    From then on the infrastructure workflow plans pull requests, applies after your approval and checks for drift every week ([infra/README.md](../infra/README.md)).
 

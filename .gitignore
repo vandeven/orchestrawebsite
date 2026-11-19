@@ -35,3 +35,8 @@ infra/.terraform/
 *.tfplan
 tfplan
 errored_test.tfstate
+
+# OpenTofu
+infra/plan.out
+infra/created.txt
+**/.terraform/
