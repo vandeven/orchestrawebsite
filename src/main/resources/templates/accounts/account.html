@@ -1,0 +1,56 @@
+{#include site/layout}
+  {#title}My account - {cdi:site.name}{/title}
+  {#description}Your account.{/description}
+  {#content}
+    <h1>My account</h1>
+    {#if changed}
+    <div class="alert alert-success" role="status">
+      <span class="alert-title">Done</span>
+      Your password was changed. You have been logged out on your other devices, and we sent you an email about it.
+    </div>
+    {/if}
+    <dl>
+      <dt>Email address</dt>
+      <dd>{email}</dd>
+      <dt>Role</dt>
+      <dd>{role}</dd>
+    </dl>
+
+    <h2>Change your password</h2>
+    {#if isMaster}
+    <p>The password of the master account is set by the owner of the website and cannot be changed here.</p>
+    {#else}
+    <form method="post" action="/account" novalidate>
+      <div class="field">
+        <label for="current">Current password</label>
+        <input type="password" id="current" name="current" maxlength="{max}" required
+               autocomplete="current-password"
+               {#if currentError}aria-invalid="true" aria-describedby="current-error"{/if}>
+        {#if currentError}<p class="field-error" id="current-error">{currentError}</p>{/if}
+      </div>
+      <div class="field">
+        <label for="password">New password</label>
+        <p class="field-hint" id="password-hint">At least {min} characters. A long sentence that only you know is better than a short word with numbers.</p>
+        <input type="password" id="password" name="password" minlength="{min}" maxlength="{max}" required
+               autocomplete="new-password"
+               aria-describedby="password-hint{#if newError} password-error{/if}"
+               {#if newError}aria-invalid="true"{/if}>
+        {#if newError}<p class="field-error" id="password-error">{newError}</p>{/if}
+        <p class="field-toggle"><button type="button" class="button button-secondary" data-toggle-password hidden
+                   aria-controls="password" aria-pressed="false">Show password</button></p>
+      </div>
+      <div class="field">
+        <label for="password2">New password again</label>
+        <input type="password" id="password2" name="password2" minlength="{min}" maxlength="{max}" required
+               autocomplete="new-password"
+               {#if confirmError}aria-invalid="true" aria-describedby="password2-error"{/if}>
+        {#if confirmError}<p class="field-error" id="password2-error">{confirmError}</p>{/if}
+      </div>
+      <div class="button-row">
+        <button type="submit" class="button">Change password</button>
+      </div>
+    </form>
+    {/if}
+  {/content}
+  {#scripts}<script src="/js/password.js"></script>{/scripts}
+{/include}

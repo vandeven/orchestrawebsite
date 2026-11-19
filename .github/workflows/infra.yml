@@ -1,0 +1,160 @@
+# The infrastructure pipeline (INF-5, INF-7, INF-8). The check job needs no cloud login. The plan,
+# apply and drift jobs only run once the keyless login is set up: the repository variable
+# GCP_WORKLOAD_IDENTITY_PROVIDER exists (see infra/README.md). Application deployments are a
+# separate pipeline (HOS-6).
+name: Infrastructure
+
+on:
+  pull_request:
+    paths: ["infra/**", ".github/workflows/infra.yml"]
+  push:
+    branches: [main]
+    paths: ["infra/**", ".github/workflows/infra.yml"]
+  schedule:
+    - cron: "43 5 * * 2"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infra-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  TOFU_VERSION: "1.13.9"
+  TF_IN_AUTOMATION: "true"
+  # Personal details are repository secrets, never files in the repository
+  TF_VAR_alert_email: ${{ secrets.TF_VAR_ALERT_EMAIL }}
+  TF_VAR_master_email: ${{ secrets.TF_VAR_MASTER_EMAIL }}
+  TF_VAR_billing_account_id: ${{ secrets.TF_VAR_BILLING_ACCOUNT_ID }}
+
+jobs:
+  check:
+    name: Format, validate and policy checks
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+        with:
+          tofu_version: ${{ env.TOFU_VERSION }}
+          tofu_wrapper: false
+      - name: Format
+        run: tofu fmt -check -recursive
+      - name: Validate
+        run: |
+          tofu init -backend=false -input=false
+          tofu validate
+      # The requirements as automatic rules against a fake provider (INF-8)
+      - name: Policy tests
+        run: tofu test
+      - name: Static policies
+        run: bash tests/static-policies.sh
+
+  plan:
+    name: Plan (read only)
+    needs: check
+    if: github.event_name == 'pull_request' && vars.GCP_WORKLOAD_IDENTITY_PROVIDER != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+        with:
+          tofu_version: ${{ env.TOFU_VERSION }}
+          tofu_wrapper: false
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_PLAN_SERVICE_ACCOUNT }}
+      # The read-only account cannot take the state lock, so a pull request plan does not lock
+      - name: Plan
+        run: |
+          tofu init -backend-config=backend.hcl -input=false
+          tofu plan -lock=false -input=false -var-file=prod.tfvars -no-color | tee "$GITHUB_STEP_SUMMARY"
+
+  apply:
+    name: Apply (after approval)
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.GCP_WORKLOAD_IDENTITY_PROVIDER != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    # The owner approves here: a required reviewer of this environment (INF-5)
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+        with:
+          tofu_version: ${{ env.TOFU_VERSION }}
+          tofu_wrapper: false
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_APPLY_SERVICE_ACCOUNT }}
+      - name: Apply
+        run: |
+          tofu init -backend-config=backend.hcl -input=false
+          tofu plan -input=false -var-file=prod.tfvars -out=tfplan -no-color
+          tofu apply -input=false tfplan
+
+  drift:
+    name: Drift check
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - name: Check that the login is set up
+        id: ready
+        env:
+          PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+        run: |
+          if [ -z "$PROVIDER" ]; then echo "ready=false" >> "$GITHUB_OUTPUT"; else echo "ready=true" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.ready.outputs.ready == 'true'
+        with:
+          persist-credentials: false
+      - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+        if: steps.ready.outputs.ready == 'true'
+        with:
+          tofu_version: ${{ env.TOFU_VERSION }}
+          tofu_wrapper: false
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        if: steps.ready.outputs.ready == 'true'
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_PLAN_SERVICE_ACCOUNT }}
+      # Exit code 2 means the real project differs from the code: the run fails and the owner is notified
+      - name: Plan
+        if: steps.ready.outputs.ready == 'true'
+        run: |
+          tofu init -backend-config=backend.hcl -input=false
+          tofu plan -lock=false -input=false -var-file=prod.tfvars -detailed-exitcode -no-color

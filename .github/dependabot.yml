@@ -1,0 +1,51 @@
+# Automatic updates (UPD-1 to UPD-5). Security updates are always on and ignore the pause.
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 2
+    groups:
+      # All Quarkus updates must have the same version, so they are one pull request
+      quarkus:
+        patterns:
+          - "io.quarkus*"
+          - "io.quarkus.platform*"
+      other-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 2
+    groups:
+      actions:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 2
+
+  # OpenTofu and the Google provider in infra/ (UPD-1). The pull request shows the plan, which must
+  # not show unexpected changes, and an applied update still waits for the owner's approval (INF-5).
+  - package-ecosystem: terraform
+    directory: /infra
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 2

@@ -27,7 +27,7 @@ Run the website on Google Cloud Run with a serverless database, so it is reliabl
 7. HOS-7: Secrets and configuration are stored in Secret Manager or environment variables, never in the repository.
 8. HOS-8: Static assets and images are cached with browser cache headers (long for files with unique names, short for pages), and images are served directly from Cloud Storage, so few requests reach the container. There is no CDN (see HOS-26).
 9. HOS-9: A monthly budget alert is set on the Google Cloud project.
-10. HOS-10: Database backups (Firestore exports to a private bucket) run on a schedule, for example every week, and old exports are deleted automatically after 30 days (a bucket lifecycle rule), so removed personal data disappears from backups within 30 days (see [legal pages](legal-pages.md), LEG-4).
+10. HOS-10: Database backups run on a schedule: Firestore's own scheduled backups, every week (on Sunday), and each backup is deleted automatically after 30 days (the retention of the schedule), so removed personal data disappears from backups within 30 days. Firestore keeps these backups itself, so there is no backup bucket of ours (see [legal pages](legal-pages.md), LEG-4).
 
 ### File storage (sheet music, audio, lyrics)
 11. HOS-11: Uploaded files are stored in a private Google Cloud Storage bucket, in the same EU region as Cloud Run. Only file metadata (name, type, size, storage path) is stored in the database.
@@ -124,7 +124,7 @@ Hosting has no pages with forms, but the configuration and the server endpoints 
 - If a smoke test fails, traffic is not switched and the pipeline reports it clearly.
 - **Cost settings (HOS-23, HOS-25, HOS-26, HOS-27):** the infrastructure policy checks (see [infrastructure](infrastructure.md), INF-8) checks that the Cloud Run service has minimum instances 0, a maximum of at most 3 and 512 MiB of memory, that the cleanup policy exists, that none of the services in HOS-26 are in the infrastructure definition, and that Secret Manager has no more secrets than expected.
 - **Hashing limit (HOS-24):** an integration test starts many logins at once and checks that no more than the allowed number of hashes run at the same time, that extra requests get a 503 with `Retry-After` and no error details, that no login is wrongly accepted or refused, and that the application stays up.
-- **Reliability settings (HOS-10, HOS-29, HOS-30, HOS-33):** the infrastructure policy checks verify that the backup lifecycle rule (30 days), the uptime check and its alert exist, that at least 5 revisions are kept and that the project has more than one owner. The smoke tests after each deployment check that the 404 page is the custom page and that the health check answers quickly (HOS-32).
+- **Reliability settings (HOS-10, HOS-29, HOS-30, HOS-33):** the infrastructure policy checks verify that the backup schedule with a retention of 30 days, the uptime check and its alert exist, that at least 5 revisions are kept and that the project has more than one owner. The smoke tests after each deployment check that the 404 page is the custom page and that the health check answers quickly (HOS-32).
 - **Schema versions (HOS-3):** tests load documents of every older schema version into the Firestore emulator, check that they can be read, and that the migration brings them to the current version and gives the same result when run twice.
 - **Version information (HOS-35):** the version is in the log lines and the admin footer, and is not in pages for anonymous visitors or the health check.
 

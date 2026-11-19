@@ -2,7 +2,7 @@
 
 [← Back to plan](PLAN.md)
 
-Practical instructions for the people who run the website: the admins and the owner. Screenshots will be added in `docs/images/` when the website exists. Emergency procedures are in the [runbook](runbook.md).
+Practical instructions for the people who run the website: the admins and the owner. Screenshots will be added in `docs/images/` when the website exists. Setting up and maintaining the whole project is in the [manual](manual.md), and emergency procedures are in the [runbook](runbook.md).
 
 ## For admins
 
@@ -34,7 +34,7 @@ Whenever you delete or remove something, the website asks you to confirm first. 
 Messages from the contact form on "Become a member" arrive by email at all admins and the master. Reply to the email to answer the sender. The website does not keep the messages.
 
 ## Backups: what is and is not saved automatically
-- **Saved automatically:** the database (users, texts, song information) is exported every week and kept for 30 days.
+- **Saved automatically:** the database (users, texts, song information) is backed up every week (on Sunday) and kept for 30 days.
 - **Not saved automatically:** the **music files** (sheet music, recordings and lyrics) and the **website images**. Deleted music files can be restored for 7 days only; deleted images cannot be restored.
 - **What admins must do (manual backup):**
   - Keep the original files of every song on a computer or shared drive that belongs to the orchestra, in one folder per song. Never upload your only copy.

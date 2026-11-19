@@ -15,13 +15,13 @@ Keep the code easy to understand, change and test by building the website as a *
 
 | Component | Owns | Feature documents |
 |-----------|------|-------------------|
-| `platform` | Shared basics: configuration, clock and Amsterdam time, request ID, security headers, rate limiting, error handling, the validation rules, random IDs, and the interfaces to Cloud Storage and email | [hosting](hosting.md), [security hardening](security-hardening.md) |
+| `platform` | Shared basics: configuration, clock and Amsterdam time, request ID, security headers, rate limiting, error handling (the error mapper and the error pages), the validation rules, random IDs, and the interfaces to Cloud Storage and email | [hosting](hosting.md), [security hardening](security-hardening.md) |
 | `audit` | Application logging helpers and the admin audit trail | [logging](logging.md) |
 | `accounts` | Users, roles, login and logout, the My account page, sessions, password hashing, password recovery, the master account setup | [login](login.md), [my account](my-account.md), [user management](user-management.md) |
 | `content` | Editable texts, the HTML sanitizer, the image library and the editor pages | [content editor](content-editor.md) |
 | `songs` | Songs and their files, signed download and upload URLs, the member page and the song management page | [member page](member-page.md) |
 | `contact` | The contact form: checking, rate limiting and sending the email to the admins | [become a member](become-a-member.md) (BAM-12 to BAM-17) |
-| `site` | Web only: the page layout, menu and footer, the About, Become a member, Agenda and legal pages, error pages, `robots.txt`, `sitemap.xml` and `security.txt` | [about](about.md), [agenda](agenda.md), [become a member](become-a-member.md), [legal pages](legal-pages.md) |
+| `site` | Web only: the page layout, menu and footer, the About, Become a member, Agenda and legal pages, `robots.txt`, `sitemap.xml` and `security.txt` | [about](about.md), [agenda](agenda.md), [become a member](become-a-member.md), [legal pages](legal-pages.md) |
 
 ## Functional requirements
 1. ARC-1: **One deployable.** The application is one Quarkus application built as one container (HOS-1). Components are separated by packages and rules, not by separate services.
@@ -62,7 +62,7 @@ Keep the code easy to understand, change and test by building the website as a *
     - the repositories of each component (for example `UserRepository`, `SongRepository`), with a Firestore implementation inside `internal`
     - the password hasher (`PasswordHasher`) in `accounts`, so tests can use a fast one
     This is the only place where interfaces are required for the sake of testing; classes without outside dependencies do not need an interface.
-7. ARC-7: **Access is declared on every endpoint.** Every endpoint and page has an `@Access(PUBLIC | MEMBER | ADMIN | MASTER)` annotation. A filter in `platform` refuses (deny by default) every endpoint without one. The check uses `accounts.api`, and the actual rules (USR-9 to USR-13) are enforced in the services of the component, not only in the web layer (see [plan](PLAN.md#access-control-and-secure-section)).
+7. ARC-7: **Access is declared on every endpoint.** Every endpoint and page has an `@Access(PUBLIC | MEMBER | ADMIN | MASTER)` annotation. A filter in `platform` refuses (deny by default) every endpoint without one. The check asks the `VisitorAccess` interface in `platform.api`, which `accounts` implements (so `platform` still depends on nothing), and the actual rules (USR-9 to USR-13) are enforced in the services of the component, not only in the web layer (see [plan](PLAN.md#access-control-and-secure-section)).
 8. ARC-8: **One way to report errors.** Components report expected problems (not found, not allowed, invalid input, conflict) with errors defined in their `api`. One mapper in `platform` turns them into the custom error pages and, for JSON endpoints, into a standard error response (RFC 9457 "problem details"). Unexpected errors are logged with the request ID and shown as the 500 page, without details.
 9. ARC-9: **Validation rules are defined once.** Each rule (for example the maximum length of a subject or the email format) is a constant in the component's `api`. The server validates with these rules (Jakarta Bean Validation), and the page templates use the same constants for the HTML attributes (`required`, `maxlength`, `pattern`), so the browser and the server cannot disagree (see [input validation](PLAN.md#input-validation)).
 10. ARC-10: **JSON endpoints.** There are only a few (for example upload URLs and refreshing an audio link). They use records as input and output, never storage documents or internal classes. State-changing requests are protected against CSRF. An OpenAPI description is generated at build time and used for contract tests, but it is not served by the application (SEC-20). No API versioning is needed, because only the website itself uses these endpoints.
@@ -72,7 +72,7 @@ Keep the code easy to understand, change and test by building the website as a *
 14. ARC-14: **Fast startup.** Dependency injection resolves at build time (Quarkus). Clients such as Firestore are created lazily, startup code only checks the configuration, and libraries that rely on heavy reflection or classpath scanning are avoided (HOS-2, the cold start budget in the plan).
 15. ARC-15: **Ready to split.** Components do not share mutable state or classes outside their `api`, so a component could later move into its own service by replacing its `api` calls with remote calls. This is not planned.
 16. ARC-16: **The structure is enforced and documented.** The rules above are checked by architecture tests in the pipeline (see Automatic tests). The component table in this document is kept up to date when a component or feature is added, and each new feature document says which component it belongs to.
-17. ARC-17: **Destructive actions are marked.** Endpoints that delete or remove something are annotated with `@Destructive`. A filter in `platform` refuses a request to such an endpoint that is not a `POST` with the confirmation field (see the [plan](PLAN.md#confirming-destructive-actions)). The dialog and the confirmation page are shared page parts (ARC-13).
+17. ARC-17: **Destructive actions are marked.** Endpoints that delete or remove something are annotated with `@Destructive`. An interceptor in `platform` refuses a request to such an endpoint that is not a `POST` with the confirmation field (`confirm=yes`) (see the [plan](PLAN.md#confirming-destructive-actions)). The dialog and the confirmation page are shared page parts (ARC-13).
 
 ## Content and data
 Package layout (example for one component):
