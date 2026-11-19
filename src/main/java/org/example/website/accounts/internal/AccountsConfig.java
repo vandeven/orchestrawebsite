@@ -54,4 +54,11 @@ interface AccountsConfig {
     /** Failed logins from one visitor across all accounts before that visitor is refused. */
     @WithDefault("200")
     int visitorFailuresPerWindow();
+
+    /**
+     * A recovery request takes at least this long, so its time does not show whether an email was
+     * sent.
+     */
+    @WithDefault("PT1.5S")
+    Duration recoveryMinResponse();
 }

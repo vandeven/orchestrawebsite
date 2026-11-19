@@ -3,6 +3,12 @@
   {#description}Log in to {cdi:site.name}.{/description}
   {#content}
     <h1>Log in</h1>
+    {#if notice}
+    <div class="alert alert-success" role="status">
+      <span class="alert-title">Done</span>
+      {notice}
+    </div>
+    {/if}
     {#if generalError}
     <div class="alert alert-error" role="alert">
       <span class="alert-title">Error</span>
@@ -33,5 +39,5 @@
     </form>
     <p class="form-links"><a href="/forgot-password">Forgot password?</a></p>
   {/content}
-  {#scripts}<script src="/js/login.js"></script>{/scripts}
+  {#scripts}<script src="/js/password.js"></script>{/scripts}
 {/include}

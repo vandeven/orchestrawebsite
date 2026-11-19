@@ -27,6 +27,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 @QuarkusTest
 class UserServiceTest {
 
+    /** A password of exactly 128 characters that is not one repeated character. */
+    private static final String GOOD_128 = ("aB3$xY9!qW7z".repeat(11)).substring(0, 128);
+
     @Inject UserService users;
     @Inject LoginService login;
 
@@ -77,23 +80,23 @@ class UserServiceTest {
     @Test
     void passwordLengthBoundary() {
         UserSummary user = users.createUser(address(), Role.MEMBER);
-        assertThrows(InvalidInput.class, () -> users.setPassword(user.id(), "x".repeat(11)));
+        assertThrows(InvalidInput.class, () -> users.setPassword(user.id(), "aB3$xY9!qW7"));
         assertThrows(InvalidInput.class, () -> users.setPassword(user.id(), null));
-        assertThrows(InvalidInput.class, () -> users.setPassword(user.id(), "x".repeat(129)));
+        assertThrows(InvalidInput.class, () -> users.setPassword(user.id(), GOOD_128 + "k"));
         assertFalse(
                 users.find(user.id()).orElseThrow().hasPassword(),
                 "a refused password changes nothing");
 
-        users.setPassword(user.id(), "x".repeat(12));
+        users.setPassword(user.id(), "aB3$xY9!qW7z");
         assertTrue(users.find(user.id()).orElseThrow().hasPassword());
-        users.setPassword(user.id(), "y".repeat(128));
-        assertTrue(login.login(user.email(), "y".repeat(128)) instanceof LoginResult.LoggedIn);
+        users.setPassword(user.id(), GOOD_128);
+        assertTrue(login.login(user.email(), GOOD_128) instanceof LoginResult.LoggedIn);
     }
 
     @Test
     void settingAPasswordForAnUnknownUserFails() {
         assertThrows(
-                ResourceNotFound.class, () -> users.setPassword(UUID.randomUUID(), "x".repeat(12)));
+                ResourceNotFound.class, () -> users.setPassword(UUID.randomUUID(), "aB3$xY9!qW7z"));
     }
 
     @Test

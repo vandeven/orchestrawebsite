@@ -44,6 +44,7 @@ class MasterAccountSetup {
                             Role.MASTER,
                             hasher.hash(password),
                             clock.instant(),
+                            null,
                             null));
             LOG.info("Master account setup: created");
             return;

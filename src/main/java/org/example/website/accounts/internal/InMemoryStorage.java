@@ -22,7 +22,8 @@ import org.jboss.logging.Logger;
  * Until the Firestore stores exist, a production start without that switch fails.
  */
 @ApplicationScoped
-class InMemoryStorage implements UserRepository, SessionRepository, AttemptStore {
+class InMemoryStorage
+        implements UserRepository, SessionRepository, AttemptStore, RecoveryTokenRepository {
 
     private static final Logger LOG = Logger.getLogger(InMemoryStorage.class);
 
@@ -32,6 +33,7 @@ class InMemoryStorage implements UserRepository, SessionRepository, AttemptStore
 
     private record Counter(AttemptCounter value, Instant expiresAt) {}
 
+    private final Map<String, RecoveryTokenRecord> recoveryTokens = new ConcurrentHashMap<>();
     private final Map<String, Counter> counters = new ConcurrentHashMap<>();
 
     @Inject AccountsConfig config;
@@ -154,5 +156,31 @@ class InMemoryStorage implements UserRepository, SessionRepository, AttemptStore
     /** For tests: the keys of all counters, to check that they hold no address. */
     java.util.Set<String> counterKeys() {
         return java.util.Set.copyOf(counters.keySet());
+    }
+
+    // Recovery links
+
+    @Override
+    public void save(RecoveryTokenRecord token) {
+        checkAllowed();
+        recoveryTokens.put(token.tokenHash(), token);
+    }
+
+    @Override
+    public Optional<RecoveryTokenRecord> findByHash(String tokenHash) {
+        checkAllowed();
+        return Optional.ofNullable(recoveryTokens.get(tokenHash));
+    }
+
+    @Override
+    public void deleteByHash(String tokenHash) {
+        checkAllowed();
+        recoveryTokens.remove(tokenHash);
+    }
+
+    @Override
+    public void deleteForUser(UUID userId) {
+        checkAllowed();
+        recoveryTokens.values().removeIf(token -> token.userId().equals(userId));
     }
 }

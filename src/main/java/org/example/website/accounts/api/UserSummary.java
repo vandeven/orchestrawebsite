@@ -10,4 +10,5 @@ public record UserSummary(
         Role role,
         Instant createdAt,
         Instant lastLoginAt,
-        boolean hasPassword) {}
+        boolean hasPassword,
+        Instant recoveryEmailSentAt) {}

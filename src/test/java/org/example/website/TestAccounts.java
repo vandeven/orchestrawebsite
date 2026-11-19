@@ -30,6 +30,10 @@ public class TestAccounts {
         return "10." + (n >> 16 & 255) + "." + (n >> 8 & 255) + "." + (n & 255);
     }
 
+    private static final java.util.regex.Pattern LINK =
+            java.util.regex.Pattern.compile("/reset-password\\?token=([A-Za-z0-9_-]{43})");
+
+    @Inject org.example.website.platform.api.Outbox outbox;
     @Inject UserService users;
     @Inject LoginService login;
 
@@ -53,5 +57,24 @@ public class TestAccounts {
     /** The value of the Cookie header for a freshly logged in user with the given role. */
     public String cookie(Role role) {
         return SessionCookie.NAME + "=" + sessionToken(role);
+    }
+
+    /** The recovery token in the newest email sent to the address, or null when there is none. */
+    public String recoveryToken(String email) {
+        var sent = outbox.sent();
+        for (int i = sent.size() - 1; i >= 0; i--) {
+            if (sent.get(i).to().equalsIgnoreCase(email)) {
+                var matcher = LINK.matcher(sent.get(i).text());
+                if (matcher.find()) {
+                    return matcher.group(1);
+                }
+            }
+        }
+        return null;
+    }
+
+    /** How many emails were sent to the address. */
+    public long emailsTo(String email) {
+        return outbox.sent().stream().filter(e -> e.to().equalsIgnoreCase(email)).count();
     }
 }

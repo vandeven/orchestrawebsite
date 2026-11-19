@@ -23,6 +23,8 @@ docker run -d --name "$name" -p "$port:8080" \
   -e PASSWORD_PEPPER=FAKE-NOT-A-SECRET-smoke-test-pepper-0123456789abcdef \
   -e MASTER_EMAIL=master@example.test -e MASTER_PASSWORD=FAKE-NOT-A-SECRET-smoke-master \
   -e ACCOUNTS_ALLOW_IN_MEMORY_STORAGE=true \
+  -e MAIL_PROVIDER=outbox -e MAIL_ALLOW_OUTBOX=true \
+  -e MAIL_SENDER_ADDRESS=no-reply@example.test -e MAIL_SENDER_NAME=Smoke \
   --memory 512m "$image" >/dev/null
 
 ready=false

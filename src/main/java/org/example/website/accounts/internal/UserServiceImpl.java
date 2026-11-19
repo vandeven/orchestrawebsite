@@ -6,6 +6,7 @@ import java.time.Clock;
 import java.util.Optional;
 import java.util.UUID;
 import org.example.website.accounts.api.AccountsRules;
+import org.example.website.accounts.api.PasswordPolicy;
 import org.example.website.accounts.api.Role;
 import org.example.website.accounts.api.UserService;
 import org.example.website.accounts.api.UserSummary;
@@ -20,6 +21,7 @@ class UserServiceImpl implements UserService {
     @Inject SessionRepository sessions;
     @Inject PasswordHasher hasher;
     @Inject Clock clock;
+    @Inject PasswordPolicy policy;
 
     @Override
     public UserSummary createUser(String email, Role role) {
@@ -34,7 +36,8 @@ class UserServiceImpl implements UserService {
         }
         // No password: nobody can log in until one is set through the recovery email (USR-4)
         UserRecord user =
-                new UserRecord(UUID.randomUUID(), normalized, role, null, clock.instant(), null);
+                new UserRecord(
+                        UUID.randomUUID(), normalized, role, null, clock.instant(), null, null);
         if (!users.insertIfEmailFree(user)) {
             throw new Conflict("Email address already has an account");
         }
@@ -43,10 +46,8 @@ class UserServiceImpl implements UserService {
 
     @Override
     public void setPassword(UUID userId, String newPassword) {
-        if (newPassword == null
-                || newPassword.length() < AccountsRules.NEW_PASSWORD_MIN
-                || newPassword.length() > AccountsRules.PASSWORD_MAX) {
-            throw new InvalidInput("Password length not allowed");
+        if (policy.problem(newPassword).isPresent()) {
+            throw new InvalidInput("Password does not follow the rules for new passwords");
         }
         UserRecord user =
                 users.findById(userId).orElseThrow(() -> new ResourceNotFound("No such user"));

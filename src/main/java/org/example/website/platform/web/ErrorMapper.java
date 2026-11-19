@@ -12,6 +12,7 @@ import java.util.Map;
 import org.example.website.platform.api.ApplicationError;
 import org.example.website.platform.api.PlatformConfig;
 import org.example.website.platform.api.RequestIds;
+import org.example.website.platform.api.TooManyRequests;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 
@@ -38,6 +39,10 @@ public class ErrorMapper {
                             new String[] {
                                 "Page not found",
                                 "We could not find this page. It may have moved or no longer exists."
+                            },
+                    429,
+                            new String[] {
+                                "Too many attempts", "Too many attempts, try again in a moment."
                             },
                     409,
                             new String[] {
@@ -70,7 +75,13 @@ public class ErrorMapper {
         } else {
             LOG.debugf("Expected problem (%d): %s", error.status(), error.getMessage());
         }
-        return respond(error.status());
+        Response response = respond(error.status());
+        if (error instanceof TooManyRequests tooMany) {
+            return Response.fromResponse(response)
+                    .header("Retry-After", tooMany.retryAfterSeconds())
+                    .build();
+        }
+        return response;
     }
 
     @ServerExceptionMapper

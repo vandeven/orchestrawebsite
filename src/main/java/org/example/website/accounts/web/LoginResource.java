@@ -46,11 +46,12 @@ public class LoginResource {
 
     @GET
     @Path("login")
-    public Response show(@RestQuery("return") String returnTo) {
+    public Response show(@RestQuery("return") String returnTo, @RestQuery String notice) {
         if (currentUser.current().isPresent()) {
             return redirect(DEFAULT_PAGE); // LOG-7
         }
-        return page(200, "", null, null, null, returnTo);
+        Response response = page(200, "", null, null, null, returnTo, noticeText(notice));
+        return response;
     }
 
     @POST
@@ -122,9 +123,26 @@ public class LoginResource {
             String passwordError,
             String generalError,
             String returnTo) {
+        return page(status, email, emailError, passwordError, generalError, returnTo, null);
+    }
+
+    /** Only a notice from this list is shown: the page never repeats text from the address. */
+    private static String noticeText(String key) {
+        return "password-set".equals(key) ? "Your password is set. You can log in now." : null;
+    }
+
+    private Response page(
+            int status,
+            String email,
+            String emailError,
+            String passwordError,
+            String generalError,
+            String returnTo,
+            String notice) {
         String html =
                 loginPage
                         .data("currentPath", "/login")
+                        .data("notice", notice)
                         .data("email", email)
                         .data("emailError", emailError)
                         .data("passwordError", passwordError)

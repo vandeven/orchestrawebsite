@@ -85,6 +85,11 @@ class MasterAccountSetupTest {
         public int visitorFailuresPerWindow() {
             return 200;
         }
+
+        @Override
+        public java.time.Duration recoveryMinResponse() {
+            return java.time.Duration.ZERO;
+        }
     }
 
     private final Config config = new Config();
@@ -144,7 +149,8 @@ class MasterAccountSetupTest {
     void anExistingAccountForTheAddressBecomesTheMaster() {
         UUID id = UUID.randomUUID();
         storage.insertIfEmailFree(
-                new UserRecord(id, "master@example.test", Role.MEMBER, null, Instant.EPOCH, null));
+                new UserRecord(
+                        id, "master@example.test", Role.MEMBER, null, Instant.EPOCH, null, null));
         setup.ensureMasterAccount();
         UserRecord master = storage.findByEmail("master@example.test").orElseThrow();
         assertEquals(id, master.id(), "the same account, not a new one");
@@ -202,10 +208,17 @@ class MasterAccountSetupTest {
                         Role.MEMBER,
                         null,
                         Instant.EPOCH,
+                        null,
                         null);
         UserRecord duplicate =
                 new UserRecord(
-                        UUID.randomUUID(), "a@example.test", Role.ADMIN, null, Instant.EPOCH, null);
+                        UUID.randomUUID(),
+                        "a@example.test",
+                        Role.ADMIN,
+                        null,
+                        Instant.EPOCH,
+                        null,
+                        null);
         assertTrue(storage.insertIfEmailFree(a));
         assertFalse(storage.insertIfEmailFree(duplicate));
         storage.delete(a.id());

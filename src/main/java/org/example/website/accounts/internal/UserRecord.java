@@ -12,21 +12,29 @@ record UserRecord(
         Role role,
         String passwordHash,
         Instant createdAt,
-        Instant lastLoginAt) {
+        Instant lastLoginAt,
+        Instant recoveryEmailSentAt) {
 
     UserRecord withPasswordHash(String hash) {
-        return new UserRecord(id, email, role, hash, createdAt, lastLoginAt);
+        return new UserRecord(id, email, role, hash, createdAt, lastLoginAt, recoveryEmailSentAt);
     }
 
     UserRecord withRole(Role newRole) {
-        return new UserRecord(id, email, newRole, passwordHash, createdAt, lastLoginAt);
+        return new UserRecord(
+                id, email, newRole, passwordHash, createdAt, lastLoginAt, recoveryEmailSentAt);
     }
 
     UserRecord withLastLogin(Instant moment) {
-        return new UserRecord(id, email, role, passwordHash, createdAt, moment);
+        return new UserRecord(
+                id, email, role, passwordHash, createdAt, moment, recoveryEmailSentAt);
+    }
+
+    UserRecord withRecoveryEmailSentAt(Instant moment) {
+        return new UserRecord(id, email, role, passwordHash, createdAt, lastLoginAt, moment);
     }
 
     UserSummary summary() {
-        return new UserSummary(id, email, role, createdAt, lastLoginAt, passwordHash != null);
+        return new UserSummary(
+                id, email, role, createdAt, lastLoginAt, passwordHash != null, recoveryEmailSentAt);
     }
 }
