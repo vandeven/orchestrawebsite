@@ -136,6 +136,10 @@ resource "google_storage_bucket_iam_member" "app_images" {
 
 # Everyone may read an image whose name they know. This role cannot list the bucket, unlike
 # roles/storage.objectViewer, so nobody can browse its contents (HOS-22).
+# This is the only public thing besides the website itself, on purpose: the pictures on public pages
+# (INF-8). Trivy's GCP-0001 is accepted for this one resource only. The files bucket stays private,
+# which `tofu test` and static-policies.sh check, and Trivy still reports any other allUsers.
+#trivy:ignore:GCP-0001
 resource "google_storage_bucket_iam_member" "images_public_read" {
   bucket = google_storage_bucket.images.name
   role   = "roles/storage.legacyObjectReader"
