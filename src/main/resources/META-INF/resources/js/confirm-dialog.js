@@ -15,17 +15,31 @@
   var cancel = dialog.querySelector("[data-confirm-cancel]");
   var opener = null;
 
+  // The form is only ever sent to a path on this website, never to another site or to a
+  // javascript: address, whatever the attribute says.
+  function safeAction(value) {
+    if (typeof value !== "string" || value.charAt(0) !== "/" || value.charAt(1) === "/") {
+      return null;
+    }
+    var url = new URL(value, window.location.origin);
+    return url.origin === window.location.origin ? url.pathname + url.search : null;
+  }
+
   document.addEventListener("click", function (event) {
     var link = event.target.closest("[data-confirm]");
     if (!link) {
       return;
+    }
+    var action = safeAction(link.getAttribute("data-confirm-action"));
+    if (!action) {
+      return; // not a path on this website: the link works as a plain link, with the confirm page
     }
     event.preventDefault();
     opener = link;
     title.textContent = link.getAttribute("data-confirm-title");
     text.textContent = link.getAttribute("data-confirm-text");
     submit.textContent = link.getAttribute("data-confirm-button");
-    form.setAttribute("action", link.getAttribute("data-confirm-action"));
+    form.setAttribute("action", action);
     dialog.showModal();
     cancel.focus();
   });

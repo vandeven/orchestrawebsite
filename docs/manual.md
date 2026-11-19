@@ -175,6 +175,8 @@ In the repository settings (Settings, then the pages named below):
 - [ ] **Variables and secrets for the infrastructure workflow:** step 8 of A3.
 - [ ] **Notifications:** make sure the email address of the owner receives GitHub notifications for failed workflow runs and Dependabot security alerts (Settings of your own account, Notifications) (SEC-17, UPD-12).
 
+**A CodeQL alert that is a false positive.** Dismiss it in GitHub: Security, then Code scanning, open the alert, **Dismiss alert**, reason **False positive**, and write why. Do this only after reading the code; a dismissal is a decision that stays in the history. Currently dismissed on purpose: `java/user-controlled-bypass` in `LoginServiceImpl` (`withLastLogin` is only reached after the password check passed, and that check is the login itself).
+
 ### A6. First deployment **(to be confirmed when the deployment workflow exists)**
 The application cannot go live yet: it needs its Firestore stores and the deployment workflow ([implementation status](implementation-status.md)). When they exist:
 - [ ] Merge the first change to `main`. The pipeline builds, runs all tests and scans, deploys the new version **without traffic**, runs the master setup job and migrations, runs the smoke tests against the test address, and only then sends traffic to it ([hosting](hosting.md), HOS-6).
