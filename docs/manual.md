@@ -40,7 +40,11 @@ Do the steps in order. Roughly half a day, apart from waiting for DNS. Check the
 - [ ] Register the domain and choose where DNS is managed. (Until then the website runs on the default `*.run.app` address, see [hosting](hosting.md).)
 
 ### A2. Google Cloud project
-Install the Google Cloud CLI and the OpenTofu CLI on your computer, then:
+Install the Google Cloud CLI and the OpenTofu CLI on your computer (or use Cloud Shell in the console, which has the Google Cloud CLI already), then:
+
+- `PROJECT_ID` must be unique in all of Google Cloud: 6 to 30 characters, lower case letters, digits and hyphens, starting with a letter. It cannot be changed later. Write it down; the infrastructure code needs it.
+- `gcloud billing accounts list` shows the `BILLING_ACCOUNT_ID`. You need a billing account with a payment method. Firestore, Cloud Run and the other services need billing to be switched on, but this website stays within the free allowances and costs close to nothing without visitors (HOS-23 to HOS-27).
+- No Google Cloud organization is needed: a project under a personal Google account works.
 ```
 gcloud auth login
 gcloud auth application-default login
@@ -49,9 +53,10 @@ gcloud billing projects link PROJECT_ID --billing-account=BILLING_ACCOUNT_ID
 gcloud config set project PROJECT_ID
 gcloud services enable run.googleapis.com firestore.googleapis.com storage.googleapis.com \
   secretmanager.googleapis.com artifactregistry.googleapis.com iam.googleapis.com \
-  iamcredentials.googleapis.com cloudresourcemanager.googleapis.com serviceusage.googleapis.com \
+  iamcredentials.googleapis.com sts.googleapis.com cloudresourcemanager.googleapis.com serviceusage.googleapis.com \
   logging.googleapis.com monitoring.googleapis.com billingbudgets.googleapis.com
 ```
+- [ ] Choose the region now: everything uses `europe-west4` (Netherlands). The location of the Firestore database cannot be changed afterwards (HOS-3).
 - [ ] Add the second owner in the console (IAM), with two-step verification ([hosting](hosting.md), HOS-33).
 - [ ] Set a **budget alert** (also in `infra/`, HOS-9) so you are warned about spending. A budget alert only warns; the real limit is the Cloud Run maximum of 3 instances (HOS-23).
 
