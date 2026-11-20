@@ -1,6 +1,7 @@
-package org.example.website.accounts.api;
+package org.example.website.accounts.api.login;
 
 import java.time.Duration;
+import org.example.website.accounts.api.users.UserSummary;
 
 /**
  * The result of a login attempt. A failure carries no reason on purpose: a wrong password, an

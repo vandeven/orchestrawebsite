@@ -302,6 +302,42 @@ class ArchitectureTest {
         return rule;
     }
 
+    // The accounts api is split by feature too. Users (the people and their roles) are the base,
+    // login uses them, recovery and the rules stand alone.
+
+    private static final String ACCOUNTS_API = ROOT + "accounts.api.";
+
+    /** The api packages of accounts: users, rules and recovery know no other api package. */
+    @ArchTest
+    static final ArchRule accountsApiBaseKnowsNoOtherApiPackage =
+            accountsApiNeverUses("users", "login", "recovery", "rules")
+                    .and(accountsApiNeverUses("rules", "login", "recovery", "users"))
+                    .and(accountsApiNeverUses("recovery", "login", "users", "rules"));
+
+    /** Login may use users, and nothing else of the accounts api. */
+    @ArchTest
+    static final ArchRule accountsApiLoginOnlyUsesUsers =
+            accountsApiNeverUses("login", "recovery", "rules");
+
+    private static CompositeArchRule accountsApiNeverUses(String from, String... forbidden) {
+        String[] names = new String[forbidden.length];
+        for (int i = 0; i < forbidden.length; i++) {
+            names[i] = ACCOUNTS_API + forbidden[i] + "..";
+        }
+        return CompositeArchRule.of(
+                noClasses()
+                        .that()
+                        .resideInAPackage(ACCOUNTS_API + from + "..")
+                        .should()
+                        .dependOnClassesThat()
+                        .resideInAnyPackage(names)
+                        .as(
+                                "accounts api "
+                                        + from
+                                        + " does not use "
+                                        + String.join(", ", forbidden)));
+    }
+
     private static final DescribedPredicate<JavaMethod> IS_ENDPOINT =
             DescribedPredicate.describe(
                     "an endpoint (a JAX-RS method)",

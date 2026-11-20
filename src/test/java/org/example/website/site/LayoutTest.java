@@ -10,7 +10,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import java.util.List;
 import org.example.website.TestAccounts;
-import org.example.website.accounts.api.Role;
+import org.example.website.accounts.api.users.Role;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

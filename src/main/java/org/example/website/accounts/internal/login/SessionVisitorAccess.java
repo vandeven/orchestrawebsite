@@ -6,10 +6,10 @@ import io.vertx.ext.web.RoutingContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.util.Optional;
-import org.example.website.accounts.api.CurrentUser;
-import org.example.website.accounts.api.LoginService;
-import org.example.website.accounts.api.SessionCookie;
-import org.example.website.accounts.api.UserSummary;
+import org.example.website.accounts.api.login.CurrentUser;
+import org.example.website.accounts.api.login.LoginService;
+import org.example.website.accounts.api.login.SessionCookie;
+import org.example.website.accounts.api.users.UserSummary;
 import org.example.website.platform.api.access.AccessLevel;
 import org.example.website.platform.api.access.VisitorAccess;
 

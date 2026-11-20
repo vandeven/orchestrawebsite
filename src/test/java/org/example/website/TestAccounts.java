@@ -3,12 +3,12 @@ package org.example.website;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.util.UUID;
-import org.example.website.accounts.api.LoginResult;
-import org.example.website.accounts.api.LoginService;
-import org.example.website.accounts.api.Role;
-import org.example.website.accounts.api.SessionCookie;
-import org.example.website.accounts.api.UserService;
-import org.example.website.accounts.api.UserSummary;
+import org.example.website.accounts.api.login.LoginResult;
+import org.example.website.accounts.api.login.LoginService;
+import org.example.website.accounts.api.login.SessionCookie;
+import org.example.website.accounts.api.users.Role;
+import org.example.website.accounts.api.users.UserService;
+import org.example.website.accounts.api.users.UserSummary;
 
 /** Test only: creates users and real sessions through the public API of accounts. */
 @ApplicationScoped

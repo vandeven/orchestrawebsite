@@ -1,7 +1,7 @@
 package org.example.website.accounts.internal.users;
 
-import org.example.website.accounts.api.Role;
-import org.example.website.accounts.api.UserManagement.Actions;
+import org.example.website.accounts.api.users.Role;
+import org.example.website.accounts.api.users.UserManagement.Actions;
 
 /**
  * Who may do what to whom (USR-9 to USR-13). One place, used by the server to refuse and by the

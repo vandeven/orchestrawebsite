@@ -1,4 +1,4 @@
-package org.example.website.accounts.api;
+package org.example.website.accounts.api.recovery;
 
 import org.example.website.platform.api.errors.ApplicationError;
 

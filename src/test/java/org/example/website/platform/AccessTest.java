@@ -10,7 +10,7 @@ import io.restassured.RestAssured;
 import io.restassured.specification.RequestSpecification;
 import jakarta.inject.Inject;
 import org.example.website.TestAccounts;
-import org.example.website.accounts.api.Role;
+import org.example.website.accounts.api.users.Role;
 import org.example.website.platform.api.access.AccessLevel;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

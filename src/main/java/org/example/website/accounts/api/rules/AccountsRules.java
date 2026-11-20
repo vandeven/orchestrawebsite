@@ -1,4 +1,4 @@
-package org.example.website.accounts.api;
+package org.example.website.accounts.api.rules;
 
 import java.util.Locale;
 

@@ -2,8 +2,8 @@ package org.example.website.accounts.internal.store;
 
 import java.time.Instant;
 import java.util.UUID;
-import org.example.website.accounts.api.Role;
-import org.example.website.accounts.api.UserSummary;
+import org.example.website.accounts.api.users.Role;
+import org.example.website.accounts.api.users.UserSummary;
 
 /** A user as it is stored. The email address is always normalized. */
 public record UserRecord(

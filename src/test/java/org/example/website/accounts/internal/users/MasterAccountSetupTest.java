@@ -11,7 +11,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
-import org.example.website.accounts.api.Role;
+import org.example.website.accounts.api.users.Role;
 import org.example.website.accounts.internal.TestAccountsConfig;
 import org.example.website.accounts.internal.passwords.Argon2PasswordHasher;
 import org.example.website.accounts.internal.store.SessionRecord;

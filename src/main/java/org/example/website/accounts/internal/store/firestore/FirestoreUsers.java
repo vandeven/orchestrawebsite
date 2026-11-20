@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import org.example.website.accounts.api.Role;
+import org.example.website.accounts.api.users.Role;
 import org.example.website.accounts.internal.store.UserRecord;
 import org.example.website.accounts.internal.store.UserRepository;
 import org.example.website.platform.api.database.Database;

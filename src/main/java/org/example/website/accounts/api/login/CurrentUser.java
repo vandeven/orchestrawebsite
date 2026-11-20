@@ -1,6 +1,7 @@
-package org.example.website.accounts.api;
+package org.example.website.accounts.api.login;
 
 import java.util.Optional;
+import org.example.website.accounts.api.users.UserSummary;
 
 /** The user of the request that is being handled, from the session cookie. */
 public interface CurrentUser {

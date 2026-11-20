@@ -1,7 +1,8 @@
-package org.example.website.accounts.api;
+package org.example.website.accounts.api.login;
 
 import java.time.Duration;
 import java.util.Optional;
+import org.example.website.accounts.api.users.UserSummary;
 
 /** Logging in and out, and finding out who a session belongs to (LOG-3 to LOG-11). */
 public interface LoginService {

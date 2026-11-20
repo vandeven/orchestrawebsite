@@ -11,8 +11,8 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
-import org.example.website.accounts.api.AccountsRules;
-import org.example.website.accounts.api.PasswordPolicy;
+import org.example.website.accounts.api.rules.AccountsRules;
+import org.example.website.accounts.api.rules.PasswordPolicy;
 
 /**
  * The rules for a new password (USR-20, LOG-22): a length from 12 to 128 characters, not on the

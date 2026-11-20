@@ -1,4 +1,4 @@
-package org.example.website.accounts.api;
+package org.example.website.accounts.api.users;
 
 /** What a logged-in user can do with their own account (ACC-1 to ACC-9). */
 public interface AccountService {

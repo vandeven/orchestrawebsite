@@ -3,8 +3,8 @@ package org.example.website.accounts.internal.users;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Map;
-import org.example.website.accounts.api.Role;
-import org.example.website.accounts.api.UserManagement.Actions;
+import org.example.website.accounts.api.users.Role;
+import org.example.website.accounts.api.users.UserManagement.Actions;
 import org.junit.jupiter.api.Test;
 
 /** USR-6, USR-9 to USR-13: every acting role against every target role, for every action. */

@@ -1,4 +1,4 @@
-package org.example.website.accounts.api;
+package org.example.website.accounts.api.users;
 
 import java.util.List;
 import java.util.UUID;

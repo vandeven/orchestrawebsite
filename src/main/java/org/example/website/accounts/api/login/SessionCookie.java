@@ -1,4 +1,4 @@
-package org.example.website.accounts.api;
+package org.example.website.accounts.api.login;
 
 /** The one cookie of the website (LOG-11, HRD-8). */
 public final class SessionCookie {
