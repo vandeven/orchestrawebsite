@@ -20,10 +20,11 @@ The repository is public, so personal details are given through the environment:
 ```
 export TF_VAR_alert_email="you@example.org"          # where alerts go
 export TF_VAR_master_email="master@example.org"      # the master account (USR-14)
+export TF_VAR_mail_sender_address="you@example.org"  # the verified Brevo sender (HOS-21)
 export TF_VAR_billing_account_id="012345-6789AB-CDEF01"   # gcloud billing accounts list
 ```
 
-For the GitHub pipeline the same three are repository **secrets** named `TF_VAR_ALERT_EMAIL`, `TF_VAR_MASTER_EMAIL` and `TF_VAR_BILLING_ACCOUNT_ID`.
+For the GitHub pipeline the same four are repository **secrets** named `TF_VAR_ALERT_EMAIL`, `TF_VAR_MASTER_EMAIL`, `TF_VAR_MAIL_SENDER_ADDRESS` and `TF_VAR_BILLING_ACCOUNT_ID`.
 
 ## Run it yourself (read only: `plan`)
 

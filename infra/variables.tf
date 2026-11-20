@@ -125,7 +125,7 @@ variable "mail_provider" {
 }
 
 variable "mail_sender_address" {
-  description = "The address mail is sent from, on the orchestra's own domain (HOS-21). Empty until there is a domain."
+  description = "The address mail is sent from, on the orchestra's own domain (HOS-21). A single sender verified in Brevo works until there is a domain. Personal, so give it through TF_VAR_mail_sender_address."
   type        = string
   default     = ""
 }

@@ -110,6 +110,7 @@ The last command must show `europe-west4`, `versioning: enabled: true`, `uniform
 ```
 export TF_VAR_alert_email="you@example.org"                  # where alerts go (LGG-16)
 export TF_VAR_master_email="master@example.org"              # the master account (USR-14)
+export TF_VAR_mail_sender_address="you@example.org"          # the verified Brevo sender (HOS-21)
 export TF_VAR_billing_account_id="012345-6789AB-CDEF01"      # from: gcloud billing accounts list
 ```
 Your own Google account must be an **owner of the project** and **billing administrator of the billing account** (the budget lives on the billing account).
@@ -140,7 +141,7 @@ tofu providers lock -platform=windows_amd64 -platform=linux_amd64 -platform=linu
 
 9. **Put the outputs in GitHub** so the pipeline can log in without keys. In the repository: Settings, then Secrets and variables, then Actions.
    - *Variables* (not secret): `GCP_WORKLOAD_IDENTITY_PROVIDER` (output `workload_identity_provider`), `GCP_PLAN_SERVICE_ACCOUNT` (output `service_accounts`, the `plan` entry) `GCP_APPLY_SERVICE_ACCOUNT` (the `apply` entry) and `GCP_DEPLOY_SERVICE_ACCOUNT` (the `deploy` entry, used by the deployment workflow, A6).
-   - *Secrets*: `TF_VAR_ALERT_EMAIL`, `TF_VAR_MASTER_EMAIL` and `TF_VAR_BILLING_ACCOUNT_ID` (the same three values as in step 3, and the same as in your environment, otherwise the pipeline plans a change).
+   - *Secrets*: `TF_VAR_ALERT_EMAIL`, `TF_VAR_MASTER_EMAIL`, `TF_VAR_MAIL_SENDER_ADDRESS` and `TF_VAR_BILLING_ACCOUNT_ID` (the same four values as in step 3, and the same as in your environment, otherwise the pipeline plans a change).
 
    From then on the infrastructure workflow plans pull requests, applies after your approval and checks for drift every week ([infra/README.md](../infra/README.md)).
 
@@ -193,7 +194,7 @@ The workflow `.github/workflows/deploy.yml` does every deployment, the first one
 
 ### A7. Domain and email
 
-- [ ] **Until Brevo and the domain are ready the website runs without sending email.** `infra/prod.tfvars` sets `mail_provider = "outbox"` and a dummy `mail_sender_address`. The first deployment failed without a sender address (`mail.sender-address is defined as the empty String`). With the outbox, nothing is sent: recovery links and welcome emails are not delivered, so the master account (from `MASTER_PASSWORD`) is the only one you can use. When Brevo is ready, delete both lines from `prod.tfvars`, set `mail_sender_address` to an address on the domain, make sure `BREVO_API_KEY` holds the real key, and apply.
+- [ ] **Without a domain, use one verified sender.** In Brevo (Senders), add and verify one address you can open. It is personal, so it is not in the repository: set `TF_VAR_mail_sender_address` (like in A3) before every `tofu plan`. Delivery from a free-mail address is poor (spam folders), so this is for testing. With the domain, verify it in Brevo and use an address on it. `mail_provider = "outbox"` in `prod.tfvars` exists only as an emergency fallback: it sends nothing.
 When the domain exists:
 - [ ] Set `domain` in `prod.tfvars`, run `tofu plan` and `tofu apply`, and add the DNS records that the output lists (the domain mapping).
 - [ ] In Brevo, verify the domain and add the records it gives you: **SPF, DKIM and DMARC**. Add **CAA** records, switch on DNSSEC and the registrar lock, and set automatic renewal (HRD-16).

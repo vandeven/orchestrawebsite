@@ -27,6 +27,7 @@ env:
   # Personal details are repository secrets, never files in the repository
   TF_VAR_alert_email: ${{ secrets.TF_VAR_ALERT_EMAIL }}
   TF_VAR_master_email: ${{ secrets.TF_VAR_MASTER_EMAIL }}
+  TF_VAR_mail_sender_address: ${{ secrets.TF_VAR_MAIL_SENDER_ADDRESS }}
   TF_VAR_billing_account_id: ${{ secrets.TF_VAR_BILLING_ACCOUNT_ID }}
 
 jobs:

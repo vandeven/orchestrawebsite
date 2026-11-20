@@ -1,7 +1,7 @@
 # The settings of the one environment, production (INF-10). Nothing here is secret.
 # Personal details are NOT in this file because the repository is public. Give them through the
-# environment instead (see README.md): TF_VAR_alert_email, TF_VAR_master_email and
-# TF_VAR_billing_account_id.
+# environment instead (see README.md): TF_VAR_alert_email, TF_VAR_master_email,
+# TF_VAR_mail_sender_address and TF_VAR_billing_account_id.
 
 project_id           = "orchestrawebsite"
 region               = "europe-west4"
@@ -13,9 +13,3 @@ site_name            = "PLACEHOLDER_NAME"
 
 # Until a domain exists the website runs on its default address. Set this when it does (HOS-5).
 domain = ""
-
-# TEMPORARY, until there is a domain and a Brevo account (manual.md, open item): the website runs
-# without sending email. Users cannot receive recovery links. Remove both lines and set
-# mail_sender_address to an address on the orchestra's domain when Brevo is ready.
-mail_provider       = "outbox"
-mail_sender_address = "no-reply@example.invalid"
