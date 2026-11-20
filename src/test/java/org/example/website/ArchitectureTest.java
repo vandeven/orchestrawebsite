@@ -23,9 +23,9 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import java.util.List;
 import java.util.Map;
-import org.example.website.platform.api.Access;
-import org.example.website.platform.api.DestroysData;
-import org.example.website.platform.api.Destructive;
+import org.example.website.platform.api.access.Access;
+import org.example.website.platform.api.access.DestroysData;
+import org.example.website.platform.api.access.Destructive;
 import org.jboss.resteasy.reactive.RestForm;
 
 /** Architecture rules from docs/architecture.md. More rules are added with each component. */
@@ -223,6 +223,84 @@ class ArchitectureTest {
                     .should()
                     .dependOnClassesThat()
                     .resideInAPackage(ACCOUNTS + "users..");
+
+    // The same idea for platform: its implementation packages are independent of each other (they
+    // only share the api), and the api packages have a simple order, with errors at the bottom.
+
+    private static final String PLATFORM = ROOT + "platform.";
+    private static final List<String> PLATFORM_INTERNAL =
+            List.of("access", "http", "mail", "database", "startup");
+
+    /** Each implementation package of platform stands on its own: it only uses the api. */
+    @ArchTest
+    static final ArchRule platformImplementationPackagesAreIndependent =
+            platformInternalPackagesDoNotUseEachOther();
+
+    private static ArchRule platformInternalPackagesDoNotUseEachOther() {
+        CompositeArchRule rule = null;
+        for (String from : PLATFORM_INTERNAL) {
+            String[] others =
+                    PLATFORM_INTERNAL.stream()
+                            .filter(other -> !other.equals(from))
+                            .map(other -> PLATFORM + "internal." + other + "..")
+                            .toArray(String[]::new);
+            ArchRule single =
+                    noClasses()
+                            .that()
+                            .resideInAPackage(PLATFORM + "internal." + from + "..")
+                            .should()
+                            .dependOnClassesThat()
+                            .resideInAnyPackage(others)
+                            .as(
+                                    "platform internal "
+                                            + from
+                                            + " does not use another internal package");
+            rule = rule == null ? CompositeArchRule.of(single) : rule.and(single);
+        }
+        return rule;
+    }
+
+    /** Errors are the bottom of the platform api: they know none of the other api packages. */
+    @ArchTest
+    static final ArchRule platformErrorsKnowNoOtherApiPackage =
+            noClasses()
+                    .that()
+                    .resideInAPackage(PLATFORM + "api.errors..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage(
+                            PLATFORM + "api.access..",
+                            PLATFORM + "api.mail..",
+                            PLATFORM + "api.request..",
+                            PLATFORM + "api.support..",
+                            PLATFORM + "api.database..");
+
+    /** The other api packages do not know each other, except that they may report errors. */
+    @ArchTest
+    static final ArchRule platformApiPackagesAreIndependent =
+            platformApiPackagesDoNotUseEachOther();
+
+    private static ArchRule platformApiPackagesDoNotUseEachOther() {
+        List<String> packages = List.of("access", "mail", "request", "support", "database");
+        CompositeArchRule rule = null;
+        for (String from : packages) {
+            String[] others =
+                    packages.stream()
+                            .filter(other -> !other.equals(from))
+                            .map(other -> PLATFORM + "api." + other + "..")
+                            .toArray(String[]::new);
+            ArchRule single =
+                    noClasses()
+                            .that()
+                            .resideInAPackage(PLATFORM + "api." + from + "..")
+                            .should()
+                            .dependOnClassesThat()
+                            .resideInAnyPackage(others)
+                            .as("platform api " + from + " does not use another api package");
+            rule = rule == null ? CompositeArchRule.of(single) : rule.and(single);
+        }
+        return rule;
+    }
 
     private static final DescribedPredicate<JavaMethod> IS_ENDPOINT =
             DescribedPredicate.describe(

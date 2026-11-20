@@ -9,10 +9,10 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.Map;
-import org.example.website.platform.api.ApplicationError;
 import org.example.website.platform.api.PlatformConfig;
-import org.example.website.platform.api.RequestIds;
-import org.example.website.platform.api.TooManyRequests;
+import org.example.website.platform.api.errors.ApplicationError;
+import org.example.website.platform.api.errors.TooManyRequests;
+import org.example.website.platform.api.request.RequestIds;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 

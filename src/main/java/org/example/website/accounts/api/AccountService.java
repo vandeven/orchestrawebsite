@@ -12,12 +12,12 @@ public interface AccountService {
      * @param sessionToken the session of the user who changes the password
      * @param clientAddress the visitor's address, for the limits; null when it is not known
      * @return the new session token for this device
-     * @throws org.example.website.platform.api.AccessDenied when the session is not valid or
+     * @throws org.example.website.platform.api.errors.AccessDenied when the session is not valid or
      *     belongs to the master (ACC-8)
      * @throws CurrentPasswordIncorrect when the current password is wrong
-     * @throws org.example.website.platform.api.InvalidInput when the new password breaks the rules
-     *     or equals the current one
-     * @throws org.example.website.platform.api.TooManyRequests after too many wrong attempts
+     * @throws org.example.website.platform.api.errors.InvalidInput when the new password breaks the
+     *     rules or equals the current one
+     * @throws org.example.website.platform.api.errors.TooManyRequests after too many wrong attempts
      */
     String changePassword(
             String sessionToken, String currentPassword, String newPassword, String clientAddress);

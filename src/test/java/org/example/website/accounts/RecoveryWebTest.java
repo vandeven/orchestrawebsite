@@ -22,7 +22,7 @@ import org.example.website.accounts.api.RecoveryService;
 import org.example.website.accounts.api.Role;
 import org.example.website.accounts.api.UserSummary;
 import org.example.website.platform.TestClock;
-import org.example.website.platform.api.Outbox;
+import org.example.website.platform.api.mail.Outbox;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.AfterEach;

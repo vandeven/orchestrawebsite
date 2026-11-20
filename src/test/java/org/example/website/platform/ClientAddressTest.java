@@ -15,7 +15,8 @@ class ClientAddressTest {
 
     private static Optional<String> resolve(String remote, String forwarded, int hops)
             throws Exception {
-        Class<?> type = Class.forName("org.example.website.platform.internal.RequestClientAddress");
+        Class<?> type =
+                Class.forName("org.example.website.platform.internal.http.RequestClientAddress");
         Method method = type.getDeclaredMethod("resolve", String.class, String.class, int.class);
         method.setAccessible(true);
         @SuppressWarnings("unchecked")

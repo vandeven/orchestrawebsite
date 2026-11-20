@@ -22,7 +22,7 @@ import org.example.website.accounts.internal.store.SessionRecord;
 import org.example.website.accounts.internal.store.SessionRepository;
 import org.example.website.accounts.internal.store.UserRecord;
 import org.example.website.accounts.internal.store.UserRepository;
-import org.example.website.platform.api.ServiceUnavailable;
+import org.example.website.platform.api.errors.ServiceUnavailable;
 import org.jboss.logging.Logger;
 
 /**

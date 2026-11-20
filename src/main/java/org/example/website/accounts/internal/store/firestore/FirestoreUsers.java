@@ -18,7 +18,7 @@ import java.util.UUID;
 import org.example.website.accounts.api.Role;
 import org.example.website.accounts.internal.store.UserRecord;
 import org.example.website.accounts.internal.store.UserRepository;
-import org.example.website.platform.api.Database;
+import org.example.website.platform.api.database.Database;
 
 /**
  * Users in Firestore (ARC-5, ARC-6). Collection {@code users}: one document per user, named by the

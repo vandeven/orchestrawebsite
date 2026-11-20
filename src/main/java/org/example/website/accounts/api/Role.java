@@ -1,6 +1,6 @@
 package org.example.website.accounts.api;
 
-import org.example.website.platform.api.AccessLevel;
+import org.example.website.platform.api.access.AccessLevel;
 
 /** The role of a user (see user management). */
 public enum Role {

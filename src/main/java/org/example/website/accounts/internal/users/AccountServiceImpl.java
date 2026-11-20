@@ -20,16 +20,16 @@ import org.example.website.accounts.internal.store.SessionRecord;
 import org.example.website.accounts.internal.store.SessionRepository;
 import org.example.website.accounts.internal.store.UserRecord;
 import org.example.website.accounts.internal.store.UserRepository;
-import org.example.website.platform.api.AccessDenied;
-import org.example.website.platform.api.AmsterdamTime;
-import org.example.website.platform.api.Email;
-import org.example.website.platform.api.EmailLayout;
-import org.example.website.platform.api.InvalidInput;
-import org.example.website.platform.api.LogSafe;
-import org.example.website.platform.api.Mailer;
 import org.example.website.platform.api.PlatformConfig;
-import org.example.website.platform.api.ServiceUnavailable;
-import org.example.website.platform.api.TooManyRequests;
+import org.example.website.platform.api.errors.AccessDenied;
+import org.example.website.platform.api.errors.InvalidInput;
+import org.example.website.platform.api.errors.ServiceUnavailable;
+import org.example.website.platform.api.errors.TooManyRequests;
+import org.example.website.platform.api.mail.Email;
+import org.example.website.platform.api.mail.EmailLayout;
+import org.example.website.platform.api.mail.Mailer;
+import org.example.website.platform.api.support.AmsterdamTime;
+import org.example.website.platform.api.support.LogSafe;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped

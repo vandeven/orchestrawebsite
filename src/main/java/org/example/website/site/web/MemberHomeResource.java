@@ -8,8 +8,8 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import org.example.website.platform.api.Access;
-import org.example.website.platform.api.AccessLevel;
+import org.example.website.platform.api.access.Access;
+import org.example.website.platform.api.access.AccessLevel;
 
 /** Temporary member page, replaced by the real member page in phase 3. */
 @Path("/members")

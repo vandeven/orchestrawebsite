@@ -19,7 +19,7 @@ import org.example.website.accounts.internal.store.UserRepository;
 import org.example.website.audit.api.AuditAction;
 import org.example.website.audit.api.AuditEntry;
 import org.example.website.audit.api.AuditTrail;
-import org.example.website.platform.api.LogSafe;
+import org.example.website.platform.api.support.LogSafe;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped

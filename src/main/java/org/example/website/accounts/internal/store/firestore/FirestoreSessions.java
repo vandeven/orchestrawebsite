@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.example.website.accounts.internal.store.SessionRecord;
 import org.example.website.accounts.internal.store.SessionRepository;
-import org.example.website.platform.api.Database;
+import org.example.website.platform.api.database.Database;
 
 /**
  * Sessions in Firestore (ARC-5, LOG-11). Collection {@code sessions}, one document per session,

@@ -10,8 +10,8 @@ import org.example.website.accounts.api.CurrentUser;
 import org.example.website.accounts.api.LoginService;
 import org.example.website.accounts.api.SessionCookie;
 import org.example.website.accounts.api.UserSummary;
-import org.example.website.platform.api.AccessLevel;
-import org.example.website.platform.api.VisitorAccess;
+import org.example.website.platform.api.access.AccessLevel;
+import org.example.website.platform.api.access.VisitorAccess;
 
 /**
  * Tells the platform what the visitor of the current request may open, from the session cookie

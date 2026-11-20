@@ -15,7 +15,8 @@ public interface RecoveryService {
      * master account (USR-16), and at most three are sent per address per hour (USR-22). The time
      * this takes does not depend on whether an email was sent.
      *
-     * @throws org.example.website.platform.api.TooManyRequests when this visitor asks too often
+     * @throws org.example.website.platform.api.errors.TooManyRequests when this visitor asks too
+     *     often
      */
     void request(String email, String clientAddress);
 
@@ -23,16 +24,17 @@ public interface RecoveryService {
      * Sends the recovery email to a user, for a new user (USR-5) or when an admin sends it again
      * (USR-6). An earlier link of the user stops working.
      *
-     * @throws org.example.website.platform.api.InvalidInput for the master account
-     * @throws org.example.website.platform.api.ResourceNotFound for an unknown user
-     * @throws org.example.website.platform.api.ServiceUnavailable when the email service failed
+     * @throws org.example.website.platform.api.errors.InvalidInput for the master account
+     * @throws org.example.website.platform.api.errors.ResourceNotFound for an unknown user
+     * @throws org.example.website.platform.api.errors.ServiceUnavailable when the email service
+     *     failed
      */
     void sendTo(UUID userId);
 
     /**
      * True when the token is a valid recovery link. Wrong tokens count against the visitor.
      *
-     * @throws org.example.website.platform.api.TooManyRequests after too many wrong tokens
+     * @throws org.example.website.platform.api.errors.TooManyRequests after too many wrong tokens
      */
     boolean isValid(String token, String clientAddress);
 
@@ -41,8 +43,9 @@ public interface RecoveryService {
      * The link is only used up when the password is accepted, so a typo does not waste it.
      *
      * @throws RecoveryLinkInvalid when the link is not valid
-     * @throws org.example.website.platform.api.InvalidInput when the password breaks the rules
-     * @throws org.example.website.platform.api.TooManyRequests after too many wrong tokens
+     * @throws org.example.website.platform.api.errors.InvalidInput when the password breaks the
+     *     rules
+     * @throws org.example.website.platform.api.errors.TooManyRequests after too many wrong tokens
      */
     void complete(String token, String newPassword, String clientAddress);
 }

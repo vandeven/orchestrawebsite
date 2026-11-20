@@ -4,8 +4,8 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import org.example.website.platform.api.Access;
-import org.example.website.platform.api.AccessLevel;
+import org.example.website.platform.api.access.Access;
+import org.example.website.platform.api.access.AccessLevel;
 
 /** Test only: an annotation on the class applies to its methods, and a method can override it. */
 @Path("/test-only/class-level")

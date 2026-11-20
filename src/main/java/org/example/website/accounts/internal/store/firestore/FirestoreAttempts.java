@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.function.UnaryOperator;
 import org.example.website.accounts.internal.store.AttemptCounter;
 import org.example.website.accounts.internal.store.AttemptStore;
-import org.example.website.platform.api.Database;
+import org.example.website.platform.api.database.Database;
 
 /**
  * The login counters in Firestore (ARC-5, LOG-13). Collection {@code attempts}, one document per

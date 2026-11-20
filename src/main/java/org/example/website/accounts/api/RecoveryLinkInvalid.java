@@ -1,6 +1,6 @@
 package org.example.website.accounts.api;
 
-import org.example.website.platform.api.ApplicationError;
+import org.example.website.platform.api.errors.ApplicationError;
 
 /**
  * Expected problem (ARC-8): the recovery link is unknown, used, expired or was replaced (USR-19).

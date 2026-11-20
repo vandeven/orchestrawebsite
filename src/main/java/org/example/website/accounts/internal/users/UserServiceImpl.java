@@ -14,9 +14,9 @@ import org.example.website.accounts.internal.passwords.PasswordHasher;
 import org.example.website.accounts.internal.store.SessionRepository;
 import org.example.website.accounts.internal.store.UserRecord;
 import org.example.website.accounts.internal.store.UserRepository;
-import org.example.website.platform.api.Conflict;
-import org.example.website.platform.api.InvalidInput;
-import org.example.website.platform.api.ResourceNotFound;
+import org.example.website.platform.api.errors.Conflict;
+import org.example.website.platform.api.errors.InvalidInput;
+import org.example.website.platform.api.errors.ResourceNotFound;
 
 @ApplicationScoped
 class UserServiceImpl implements UserService {

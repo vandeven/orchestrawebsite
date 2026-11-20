@@ -17,7 +17,7 @@ import org.example.website.accounts.internal.passwords.Argon2PasswordHasher;
 import org.example.website.accounts.internal.store.SessionRecord;
 import org.example.website.accounts.internal.store.UserRecord;
 import org.example.website.accounts.internal.store.memory.InMemoryStorage;
-import org.example.website.platform.api.ServiceUnavailable;
+import org.example.website.platform.api.errors.ServiceUnavailable;
 import org.junit.jupiter.api.Test;
 
 /** USR-14, USR-15: the master account follows MASTER_EMAIL and MASTER_PASSWORD. */

@@ -33,7 +33,7 @@ public class TestAccounts {
     private static final java.util.regex.Pattern LINK =
             java.util.regex.Pattern.compile("/reset-password\\?token=([A-Za-z0-9_-]{43})");
 
-    @Inject org.example.website.platform.api.Outbox outbox;
+    @Inject org.example.website.platform.api.mail.Outbox outbox;
     @Inject UserService users;
     @Inject LoginService login;
 

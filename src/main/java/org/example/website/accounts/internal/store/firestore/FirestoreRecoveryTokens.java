@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.example.website.accounts.internal.store.RecoveryTokenRecord;
 import org.example.website.accounts.internal.store.RecoveryTokenRepository;
-import org.example.website.platform.api.Database;
+import org.example.website.platform.api.database.Database;
 
 /**
  * Recovery links in Firestore (ARC-5, USR-19). Collection {@code recoveryTokens}, one document per

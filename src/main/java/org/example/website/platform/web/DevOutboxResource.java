@@ -6,9 +6,9 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import org.example.website.platform.api.Access;
-import org.example.website.platform.api.AccessLevel;
-import org.example.website.platform.api.Outbox;
+import org.example.website.platform.api.access.Access;
+import org.example.website.platform.api.access.AccessLevel;
+import org.example.website.platform.api.mail.Outbox;
 
 /**
  * Development only: shows the email the application "sent" to the outbox, so password recovery can

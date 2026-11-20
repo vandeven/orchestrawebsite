@@ -8,7 +8,7 @@ import com.google.cloud.firestore.WriteBatch;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import org.example.website.platform.api.Database;
+import org.example.website.platform.api.database.Database;
 
 /** Reading and writing values of documents in the shape the stores use. */
 public final class FirestoreFields {

@@ -19,7 +19,7 @@ import org.example.website.accounts.api.Role;
 import org.example.website.accounts.api.SessionCookie;
 import org.example.website.accounts.api.UserService;
 import org.example.website.accounts.api.UserSummary;
-import org.example.website.platform.api.Outbox;
+import org.example.website.platform.api.mail.Outbox;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

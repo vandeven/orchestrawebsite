@@ -11,7 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import org.example.website.platform.api.ServiceUnavailable;
+import org.example.website.platform.api.errors.ServiceUnavailable;
 import org.junit.jupiter.api.Test;
 
 /** LOG-16 to LOG-20 and LOG-23: how passwords are hashed. */

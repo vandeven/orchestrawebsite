@@ -20,10 +20,10 @@ import org.example.website.audit.api.AuditEntry;
 import org.example.website.audit.api.AuditEntry.Person;
 import org.example.website.audit.api.AuditEntry.Result;
 import org.example.website.audit.api.AuditTrail;
-import org.example.website.platform.api.AccessDenied;
-import org.example.website.platform.api.ApplicationError;
-import org.example.website.platform.api.ResourceNotFound;
-import org.example.website.platform.api.ServiceUnavailable;
+import org.example.website.platform.api.errors.AccessDenied;
+import org.example.website.platform.api.errors.ApplicationError;
+import org.example.website.platform.api.errors.ResourceNotFound;
+import org.example.website.platform.api.errors.ServiceUnavailable;
 
 @ApplicationScoped
 class UserManagementImpl implements UserManagement {

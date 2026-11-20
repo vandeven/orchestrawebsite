@@ -6,9 +6,9 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.example.website.platform.api.Access;
-import org.example.website.platform.api.AccessLevel;
-import org.example.website.platform.api.Destructive;
+import org.example.website.platform.api.access.Access;
+import org.example.website.platform.api.access.AccessLevel;
+import org.example.website.platform.api.access.Destructive;
 import org.jboss.resteasy.reactive.RestForm;
 
 /** Test only: destructive endpoints, and counters that show whether the action really ran. */

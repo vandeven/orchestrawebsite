@@ -14,7 +14,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.bouncycastle.crypto.generators.Argon2BytesGenerator;
 import org.bouncycastle.crypto.params.Argon2Parameters;
 import org.example.website.accounts.internal.config.AccountsConfig;
-import org.example.website.platform.api.ServiceUnavailable;
+import org.example.website.platform.api.errors.ServiceUnavailable;
 
 /**
  * Argon2id with a random salt and a pepper (LOG-16 to LOG-20).

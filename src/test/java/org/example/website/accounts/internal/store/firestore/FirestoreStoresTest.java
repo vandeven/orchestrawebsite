@@ -12,7 +12,7 @@ import org.example.website.accounts.internal.store.AttemptStore;
 import org.example.website.accounts.internal.store.RecoveryTokenRepository;
 import org.example.website.accounts.internal.store.SessionRepository;
 import org.example.website.accounts.internal.store.UserRepository;
-import org.example.website.platform.api.Database;
+import org.example.website.platform.api.database.Database;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 

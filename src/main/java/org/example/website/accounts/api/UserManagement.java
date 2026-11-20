@@ -2,7 +2,7 @@ package org.example.website.accounts.api;
 
 import java.util.List;
 import java.util.UUID;
-import org.example.website.platform.api.DestroysData;
+import org.example.website.platform.api.access.DestroysData;
 
 /**
  * What admins and the master can do with users (USR-1 to USR-13, USR-22 to USR-24). Every method
@@ -40,8 +40,8 @@ public interface UserManagement {
     /**
      * All users with what the actor may do with each (USR-7, USR-8).
      *
-     * @throws org.example.website.platform.api.AccessDenied unless the actor is an admin or the
-     *     master
+     * @throws org.example.website.platform.api.errors.AccessDenied unless the actor is an admin or
+     *     the master
      */
     List<UserRow> list(UUID actorId, Query query);
 
@@ -52,15 +52,17 @@ public interface UserManagement {
      * Adds a member and sends the recovery email (USR-2 to USR-5). When the email fails the account
      * still exists and the result says so, so the admin can send it again.
      *
-     * @throws org.example.website.platform.api.InvalidInput for an invalid address
-     * @throws org.example.website.platform.api.Conflict when the address already has an account
+     * @throws org.example.website.platform.api.errors.InvalidInput for an invalid address
+     * @throws org.example.website.platform.api.errors.Conflict when the address already has an
+     *     account
      */
     AddResult add(UUID actorId, String email);
 
     /**
      * Sends the recovery email again (USR-6). Not for the master account.
      *
-     * @throws org.example.website.platform.api.ServiceUnavailable when the email service failed
+     * @throws org.example.website.platform.api.errors.ServiceUnavailable when the email service
+     *     failed
      */
     void resendRecovery(UUID actorId, UUID targetId);
 
