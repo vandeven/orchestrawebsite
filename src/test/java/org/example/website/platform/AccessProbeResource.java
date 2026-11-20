@@ -5,8 +5,8 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import org.example.website.platform.api.Access;
-import org.example.website.platform.api.AccessLevel;
+import org.example.website.platform.api.access.Access;
+import org.example.website.platform.api.access.AccessLevel;
 
 /** Test only: one endpoint per access level, one without the annotation, one with an override. */
 @Path("/test-only/access")

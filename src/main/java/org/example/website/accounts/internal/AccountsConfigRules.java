@@ -2,10 +2,11 @@ package org.example.website.accounts.internal;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.example.website.accounts.api.AccountsRules;
+import org.example.website.accounts.api.rules.AccountsRules;
+import org.example.website.accounts.internal.passwords.Argon2PasswordHasher;
 
 /** The validation rules for the accounts configuration. Messages never contain the values. */
-final class AccountsConfigRules {
+public final class AccountsConfigRules {
 
     private AccountsConfigRules() {}
 

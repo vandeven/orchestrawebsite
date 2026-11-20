@@ -3,7 +3,7 @@ package org.example.website.platform;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.Instant;
-import org.example.website.platform.api.AmsterdamTime;
+import org.example.website.platform.api.support.AmsterdamTime;
 import org.junit.jupiter.api.Test;
 
 /** Plan: Language, dates and time zone. Amsterdam time, including the days the clocks change. */

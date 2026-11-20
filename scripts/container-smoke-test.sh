@@ -65,7 +65,13 @@ for path in /q/dev /q/dev-ui /q/swagger-ui /q/openapi /q/metrics /q/health/start
     || fail "$path answered with $code"
 done
 
-if docker logs "$name" 2>&1 | head -1 | grep -q '^{'; then pass "logs are JSON"; else fail "logs are not JSON"; fi
+first_line=$(docker logs "$name" 2>&1 | head -1)
+if [[ "$first_line" == "{"* ]]; then
+  pass "logs are JSON"
+else
+  fail "logs are not JSON. The first lines of the log are:"
+  docker logs "$name" 2>&1 | head -5 | cut -c1-300
+fi
 docker logs "$name" 2>&1 | grep -q '/q/health' && fail "health check requests are logged" || pass "health checks are not logged"
 
 if [ "$failures" -gt 0 ]; then echo "$failures check(s) failed"; exit 1; fi

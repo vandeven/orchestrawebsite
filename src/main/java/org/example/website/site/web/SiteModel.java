@@ -5,9 +5,9 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
-import org.example.website.platform.api.AccessLevel;
 import org.example.website.platform.api.PlatformConfig;
-import org.example.website.platform.api.VisitorAccess;
+import org.example.website.platform.api.access.AccessLevel;
+import org.example.website.platform.api.access.VisitorAccess;
 
 /**
  * What every page template needs: the name of the orchestra and the main menu for the current

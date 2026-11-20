@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-import org.example.website.platform.api.LogSafe;
+import org.example.website.platform.api.support.LogSafe;
 import org.junit.jupiter.api.Test;
 
 /** LGG-5: identifiers of visitors are logged as a short hash. */

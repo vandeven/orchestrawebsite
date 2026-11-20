@@ -5,6 +5,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import java.util.List;
+import org.example.website.accounts.internal.config.AccountsConfig;
+import org.example.website.accounts.internal.users.MasterAccountSetup;
 import org.jboss.logging.Logger;
 
 /**
@@ -33,7 +35,9 @@ class AccountsStartup {
                     "Invalid configuration, the application does not start: "
                             + String.join("; ", problems));
         }
-        LOG.info("Accounts configuration check passed");
+        LOG.infof(
+                "Accounts configuration check passed (storage: %s)",
+                config.allowInMemoryStorage() ? "in memory" : "firestore");
         if (config.masterSetupOnStart()) {
             masterSetup.ensureMasterAccount();
         }

@@ -6,8 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
-import org.example.website.platform.api.Email;
-import org.example.website.platform.api.EmailLayout;
+import org.example.website.platform.api.mail.Email;
+import org.example.website.platform.api.mail.EmailLayout;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
