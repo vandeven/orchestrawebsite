@@ -28,7 +28,8 @@ class FirestoreDatabase implements Database {
             FirestoreOptions.Builder options =
                     FirestoreOptions.newBuilder().setDatabaseId(config.databaseId());
             config.projectId().filter(id -> !id.isBlank()).ifPresent(options::setProjectId);
-            // With FIRESTORE_EMULATOR_HOST set, the client talks to the emulator without credentials
+            // With FIRESTORE_EMULATOR_HOST set, the client talks to the emulator without
+            // credentials
             client = options.build().getService();
         }
         return client;

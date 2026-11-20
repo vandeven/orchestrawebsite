@@ -12,6 +12,7 @@ import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.lang.CompositeArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import jakarta.ws.rs.DELETE;
@@ -116,6 +117,112 @@ class ArchitectureTest {
                     .should()
                     .dependOnClassesThat()
                     .resideInAnyPackage("..internal..", "..web..");
+
+    // Inside the accounts component the implementation is split by purpose, and the packages form
+    // layers (see docs/architecture.md). The rules keep the flow readable: a lower layer never
+    // reaches up to a higher one, and the sibling features do not know each other.
+
+    private static final String ACCOUNTS = ROOT + "accounts.internal.";
+    private static final String ACCOUNTS_ROOT = ROOT + "accounts.internal";
+
+    private static ArchRule accountsPackageNeverUses(String from, String... forbidden) {
+        String[] names = new String[forbidden.length];
+        for (int i = 0; i < forbidden.length; i++) {
+            names[i] = forbidden[i].isEmpty() ? ACCOUNTS_ROOT : ACCOUNTS + forbidden[i] + "..";
+        }
+        return noClasses()
+                .that()
+                .resideInAPackage(ACCOUNTS + from + "..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage(names)
+                .as(
+                        "accounts "
+                                + from
+                                + " never uses "
+                                + String.join(", ", forbidden).replaceAll(", $", "")
+                                + (forbidden[forbidden.length - 1].isEmpty()
+                                        ? " (nor the start-up classes)"
+                                        : ""));
+    }
+
+    /** The configuration is at the bottom: it depends on nothing else of accounts. */
+    @ArchTest
+    static final ArchRule accountsConfigIsAtTheBottom =
+            accountsPackageNeverUses(
+                    "config", "passwords", "security", "store", "login", "recovery", "users");
+
+    /** Passwords and security helpers are building blocks: they know no feature and no store. */
+    @ArchTest
+    static final ArchRule accountsBuildingBlocksKnowNoFeature =
+            CompositeArchRule.of(
+                            accountsPackageNeverUses(
+                                    "passwords", "store", "login", "recovery", "users", ""))
+                    .and(
+                            accountsPackageNeverUses(
+                                    "security", "store", "login", "recovery", "users", ""));
+
+    /**
+     * The data and its stores know no feature: login, recovery and users use them, not the reverse.
+     */
+    @ArchTest
+    static final ArchRule accountsStoresKnowNoFeature =
+            accountsPackageNeverUses("store", "passwords", "login", "recovery", "users", "");
+
+    /** The in-memory and the Firestore stores are two alternatives: neither knows the other. */
+    @ArchTest
+    static final ArchRule accountsStoreImplementationsAreSeparate =
+            CompositeArchRule.of(
+                            accountsPackageNeverUses(
+                                    "store.memory",
+                                    "store.firestore",
+                                    "login",
+                                    "recovery",
+                                    "users",
+                                    ""))
+                    .and(
+                            accountsPackageNeverUses(
+                                    "store.firestore",
+                                    "store.memory",
+                                    "login",
+                                    "recovery",
+                                    "users",
+                                    ""));
+
+    /** Only the store package itself (AccountsStorage) chooses between the two implementations. */
+    @ArchTest
+    static final ArchRule accountsOnlyTheStoreChoosesAnImplementation =
+            noClasses()
+                    .that()
+                    .resideOutsideOfPackages(ACCOUNTS + "store..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage(
+                            ACCOUNTS + "store.memory..", ACCOUNTS + "store.firestore..");
+
+    /**
+     * Login and recovery are separate features: neither knows the other, and neither knows users.
+     */
+    @ArchTest
+    static final ArchRule accountsLoginAndRecoveryAreSeparate =
+            CompositeArchRule.of(accountsPackageNeverUses("login", "recovery", "users", ""))
+                    .and(accountsPackageNeverUses("recovery", "login", "users", ""));
+
+    /** Users (user management, my account, the master account) is the top layer. */
+    @ArchTest
+    static final ArchRule accountsUsersIsOnTop =
+            noClasses()
+                    .that()
+                    .resideInAnyPackage(
+                            ACCOUNTS + "config..",
+                            ACCOUNTS + "passwords..",
+                            ACCOUNTS + "security..",
+                            ACCOUNTS + "store..",
+                            ACCOUNTS + "login..",
+                            ACCOUNTS + "recovery..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAPackage(ACCOUNTS + "users..");
 
     private static final DescribedPredicate<JavaMethod> IS_ENDPOINT =
             DescribedPredicate.describe(

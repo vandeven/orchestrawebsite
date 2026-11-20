@@ -5,6 +5,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import java.util.List;
+import org.example.website.accounts.internal.config.AccountsConfig;
+import org.example.website.accounts.internal.users.MasterAccountSetup;
 import org.jboss.logging.Logger;
 
 /**

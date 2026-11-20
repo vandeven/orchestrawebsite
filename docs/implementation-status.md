@@ -193,6 +193,15 @@ Decisions and findings:
 - **An update replaces the whole user.** Two changes to the same user at the same moment (a login and a role change) can lose one of them, as before with the in-memory store. Not an issue at this size; a field-level update can come later.
 - **Collections:** `users`, `userEmails`, `sessions`, `recoveryTokens`, `attempts`, each document with `schemaVersion` 1. The queries only use automatic single-field indexes, so `infra/` needs no index.
 
+### Restructuring: `accounts/internal` split by purpose (ARC-18)
+
+`accounts/internal` had 34 classes in one folder, which made the flow hard to follow. It is now split into packages by purpose, with a `package-info.java` in each: `config`, `passwords`, `security`, `store` (with `memory` and `firestore`), `login`, `recovery` and `users`; only the start-up classes stay in the root. The tests moved with their classes. Behaviour did not change: all 610 tests passed before and pass after, plus the seven new architecture rules (617).
+
+| What | Where | Tests |
+|------|-------|-------|
+| Seven architecture rules for the layers: `config` knows nothing; `passwords`, `security` and `store` know no feature; login and recovery do not know each other; nothing but the start-up knows `users`; only `store` chooses between memory and Firestore | `ArchitectureTest` | five planted violations (a store using passwords, passwords using a store, login using recovery, recovery using users, a helper using the in-memory store) all failed the build |
+| Classes used from another package of `internal` became `public` (the records, the repositories, the shared helpers) and a few test hooks (the constructor of `InMemoryStorage` now takes its settings instead of loose fields; a shared `TestAccountsConfig` for tests) | | |
+
 ### Phase 1: left out on purpose (to do in the next slices)
 
 | Item | Why it waits |

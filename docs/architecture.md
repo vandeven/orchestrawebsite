@@ -73,6 +73,7 @@ Keep the code easy to understand, change and test by building the website as a *
 15. ARC-15: **Ready to split.** Components do not share mutable state or classes outside their `api`, so a component could later move into its own service by replacing its `api` calls with remote calls. This is not planned.
 16. ARC-16: **The structure is enforced and documented.** The rules above are checked by architecture tests in the pipeline (see Automatic tests). The component table in this document is kept up to date when a component or feature is added, and each new feature document says which component it belongs to.
 17. ARC-17: **Destructive actions are marked.** Endpoints that delete or remove something are annotated with `@Destructive`. An interceptor in `platform` refuses a request to such an endpoint that is not a `POST` with the confirmation field (`confirm=yes`) (see the [plan](PLAN.md#confirming-destructive-actions)). The dialog and the confirmation page are shared page parts (ARC-13).
+18. ARC-18: **Inside a component, `internal` follows layers.** When `internal` has more than about ten classes it is split into packages by purpose, and the dependencies only go downwards: `config` depends on nothing; `passwords`, `security` and `store` are building blocks that know no feature; `login` and `recovery` are separate features that do not know each other; `users` is on top and nothing depends on it; the in-memory and the Firestore stores do not know each other and only `store` chooses between them. Classes that are used in another package of `internal` are `public`, classes that are not stay package-private. The rules are architecture tests (see below).
 
 ## Content and data
 Package layout (example for one component):
@@ -87,6 +88,23 @@ src/main/resources/META-INF/resources/songs/    (small JavaScript and CSS files)
 src/test/java/org/example/website/songs/        (component tests with fakes, adapter tests with emulators)
 ```
 
+**A component with a lot of implementation splits `internal` by purpose** (ARC-18). The test is whether someone can follow a request through the folders. `accounts` is the example, with the layers from the bottom:
+
+```
+accounts/internal/
+  config/      AccountsConfig                       the settings (bottom layer, knows nothing else)
+  passwords/   Argon2PasswordHasher, PasswordHasher, CommonPasswords    building block
+  security/    SessionTokens, Fingerprints                              building block
+  store/       UserRecord, SessionRecord, ...Repository, AttemptStore, AccountsStorage
+    memory/    InMemoryStorage                      for tests and development
+    firestore/ FirestoreUsers, FirestoreSessions, ...                   the real database
+  login/       LoginServiceImpl, LoginThrottle, SessionVisitorAccess    a feature
+  recovery/    RecoveryServiceImpl, RequestCounter, Pacer               a feature
+  users/       UserServiceImpl, UserManagementImpl, AccountServiceImpl, MasterAccountSetup   the top layer
+  AccountsStartup, AccountsConfigRules                                  the start (nothing depends on it)
+```
+Each package has a `package-info.java` that says in a few lines what it is for. A login request goes `accounts/web/LoginResource` to `api/LoginService`, then `login/LoginServiceImpl`, which uses `passwords` (check), `login/LoginThrottle` (limits, kept through `store/AttemptStore`) and `store/UserRepository` and `SessionRepository`. Which implementation sits behind the repositories, memory or Firestore, is decided in one place, `store/AccountsStorage`.
+
 ## Input validation
 This document has no inputs of its own. It sets how all other inputs are validated: rules are defined once per input (ARC-9), checked on the server for every request, never trusted from the browser, and expected errors use the common error format (ARC-8).
 
@@ -98,6 +116,7 @@ This document has no inputs of its own. It sets how all other inputs are validat
   - `web` classes do not use storage classes (Firestore, Cloud Storage) or `internal` classes of their own component directly, only the `api`.
   - Only the adapters in `internal` and `platform` use the Google Cloud and Brevo libraries.
   - Every endpoint and page has an `@Access` annotation, and every state-changing endpoint is protected against CSRF.
+  - The layers inside `accounts/internal` (ARC-18): no dependency goes upwards or sideways between the packages as described there, and only `store` uses the two store implementations.
   - Only the audit services write audit entries, and only services (not `web` classes) call `audit.api`.
   - The only raw HTML output is in the editable text component (HRD-5).
 - **Component tests (ARC-3, ARC-6):** each component is tested through its `api` with in-memory fakes for storage, email and the clock, so most tests run in seconds. Every requirement of the feature documents has at least one test (see [automatic tests](PLAN.md#automatic-tests)).
