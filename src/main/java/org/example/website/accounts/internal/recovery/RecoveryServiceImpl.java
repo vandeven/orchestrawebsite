@@ -77,6 +77,7 @@ class RecoveryServiceImpl implements RecoveryService {
                 }
             }
             if (!AccountsRules.validEmail(normalized)) {
+                LOG.info("Recovery request: no email sent (not a valid address)");
                 return;
             }
             // Counted for every address, also unknown ones, so the limit shows nothing about
@@ -94,6 +95,11 @@ class RecoveryServiceImpl implements RecoveryService {
                 } catch (ServiceUnavailable e) {
                     // Logged and alerted in sendTo. The visitor sees the same message (USR-18).
                 }
+            } else {
+                // Only the log tells the owner; the visitor sees the same page in every case
+                LOG.info(
+                        "Recovery request: no email sent (no account for the address, or the"
+                                + " master account)");
             }
         } finally {
             Pacer.waitUntil(start, config.recoveryMinResponse());
