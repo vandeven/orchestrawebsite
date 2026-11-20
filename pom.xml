@@ -32,6 +32,9 @@
     <!-- Versions of the Google Cloud client libraries that fit together (Firestore now, Cloud Storage
          later). Imported after the Quarkus BOM, so where both manage a library Quarkus wins. -->
     <google-cloud-libraries-bom.version>26.94.0</google-cloud-libraries-bom.version>
+    <!-- Security override: the Google client libraries bring OpenTelemetry 1.62.0 (GHSA-ccrj-gw8r-854m,
+         fixed in 1.67.0). Remove it when the libraries-bom has 1.67.0 or newer. -->
+    <opentelemetry-bom.version>1.67.0</opentelemetry-bom.version>
   </properties>
 
   <dependencyManagement>
@@ -42,6 +45,14 @@
         <groupId>com.fasterxml.jackson</groupId>
         <artifactId>jackson-bom</artifactId>
         <version>${jackson-bom.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <!-- Brought in by the Firestore client (GHSA-ccrj-gw8r-854m, fixed in 1.67.0) -->
+      <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-bom</artifactId>
+        <version>${opentelemetry-bom.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
