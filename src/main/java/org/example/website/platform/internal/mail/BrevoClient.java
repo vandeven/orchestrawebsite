@@ -61,11 +61,12 @@ class BrevoClient {
                         .POST(HttpRequest.BodyPublishers.ofString(body.encode()))
                         .build();
         try {
-            HttpResponse<Void> response =
-                    http.send(request, HttpResponse.BodyHandlers.discarding());
+            HttpResponse<String> response =
+                    http.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() / 100 != 2) {
                 LOG.errorf(
-                        "The email service refused a message (status %d)", response.statusCode());
+                        "The email service refused a message (status %d, code %s)",
+                        response.statusCode(), errorCode(response.body()));
                 throw new ServiceUnavailable("Email service answered " + response.statusCode());
             }
         } catch (IOException e) {
@@ -74,6 +75,20 @@ class BrevoClient {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new ServiceUnavailable("Interrupted while sending email");
+        }
+    }
+
+    /**
+     * The short error code Brevo sends, such as {@code unauthorized}. It is the only part of the
+     * answer that is logged: the rest can hold an email address. Anything that does not look like a
+     * code is not logged.
+     */
+    private static String errorCode(String body) {
+        try {
+            String code = new JsonObject(body).getString("code");
+            return code != null && code.matches("[a-z_]{1,40}") ? code : "unknown";
+        } catch (RuntimeException e) {
+            return "unknown";
         }
     }
 }

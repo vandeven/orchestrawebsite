@@ -32,6 +32,7 @@ class BrevoClientTest {
     private final List<String> apiKeys = new CopyOnWriteArrayList<>();
     private final List<String> methods = new CopyOnWriteArrayList<>();
     private volatile int status = 201;
+    private volatile String answerBody = "{\"message\":\"someone@example.test is blocked\"}";
 
     @BeforeEach
     void start() throws IOException {
@@ -45,9 +46,7 @@ class BrevoClientTest {
                                     StandardCharsets.UTF_8));
                     apiKeys.add(String.valueOf(exchange.getRequestHeaders().getFirst("api-key")));
                     methods.add(exchange.getRequestMethod());
-                    byte[] answer =
-                            "{\"message\":\"someone@example.test is blocked\"}"
-                                    .getBytes(StandardCharsets.UTF_8);
+                    byte[] answer = answerBody.getBytes(StandardCharsets.UTF_8);
                     exchange.sendResponseHeaders(status, answer.length);
                     exchange.getResponseBody().write(answer);
                     exchange.close();
@@ -115,6 +114,40 @@ class BrevoClientTest {
             assertFalse(text.contains("member@example.test"));
             assertFalse(text.contains(KEY));
         }
+    }
+
+    @Test
+    void theErrorCodeOfTheAnswerIsLoggedButNothingElseOfIt() {
+        status = 401;
+        answerBody =
+                "{\"code\":\"unauthorized\",\"message\":\"unrecognised IP for someone@example.test\"}";
+        List<LogRecord> logs =
+                TestLogs.capture(() ->
+                        assertThrows(
+                                ServiceUnavailable.class,
+                                () ->
+                                        new BrevoClient(url(), KEY, "a@example.org", "N", null)
+                                                .send(email())));
+        assertTrue(
+                logs.stream()
+                        .anyMatch(r ->
+                                TestLogs.everything(r).contains("status 401, code unauthorized")));
+        assertTrue(logs.stream().noneMatch(r -> TestLogs.everything(r).contains("someone@")));
+    }
+
+    @Test
+    void aCodeThatDoesNotLookLikeACodeIsNotLogged() {
+        status = 400;
+        answerBody = "{\"code\":\"x@example.test\"}";
+        List<LogRecord> logs =
+                TestLogs.capture(() ->
+                        assertThrows(
+                                ServiceUnavailable.class,
+                                () ->
+                                        new BrevoClient(url(), KEY, "a@example.org", "N", null)
+                                                .send(email())));
+        assertTrue(logs.stream().anyMatch(r -> TestLogs.everything(r).contains("code unknown")));
+        assertTrue(logs.stream().noneMatch(r -> TestLogs.everything(r).contains("x@example")));
     }
 
     @Test
