@@ -22,7 +22,7 @@ docker run -d --name "$name" -p "$port:8080" \
   -e PUBLIC_BASE_URL=https://example.org \
   -e PASSWORD_PEPPER=FAKE-NOT-A-SECRET-smoke-test-pepper-0123456789abcdef \
   -e MASTER_EMAIL=master@example.test -e MASTER_PASSWORD=FAKE-NOT-A-SECRET-smoke-master \
-  -e ACCOUNTS_ALLOW_IN_MEMORY_STORAGE=true \
+  -e ACCOUNTS_ALLOW_IN_MEMORY_STORAGE=true -e FIRESTORE_READINESS_CHECK=false \
   -e MAIL_PROVIDER=outbox -e MAIL_ALLOW_OUTBOX=true \
   -e MAIL_SENDER_ADDRESS=no-reply@example.test -e MAIL_SENDER_NAME=Smoke \
   --memory 512m "$image" >/dev/null
@@ -65,14 +65,17 @@ for path in /q/dev /q/dev-ui /q/swagger-ui /q/openapi /q/metrics /q/health/start
     || fail "$path answered with $code"
 done
 
-first_line=$(docker logs "$name" 2>&1 | head -1)
+# Read the log once into a variable: piping "docker logs" into head or grep -q closes the pipe
+# early, and with pipefail the resulting SIGPIPE (exit 141) would stop the script at random.
+logs=$(docker logs "$name" 2>&1)
+first_line=${logs%%$'\n'*}
 if [[ "$first_line" == "{"* ]]; then
   pass "logs are JSON"
 else
   fail "logs are not JSON. The first lines of the log are:"
-  docker logs "$name" 2>&1 | head -5 | cut -c1-300
+  printf '%s\n' "$logs" | sed -n '1,5p' | cut -c1-300
 fi
-docker logs "$name" 2>&1 | grep -q '/q/health' && fail "health check requests are logged" || pass "health checks are not logged"
+if grep -q '/q/health' <<<"$logs"; then fail "health check requests are logged"; else pass "health checks are not logged"; fi
 
 if [ "$failures" -gt 0 ]; then echo "$failures check(s) failed"; exit 1; fi
 echo "All container checks passed"

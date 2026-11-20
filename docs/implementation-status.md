@@ -218,6 +218,23 @@ The 14 classes of `accounts/api` are now `users` (user service and management, t
 |------|-------|-------|
 | Two architecture rules: `users`, `rules` and `recovery` know no other api package; `login` only uses `users` | `ArchitectureTest` | planted violations (see below) |
 
+### Slice 7: the deployment workflow (HOS-6, SEC-15, HRD-15, HOS-35)
+
+| What | Requirements | Status | Where | Tests |
+|------|--------------|--------|-------|-------|
+| A deployment on every push to `main` (and by hand from `main`), one at a time, never cancelled half way | HOS-6 | **Written, never run against Google Cloud** | `.github/workflows/deploy.yml` | `actionlint`; its parts below |
+| The gate: waits until the 7 required checks of that commit have succeeded; a failed, skipped, cancelled, missing or unfinished one keeps it closed; the newest run of a check counts | SEC-15 | Done (the script is tested; the workflow that uses it has not run) | `scripts/wait-for-checks.sh` | `scripts/tests/wait-for-checks-selftest.sh` (13 cases, run in CI; two planted bugs failed it) |
+| Build the image again from the same commit, check it (cold start, headers), push it to Artifact Registry by digest, create a signed provenance statement and verify it with `gh attestation verify` before deploying | HRD-15, SEC-9 | Written, not run | `deploy.yml` | `container-smoke-test.sh` runs in the workflow |
+| Deploy as a new revision with no traffic and its own test address (a tag), smoke tests against that address, only then all the traffic, a check of the live website, and an automatic move back to the previous revision if that check fails | HOS-6, HOS-30 | Written, not run | `deploy.yml` | |
+| The smoke tests: read only (GET), public pages with the security headers, the secure pages send an anonymous visitor to the login page and are not cached, the custom 404 page, nothing for development reachable, and **the application can read from Firestore** | HOS-6, HRD-6, LOG-12, SEC-13 | Done | `scripts/deploy-smoke-test.sh` | `deploy-smoke-test-selftest.sh` in CI: passes on the real application, fails on a broken version (37 checks failed) and on an unreachable one |
+| A readiness check that reads one document from Firestore, so a version that cannot reach the database never gets traffic; liveness does not depend on it, so a database outage does not restart the container | HOS-6 | Done | `platform/internal/database/DatabaseReadiness` | `DatabaseReadinessTest` (with the emulator) and by hand: ready 200 with the emulator, 503 without it, live 200 in both cases |
+| Text files are stored with LF on every computer (a Windows checkout made 244 files look changed) | | Done | `.gitattributes` | |
+
+- **Never run for real.** The login to Google Cloud as the deploy account, the push to Artifact Registry, the provenance check, `gcloud run deploy --no-traffic --tag`, finding the test address and the traffic switch are all untested. The permissions of the deploy account (`run.developer`, Artifact Registry writer, act as the app account) are reasoned out, not tried.
+- **The master account** is still made at start-up (`ACCOUNTS_MASTER_SETUP_ON_START` in `infra/run.tf`), not by a job before the traffic switch. That is the next slice.
+- **No `production` approval** for a deployment, as HOS-6 says (automated). The login of the deploy account is bound to the `main` branch, not to the environment.
+- **The first deployment replaces the Google sample page**, which has no health checks: nothing is lost by a failed attempt, the sample page stays.
+
 ### Phase 1: left out on purpose (to do in the next slices)
 
 | Item | Why it waits |
@@ -274,12 +291,12 @@ Everything that has to be done by a person, and cannot be code, is in [manual.md
 | Email notifications (SEC-17, UPD-12) | A GitHub setting for the owner, not code |
 | Branch protection with the required checks, "Allow auto-merge", secret scanning and push protection, Dependabot security updates (SEC-19, UPD-4, UPD-8) | Repository settings the owner turns on; the check names to require are the job names in the two workflows |
 | ESLint with security rules (SEC-7) | There is no JavaScript yet |
-| The deployment workflow: deploy without traffic, smoke tests against the test address, then traffic (HOS-6, SEC-15 deployment gate), the provenance attestation (HRD-15), the deployment of automatic merges (UPD-10) | `infra/` is written; needs the first apply and the application's Firestore stores |
+| The things around the deployment: a test with a deliberately broken version that fails in the real pipeline (only done with a stand-in server), a notification beyond the GitHub email for a failed run, the Cloud Run job for migrations (there are none yet), and the check that the weekly scheduled scans ran in the last 8 days (SEC-14) | Later |
 | The security header smoke tests against the deployed address and the HTTP to HTTPS redirect (SEC-13) | Same; the header checks already run on the image in `container-smoke-test.sh` |
 
 ## Not started in phase 0
 
-Rate limiting, `infra/` (OpenTofu), the deployment workflow, the seed command.
+The seed command.
 
 ## Decisions and differences from the documents
 

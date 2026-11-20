@@ -1,0 +1,177 @@
+# Deployment (HOS-6, SEC-15, HRD-15). Every push to main is deployed when, and only when, all the
+# tests and security scans of that commit passed. The new version is first deployed WITHOUT traffic
+# with its own test address, the smoke tests run against that address, and only when all of them
+# pass does it get the traffic. If anything fails, the live website stays on the previous version.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # deploys the current main again, for example after a failed attempt
+
+permissions:
+  contents: read
+
+# One deployment at a time, and a running one is never cancelled half way
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  PROJECT_ID: orchestrawebsite
+  REGION: europe-west4
+  SERVICE: orchestra-website
+  IMAGE: europe-west4-docker.pkg.dev/orchestrawebsite/orchestra-website/app
+
+jobs:
+  # SEC-15: the gate. Waits for the checks of this commit and fails if one of them fails.
+  gate:
+    name: Gate (all tests and scans passed)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      checks: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Wait for the required checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/wait-for-checks.sh "$GITHUB_REPOSITORY" "$GITHUB_SHA"
+
+  not-configured:
+    name: Deployment is not set up yet
+    runs-on: ubuntu-24.04
+    needs: gate
+    if: vars.GCP_WORKLOAD_IDENTITY_PROVIDER == '' || vars.GCP_DEPLOY_SERVICE_ACCOUNT == ''
+    steps:
+      - run: |
+          echo "::warning::Nothing was deployed: the variables GCP_WORKLOAD_IDENTITY_PROVIDER and GCP_DEPLOY_SERVICE_ACCOUNT are not set (docs/manual.md, A3 and A6)."
+
+  deploy:
+    name: Deploy without traffic, test, then switch
+    runs-on: ubuntu-24.04
+    needs: gate
+    timeout-minutes: 30
+    if: vars.GCP_WORKLOAD_IDENTITY_PROVIDER != '' && vars.GCP_DEPLOY_SERVICE_ACCOUNT != ''
+    permissions:
+      contents: read
+      id-token: write # the keyless login to Google Cloud
+      attestations: write # the provenance attestation (HRD-15)
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      # The tests already ran for this commit (the gate). Here the same code is packaged again.
+      - name: Package the application
+        run: ./mvnw -B -ntp -DskipTests package
+      - name: Build the image
+        run: |
+          version="${GITHUB_SHA:0:7}-$(date -u +%Y%m%d%H%M)"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          docker build --build-arg "APP_VERSION=$version" -t "$IMAGE:${GITHUB_SHA}" .
+      - name: Smoke test of the image (cold start, headers, nothing internal reachable)
+        run: bash scripts/container-smoke-test.sh "$IMAGE:${GITHUB_SHA}"
+
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - name: Push the image
+        id: push
+        run: |
+          gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
+          docker push "$IMAGE:${GITHUB_SHA}"
+          digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE:${GITHUB_SHA}" | cut -d@ -f2)
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "Pushed $IMAGE@$digest"
+
+      # HRD-15: a signed statement of which commit and which workflow built this image, and a check
+      # that it is there before anything is deployed
+      - uses: actions/attest-build-provenance@96278af6caaf10aea03fd8d33a09a777ca52d62f # v3.2.0
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+      - name: Verify the provenance of the image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          gh attestation verify "oci://$IMAGE@$DIGEST" --repo "$GITHUB_REPOSITORY" \
+            --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/deploy.yml"
+
+      # HOS-6: a new revision with its own test address, and no traffic at all
+      - name: Deploy the new version without traffic
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          tag="candidate-${GITHUB_SHA:0:7}"
+          echo "TAG=$tag" >> "$GITHUB_ENV"
+          gcloud run deploy "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \
+            --image "$IMAGE@$DIGEST" --no-traffic --tag "$tag" --quiet
+          revision=$(gcloud run services describe "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \
+            --format='value(status.latestCreatedRevisionName)')
+          test_url=$(gcloud run services describe "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \
+            --format=json | jq -r --arg t "$tag" '.status.traffic[] | select(.tag == $t) | .url')
+          [ -n "$revision" ] && [ -n "$test_url" ] && [ "$test_url" != "null" ] \
+            || { echo "::error::The new revision or its test address was not found"; exit 1; }
+          echo "REVISION=$revision" >> "$GITHUB_ENV"
+          echo "TEST_URL=$test_url" >> "$GITHUB_ENV"
+          echo "Revision $revision has the test address $test_url and no traffic."
+
+      # The smoke tests only read. Without a pass, the traffic stays where it is.
+      - name: Smoke tests against the test address
+        run: bash scripts/deploy-smoke-test.sh "$TEST_URL"
+
+      - name: Send all traffic to the new version
+        id: switch
+        run: |
+          # Remember where the traffic is now, to be able to go back
+          previous=$(gcloud run services describe "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \
+            --format=json | jq -r '[.status.traffic[] | select(.percent > 0)][0].revisionName')
+          echo "PREVIOUS=$previous" >> "$GITHUB_ENV"
+          echo "The traffic is on $previous now."
+          gcloud run services update-traffic "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \
+            --to-revisions "$REVISION=100" --quiet
+          gcloud run services update-traffic "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \
+            --remove-tags "$TAG" --quiet
+      - name: Check the live website
+        id: live
+        run: |
+          live_url=$(gcloud run services describe "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \
+            --format='value(status.url)')
+          bash scripts/deploy-smoke-test.sh "$live_url"
+          echo "### Deployed" >> "$GITHUB_STEP_SUMMARY"
+          echo "Version \`$VERSION\` (revision \`$REVISION\`) now has all the traffic." >> "$GITHUB_STEP_SUMMARY"
+
+      # If the live website fails its check right after the switch, the traffic goes back by itself
+      - name: Go back to the previous version
+        if: failure() && steps.switch.outcome == 'success' && steps.live.outcome == 'failure'
+        run: |
+          if [ -n "${PREVIOUS:-}" ] && [ "$PREVIOUS" != "null" ]; then
+            gcloud run services update-traffic "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \
+              --to-revisions "$PREVIOUS=100" --quiet
+            echo "::error::The live check failed. The traffic is back on $PREVIOUS."
+          else
+            echo "::error::The live check failed and the previous revision is unknown. Go back by hand (docs/runbook.md)."
+          fi
+
+      - name: Say what happened when something failed
+        if: failure()
+        run: |
+          {
+            echo "### The deployment failed"
+            echo "The live website was **not** switched to the new version unless the step 'Send all traffic' ran."
+            echo "Look at the failed step above. To see which revision has the traffic:"
+            echo "\`gcloud run services describe $SERVICE --region $REGION --format='value(status.traffic)'\`"
+            echo "To go back to an earlier revision, see docs/runbook.md."
+          } >> "$GITHUB_STEP_SUMMARY"
