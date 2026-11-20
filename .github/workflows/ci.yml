@@ -32,6 +32,9 @@ jobs:
       # same image and digest as scripts/firestore-emulator.sh.
       - name: Start the Firestore emulator
         run: bash scripts/firestore-emulator.sh start
+      # The deployment gate must stay closed unless every required check succeeded (SEC-15)
+      - name: Self-test of the deployment gate
+        run: bash scripts/tests/wait-for-checks-selftest.sh
       # Enforcer rules, compiler warnings as errors, tests, architecture tests, formatting,
       # SpotBugs with Find Security Bugs and the 80% coverage rule
       - name: Verify
@@ -74,3 +77,6 @@ jobs:
           docker build --build-arg "APP_VERSION=$version" -t orchestra-website:ci .
       - name: Container smoke test
         run: bash scripts/container-smoke-test.sh orchestra-website:ci
+      # The smoke tests of a deployment pass on this image and fail on a broken version (HOS-6)
+      - name: Self-test of the deployment smoke tests
+        run: bash scripts/tests/deploy-smoke-test-selftest.sh orchestra-website:ci

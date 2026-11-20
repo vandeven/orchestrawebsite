@@ -18,6 +18,13 @@ interface FirestoreConfig {
     @WithDefault("(default)")
     String databaseId();
 
+    /**
+     * Whether the readiness check reads from Firestore. On in production, so a new version that
+     * cannot reach the database never gets traffic (HOS-6). Off for tests and local work.
+     */
+    @WithDefault("true")
+    boolean readinessCheck();
+
     /** How long one database call may take before it counts as unavailable (HOS-24). */
     @WithDefault("PT10S")
     Duration timeout();

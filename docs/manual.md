@@ -48,7 +48,7 @@ Tick a step off here and in its own list below. "Reported" means the owner said 
 | A3 Lock file from the real registry, GitHub variables and secrets | Not reported |
 | A4 Secret values | Not reported (Cloud Run needs them, so they were added during the apply) |
 | A5 GitHub settings | Not done |
-| A6 First deployment | Not possible yet: the application needs its Firestore stores and the deployment workflow ([implementation status](implementation-status.md)) |
+| A6 First deployment | Not done: the workflow exists but has not run yet ([implementation status](implementation-status.md)) |
 | A7 Domain and email | Not started (open items 1 and 9) |
 | A8 Go live | Not started |
 
@@ -139,7 +139,7 @@ tofu providers lock -platform=windows_amd64 -platform=linux_amd64 -platform=linu
 8. **Check the result:** `tofu output` lists the website address (`service_url`), the service accounts, the Workload Identity Federation provider and the buckets. Open `service_url` in a browser: it should show the Google sample page. Check in the console that the uptime check exists (Monitoring) and that you received an email asking to confirm the alert address (confirm it).
 
 9. **Put the outputs in GitHub** so the pipeline can log in without keys. In the repository: Settings, then Secrets and variables, then Actions.
-   - *Variables* (not secret): `GCP_WORKLOAD_IDENTITY_PROVIDER` (output `workload_identity_provider`), `GCP_PLAN_SERVICE_ACCOUNT` (output `service_accounts`, the `plan` entry) and `GCP_APPLY_SERVICE_ACCOUNT` (the `apply` entry).
+   - *Variables* (not secret): `GCP_WORKLOAD_IDENTITY_PROVIDER` (output `workload_identity_provider`), `GCP_PLAN_SERVICE_ACCOUNT` (output `service_accounts`, the `plan` entry) `GCP_APPLY_SERVICE_ACCOUNT` (the `apply` entry) and `GCP_DEPLOY_SERVICE_ACCOUNT` (the `deploy` entry, used by the deployment workflow, A6).
    - *Secrets*: `TF_VAR_ALERT_EMAIL`, `TF_VAR_MASTER_EMAIL` and `TF_VAR_BILLING_ACCOUNT_ID` (the same three values as in step 3, and the same as in your environment, otherwise the pipeline plans a change).
 
    From then on the infrastructure workflow plans pull requests, applies after your approval and checks for drift every week ([infra/README.md](../infra/README.md)).
@@ -177,11 +177,19 @@ In the repository settings (Settings, then the pages named below):
 
 **A CodeQL alert that is a false positive.** Dismiss it in GitHub: Security, then Code scanning, open the alert, **Dismiss alert**, reason **False positive**, and write why. Do this only after reading the code; a dismissal is a decision that stays in the history. Currently dismissed on purpose: `java/user-controlled-bypass` in `LoginServiceImpl` (`withLastLogin` is only reached after the password check passed, and that check is the login itself).
 
-### A6. First deployment **(to be confirmed when the deployment workflow exists)**
-The application cannot go live yet: it needs its Firestore stores and the deployment workflow ([implementation status](implementation-status.md)). When they exist:
-- [ ] Merge the first change to `main`. The pipeline builds, runs all tests and scans, deploys the new version **without traffic**, runs the master setup job and migrations, runs the smoke tests against the test address, and only then sends traffic to it ([hosting](hosting.md), HOS-6).
-- [ ] Open the website on the `*.run.app` address. Log in as the master with `MASTER_EMAIL` and the master password. Add the first admins and then the members (see [instructions](instructions.md)).
+### A6. First deployment
+The workflow `.github/workflows/deploy.yml` does every deployment, the first one included. It is written and its parts are tested, but **it has never run against Google Cloud**: expect to fix something on the first run, and send me the log of the failed step.
+- [ ] **One more GitHub variable:** `GCP_DEPLOY_SERVICE_ACCOUNT` = `orchestra-deploy@orchestrawebsite.iam.gserviceaccount.com` (output `service_accounts`, the `deploy` entry). Settings, Secrets and variables, Actions, **Variables**. Until it exists the workflow only shows a warning and deploys nothing.
+- [ ] Merge a change to `main`, or start the workflow by hand (Actions, **Deploy**, Run workflow, branch `main`). It does, in this order ([hosting](hosting.md), HOS-6):
+  1. **Gate:** waits for all tests and scans of that commit. One failure stops everything.
+  2. Builds the image, checks it (cold start, headers), pushes it to Artifact Registry, makes a signed statement of where it came from and **verifies** that statement.
+  3. Deploys it as a new revision with **no traffic** and its own test address.
+  4. Runs the smoke tests against that address. They only read, and they include that the application can read from Firestore.
+  5. Only then sends all traffic to it, and checks the live website again. If that check fails, the traffic goes back by itself.
+  If any step fails, the website stays on the version it had (on the first run: the Google sample page), and GitHub sends you an email about the failed run.
+- [ ] Open the website on the `*.run.app` address (`tofu output service_url`). It shows the real home page now, not the sample page. Log in as the master with `MASTER_EMAIL` and the master password (the account is made at start-up while `ACCOUNTS_MASTER_SETUP_ON_START` is on). Add the first admins and then the members (see [instructions](instructions.md)).
 - [ ] Check that the uptime check is green and that the alert emails arrive (send a test alert).
+- [ ] If something is wrong with a version that did get traffic: go back with the commands in the [runbook](runbook.md) (rollback).
 
 ### A7. Domain and email
 When the domain exists:
@@ -244,7 +252,7 @@ Without `FIRESTORE_EMULATOR_HOST` the Firestore tests are skipped and the build 
 6. Update `docs/implementation-status.md` (what is built, what was left out, what differs from the documents) and add a line to the status log in `docs/PLAN.md`.
 7. Open a pull request and complete the checklist in the template ([CONTRIBUTING](../CONTRIBUTING.md)).
 
-### B5. Release **(to be confirmed when the deployment workflow exists)**
+### B5. Release
 There is no separate release step. Merging to `main` deploys: the new version is tested through its own address and only then gets traffic (HOS-6). To undo a release that got through, see the rollback in the [runbook](runbook.md). The commit ID of the running version is in every log line and on the 500 error page (HOS-35); it comes from the `APP_VERSION` variable that the pipeline sets when it builds the image.
 
 ### B6. Change infrastructure
