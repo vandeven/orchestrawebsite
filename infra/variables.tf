@@ -113,6 +113,17 @@ variable "max_instances" {
   }
 }
 
+variable "mail_provider" {
+  description = "brevo sends real email. outbox sends nothing (recovery links are not delivered) and only exists so the website can run before there is a domain and a Brevo account (HOS-21)."
+  type        = string
+  default     = "brevo"
+
+  validation {
+    condition     = contains(["brevo", "outbox"], var.mail_provider)
+    error_message = "mail_provider must be brevo or outbox."
+  }
+}
+
 variable "mail_sender_address" {
   description = "The address mail is sent from, on the orchestra's own domain (HOS-21). Empty until there is a domain."
   type        = string

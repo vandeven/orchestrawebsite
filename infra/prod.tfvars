@@ -13,3 +13,9 @@ site_name            = "PLACEHOLDER_NAME"
 
 # Until a domain exists the website runs on its default address. Set this when it does (HOS-5).
 domain = ""
+
+# TEMPORARY, until there is a domain and a Brevo account (manual.md, open item): the website runs
+# without sending email. Users cannot receive recovery links. Remove both lines and set
+# mail_sender_address to an address on the orchestra's domain when Brevo is ready.
+mail_provider       = "outbox"
+mail_sender_address = "no-reply@example.invalid"

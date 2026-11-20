@@ -53,7 +53,11 @@ resource "google_cloud_run_v2_service" "app" {
       }
       env {
         name  = "MAIL_PROVIDER"
-        value = "brevo"
+        value = var.mail_provider
+      }
+      env {
+        name  = "MAIL_ALLOW_OUTBOX"
+        value = tostring(var.mail_provider == "outbox") # only on purpose, see variables.tf
       }
       env {
         name  = "MAIL_SENDER_ADDRESS"

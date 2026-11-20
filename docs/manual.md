@@ -192,6 +192,8 @@ The workflow `.github/workflows/deploy.yml` does every deployment, the first one
 - [ ] If something is wrong with a version that did get traffic: go back with the commands in the [runbook](runbook.md) (rollback).
 
 ### A7. Domain and email
+
+- [ ] **Until Brevo and the domain are ready the website runs without sending email.** `infra/prod.tfvars` sets `mail_provider = "outbox"` and a dummy `mail_sender_address`. The first deployment failed without a sender address (`mail.sender-address is defined as the empty String`). With the outbox, nothing is sent: recovery links and welcome emails are not delivered, so the master account (from `MASTER_PASSWORD`) is the only one you can use. When Brevo is ready, delete both lines from `prod.tfvars`, set `mail_sender_address` to an address on the domain, make sure `BREVO_API_KEY` holds the real key, and apply.
 When the domain exists:
 - [ ] Set `domain` in `prod.tfvars`, run `tofu plan` and `tofu apply`, and add the DNS records that the output lists (the domain mapping).
 - [ ] In Brevo, verify the domain and add the records it gives you: **SPF, DKIM and DMARC**. Add **CAA** records, switch on DNSSEC and the registrar lock, and set automatic renewal (HRD-16).
