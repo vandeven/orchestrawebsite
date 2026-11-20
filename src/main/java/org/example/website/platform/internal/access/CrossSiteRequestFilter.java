@@ -33,9 +33,12 @@ public class CrossSiteRequestFilter {
         String origin = request.getHeaderString("Origin");
         String site = request.getHeaderString("Sec-Fetch-Site");
         boolean allowed;
-        if (origin != null) {
+        if (origin != null && !origin.equals("null")) {
             allowed = origin.equalsIgnoreCase(ownOrigin());
         } else {
+            // No Origin, or "null": a browser sends "null" even for a form on this website when
+            // that page has Referrer-Policy: no-referrer (the recovery pages do). Only the
+            // Fetch Metadata header tells those apart from a form on another site
             allowed = site != null && site.equalsIgnoreCase("same-origin");
         }
         if (!allowed) {

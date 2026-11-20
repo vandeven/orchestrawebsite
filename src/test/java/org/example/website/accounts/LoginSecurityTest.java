@@ -292,6 +292,41 @@ class LoginSecurityTest {
     }
 
     @Test
+    void aNullOriginFromThisWebsiteIsAcceptedOnlyWithSameOriginFetchMetadata() {
+        // Browsers send "Origin: null" for a form on a page with Referrer-Policy: no-referrer
+        UserSummary user = accounts.newUser(Role.MEMBER);
+        given().redirects()
+                .follow(false)
+                .header("Origin", "null")
+                .header("Sec-Fetch-Site", "same-origin")
+                .formParam("email", user.email())
+                .formParam("password", TestAccounts.PASSWORD)
+                .post("/login")
+                .then()
+                .statusCode(303);
+        for (String site : new String[] {"cross-site", "same-site", "none"}) {
+            given().redirects()
+                    .follow(false)
+                    .header("Origin", "null")
+                    .header("Sec-Fetch-Site", site)
+                    .formParam("email", user.email())
+                    .formParam("password", TestAccounts.PASSWORD)
+                    .post("/login")
+                    .then()
+                    .statusCode(403);
+        }
+        given().redirects()
+                .follow(false)
+                .header("Origin", "https://evil.example")
+                .header("Sec-Fetch-Site", "same-origin")
+                .formParam("email", user.email())
+                .formParam("password", TestAccounts.PASSWORD)
+                .post("/login")
+                .then()
+                .statusCode(403);
+    }
+
+    @Test
     void aLogoutFromAnotherSiteDoesNotEndTheSession() {
         String cookie = accounts.cookie(Role.MEMBER);
         given().redirects()
