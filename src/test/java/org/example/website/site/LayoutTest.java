@@ -148,6 +148,9 @@ class LayoutTest {
     void pagesLoadNothingFromAnotherSiteAndHaveNoInlineCodeOrStyles(String path) {
         Document page = page(path, "ADMIN");
         for (Element element : page.select("[src], [href], [action]")) {
+            if (element.is("link[rel=canonical]")) {
+                continue; // the full address of this website, checked in AboutPageTest
+            }
             for (String attribute : List.of("src", "href", "action")) {
                 String value = element.attr(attribute);
                 if (value.isEmpty()) {
