@@ -127,6 +127,48 @@ run "the_image_and_the_traffic_are_not_reset_by_an_apply" {
   }
 }
 
+# --- The master account setup job (HOS-19) ---
+
+run "the_master_setup_job_runs_as_the_application_with_the_same_settings" {
+  command = plan
+
+  assert {
+    condition     = google_cloud_run_v2_job.master_setup.template[0].template[0].service_account == google_service_account.app.email
+    error_message = "The job runs as the application's own service account (HRD-12)."
+  }
+  assert {
+    condition = alltrue([
+      for e in google_cloud_run_v2_job.master_setup.template[0].template[0].containers[0].env :
+      !can(regex("(?i)(pepper|password|api.?key)", e.name)) || length(e.value_source) > 0
+    ])
+    error_message = "A secret of the job comes from Secret Manager, not from a plain value (INF-3)."
+  }
+  assert {
+    condition = alltrue([
+      for e in google_cloud_run_v2_job.master_setup.template[0].template[0].containers[0].env :
+      e.name == "DEPLOYMENT_TASK" || contains([for s in google_cloud_run_v2_service.app.template[0].containers[0].env : s.name], e.name)
+    ])
+    error_message = "The job has no setting the website does not have, so the same checks pass at start-up."
+  }
+  assert {
+    condition     = contains([for e in google_cloud_run_v2_job.master_setup.template[0].template[0].containers[0].env : e.name], "DEPLOYMENT_TASK")
+    error_message = "The job starts the master setup task."
+  }
+  assert {
+    condition     = google_cloud_run_v2_job.master_setup.template[0].template[0].max_retries == 0
+    error_message = "The pipeline decides what happens after a failure, the job does not retry."
+  }
+}
+
+run "the_website_no_longer_sets_up_the_master_at_start" {
+  command = plan
+
+  assert {
+    condition     = !contains([for e in google_cloud_run_v2_service.app.template[0].containers[0].env : e.name], "ACCOUNTS_MASTER_SETUP_ON_START")
+    error_message = "The master is set up by the job once per deployment, not by every instance that starts."
+  }
+}
+
 # --- Firestore (HOS-3, HRD-13) ---
 
 run "firestore_is_protected_and_in_the_right_place" {

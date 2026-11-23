@@ -140,9 +140,3 @@ variable "contact_daily_limit" {
     error_message = "From 1 to 200."
   }
 }
-
-variable "master_setup_on_start" {
-  description = "Set up the master account when the application starts. TEMPORARY: the once-per-deployment job (HOS-19) does not exist yet. Remove when it does."
-  type        = bool
-  default     = true
-}

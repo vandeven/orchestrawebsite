@@ -50,7 +50,7 @@ The member files bucket is not backed up automatically (see the [instructions](i
 2. Log in as master and resend the password recovery email to every user on the user management page (USR-6). Old passwords no longer work.
 
 ## The master account does not work
-Run the master account setup job again (HOS-19). It sets the master account to match `MASTER_EMAIL` and `MASTER_PASSWORD`.
+Run the master account setup job again (HOS-19). It sets the master account to match `MASTER_EMAIL` and `MASTER_PASSWORD`: `gcloud run jobs execute orchestra-website-master-setup --region europe-west4 --project orchestrawebsite --wait`. Read its log in the Cloud Run console (Jobs, Executions, Logs) if it fails. A normal deployment runs the same job, so a new `MASTER_PASSWORD` secret version takes effect with the next deployment.
 
 ## Someone asks to see or remove their data
 1. Reply within one month (see [legal pages](legal-pages.md), LEG-5).
