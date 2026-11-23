@@ -36,6 +36,14 @@ override_resource {
 }
 
 override_resource {
+  target = google_service_account.master_job
+  values = {
+    name  = "projects/orchestrawebsite/serviceAccounts/orchestra-master-job@orchestrawebsite.iam.gserviceaccount.com"
+    email = "orchestra-master-job@orchestrawebsite.iam.gserviceaccount.com"
+  }
+}
+
+override_resource {
   target = google_service_account.plan
   values = {
     name  = "projects/orchestrawebsite/serviceAccounts/orchestra-tofu-plan@orchestrawebsite.iam.gserviceaccount.com"
