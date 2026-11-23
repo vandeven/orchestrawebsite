@@ -679,3 +679,12 @@ dialog::backdrop {
   padding-inline-start: var(--space-4);
   color: var(--color-text-muted);
 }
+
+/* A field only programs fill in, to catch automatic spam (BAM-16): out of sight and out of reach */
+.field-trap {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
