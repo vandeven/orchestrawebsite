@@ -140,3 +140,9 @@ variable "contact_daily_limit" {
     error_message = "From 1 to 200."
   }
 }
+
+variable "website_has_master_settings" {
+  description = "TEMPORARY, for the move to the master setup job only: while true the website still gets MASTER_EMAIL and MASTER_PASSWORD, which the OLD application version needs to start. Set it to true in prod.tfvars until the first deployment with the job has worked, then remove that line (the default is the target: the website never has them, HOS-19)."
+  type        = bool
+  default     = false
+}

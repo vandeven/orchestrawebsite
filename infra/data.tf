@@ -196,10 +196,19 @@ resource "google_secret_manager_secret" "app" {
   }
 }
 
+# The website never reads the master password: only the setup job does (HOS-19, USR-14)
 resource "google_secret_manager_secret_iam_member" "app_reads" {
-  for_each = google_secret_manager_secret.app
+  for_each = { for name, secret in google_secret_manager_secret.app : name => secret if name != "MASTER_PASSWORD" || var.website_has_master_settings }
 
   secret_id = each.value.id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.app.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "master_job_reads" {
+  for_each = { for name, secret in google_secret_manager_secret.app : name => secret if contains(["PASSWORD_PEPPER", "MASTER_PASSWORD"], name) }
+
+  secret_id = each.value.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.master_job.email}"
 }

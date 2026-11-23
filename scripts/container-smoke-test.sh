@@ -21,11 +21,10 @@ start=$(date +%s.%N)
 docker run -d --name "$name" -p "$port:8080" \
   -e PUBLIC_BASE_URL=https://example.org \
   -e PASSWORD_PEPPER=FAKE-NOT-A-SECRET-smoke-test-pepper-0123456789abcdef \
-  -e MASTER_EMAIL=master@example.test -e MASTER_PASSWORD=FAKE-NOT-A-SECRET-smoke-master \
   -e ACCOUNTS_ALLOW_IN_MEMORY_STORAGE=true -e FIRESTORE_READINESS_CHECK=false \
   -e MAIL_PROVIDER=outbox -e MAIL_ALLOW_OUTBOX=true \
   -e MAIL_SENDER_ADDRESS=no-reply@example.test -e MAIL_SENDER_NAME=Smoke \
-  --memory 512m "$image" >/dev/null
+  --memory 512m "$image" >/dev/null   # no master settings: the website must not need them
 
 ready=false
 for _ in $(seq 1 200); do
@@ -80,12 +79,17 @@ if grep -q '/q/health' <<<"$logs"; then fail "health check requests are logged";
 # The same image as a deployment task (HOS-19): it runs the task and stops with an exit code
 task_env=(-e PUBLIC_BASE_URL=https://example.org
   -e PASSWORD_PEPPER=FAKE-NOT-A-SECRET-smoke-test-pepper-0123456789abcdef
-  -e MASTER_EMAIL=master@example.test -e MASTER_PASSWORD=FAKE-NOT-A-SECRET-smoke-master
   -e ACCOUNTS_ALLOW_IN_MEMORY_STORAGE=true -e FIRESTORE_READINESS_CHECK=false
   -e MAIL_PROVIDER=outbox -e MAIL_ALLOW_OUTBOX=true
   -e MAIL_SENDER_ADDRESS=no-reply@example.test -e MAIL_SENDER_NAME=Smoke)
 task_log=$(timeout 60 docker run --rm "${task_env[@]}" -e DEPLOYMENT_TASK=master-setup \
   --memory 512m "$image" 2>&1) && task_code=0 || task_code=$?
+[ "$task_code" != "0" ] && grep -q "MASTER_PASSWORD must be" <<<"$task_log" \
+  && pass "the master setup task refuses to run without the master settings" \
+  || fail "the master setup task did not refuse missing settings (exit code $task_code)"
+task_log=$(timeout 60 docker run --rm "${task_env[@]}" \
+  -e MASTER_EMAIL=master@example.test -e MASTER_PASSWORD=FAKE-NOT-A-SECRET-smoke-master \
+  -e DEPLOYMENT_TASK=master-setup --memory 512m "$image" 2>&1) && task_code=0 || task_code=$?
 if [ "$task_code" = "0" ] && grep -q "Master account setup: created" <<<"$task_log"; then
   pass "the master setup task runs and stops with exit code 0"
 else

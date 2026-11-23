@@ -113,8 +113,8 @@ run "cloud_run_uses_its_own_service_account_and_secret_references" {
     error_message = "A secret must come from Secret Manager, not from a plain environment value (INF-3)."
   }
   assert {
-    condition     = length([for e in google_cloud_run_v2_service.app.template[0].containers[0].env : e.name if length(e.value_source) > 0]) == 3
-    error_message = "Exactly the three secrets are references to Secret Manager (HOS-27)."
+    condition     = toset([for e in google_cloud_run_v2_service.app.template[0].containers[0].env : e.name if length(e.value_source) > 0]) == toset(["PASSWORD_PEPPER", "BREVO_API_KEY"])
+    error_message = "The website gets exactly two secrets from Secret Manager, never MASTER_PASSWORD (HOS-27, HOS-19)."
   }
 }
 
@@ -129,12 +129,12 @@ run "the_image_and_the_traffic_are_not_reset_by_an_apply" {
 
 # --- The master account setup job (HOS-19) ---
 
-run "the_master_setup_job_runs_as_the_application_with_the_same_settings" {
+run "the_master_setup_job_has_its_own_account_and_the_master_password" {
   command = plan
 
   assert {
-    condition     = google_cloud_run_v2_job.master_setup.template[0].template[0].service_account == google_service_account.app.email
-    error_message = "The job runs as the application's own service account (HRD-12)."
+    condition     = google_cloud_run_v2_job.master_setup.template[0].template[0].service_account == google_service_account.master_job.email
+    error_message = "The job runs as its own service account, not as the website (HRD-12, HOS-19)."
   }
   assert {
     condition = alltrue([
@@ -146,9 +146,13 @@ run "the_master_setup_job_runs_as_the_application_with_the_same_settings" {
   assert {
     condition = alltrue([
       for e in google_cloud_run_v2_job.master_setup.template[0].template[0].containers[0].env :
-      e.name == "DEPLOYMENT_TASK" || contains([for s in google_cloud_run_v2_service.app.template[0].containers[0].env : s.name], e.name)
+      contains(["DEPLOYMENT_TASK", "MASTER_EMAIL", "MASTER_PASSWORD"], e.name) || contains([for s in google_cloud_run_v2_service.app.template[0].containers[0].env : s.name], e.name)
     ])
-    error_message = "The job has no setting the website does not have, so the same checks pass at start-up."
+    error_message = "The job has no setting the website does not have, apart from the task and the master settings."
+  }
+  assert {
+    condition     = toset([for e in google_cloud_run_v2_job.master_setup.template[0].template[0].containers[0].env : e.name if length(e.value_source) > 0]) == toset(["PASSWORD_PEPPER", "MASTER_PASSWORD"])
+    error_message = "The job gets the pepper and the master password and nothing else from Secret Manager (no mail key)."
   }
   assert {
     condition     = contains([for e in google_cloud_run_v2_job.master_setup.template[0].template[0].containers[0].env : e.name], "DEPLOYMENT_TASK")
@@ -166,6 +170,14 @@ run "the_website_no_longer_sets_up_the_master_at_start" {
   assert {
     condition     = !contains([for e in google_cloud_run_v2_service.app.template[0].containers[0].env : e.name], "ACCOUNTS_MASTER_SETUP_ON_START")
     error_message = "The master is set up by the job once per deployment, not by every instance that starts."
+  }
+  assert {
+    condition     = length(setintersection([for e in google_cloud_run_v2_service.app.template[0].containers[0].env : e.name], ["MASTER_EMAIL", "MASTER_PASSWORD"])) == 0
+    error_message = "The website has no master settings: only the setup job does (USR-14)."
+  }
+  assert {
+    condition     = !contains(keys(google_secret_manager_secret_iam_member.app_reads), "MASTER_PASSWORD") && contains(keys(google_secret_manager_secret_iam_member.master_job_reads), "MASTER_PASSWORD")
+    error_message = "Only the job's service account may read MASTER_PASSWORD."
   }
 }
 

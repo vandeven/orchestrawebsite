@@ -33,8 +33,16 @@ public class MasterAccountSetup {
     @Inject AuditTrail audit;
 
     public void ensureMasterAccount() {
-        String email = AccountsRules.normalizeEmail(config.masterEmail());
-        String password = config.masterPassword();
+        var problems =
+                MasterRules.problems(
+                        config.masterEmail().orElse(null), config.masterPassword().orElse(null));
+        if (!problems.isEmpty()) {
+            // The messages never hold the values
+            LOG.errorf("Master account setup: %s", String.join("; ", problems));
+            throw new IllegalStateException("Invalid master account settings");
+        }
+        String email = AccountsRules.normalizeEmail(config.masterEmail().orElseThrow());
+        String password = config.masterPassword().orElseThrow();
 
         // A previous master with another address becomes an admin (USR-15)
         for (UserRecord other : users.findAll()) {

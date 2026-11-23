@@ -16,13 +16,13 @@ public final class TestAccountsConfig implements AccountsConfig {
     }
 
     @Override
-    public String masterEmail() {
-        return masterEmail;
+    public java.util.Optional<String> masterEmail() {
+        return java.util.Optional.ofNullable(masterEmail);
     }
 
     @Override
-    public String masterPassword() {
-        return masterPassword;
+    public java.util.Optional<String> masterPassword() {
+        return java.util.Optional.ofNullable(masterPassword);
     }
 
     @Override
