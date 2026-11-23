@@ -11,7 +11,9 @@ public enum AuditAction {
     USER_MAKE_MEMBER("user.make-member"),
     AUTH_LOGIN("auth.login"),
     AUTH_LOGOUT("auth.logout"),
-    MASTER_SETUP("master.setup");
+    MASTER_SETUP("master.setup"),
+    TEXT_CHANGE("text.change"),
+    TEXT_CLEAR("text.clear");
 
     private final String code;
 

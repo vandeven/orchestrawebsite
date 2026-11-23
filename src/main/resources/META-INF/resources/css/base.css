@@ -615,3 +615,67 @@ dialog::backdrop {
     font-size: var(--text-sm);
   }
 }
+
+/* The text of a page, written by the admins in the editor (EDT-4, EDT-13). Admins choose from these
+ * classes only: fonts and colors stay the website's own. */
+.page-text {
+  max-width: var(--content-width);
+}
+
+.page-text img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 0 var(--space-4);
+}
+
+.page-text .img-small {
+  width: min(100%, 12rem);
+}
+
+.page-text .img-medium {
+  width: min(100%, 24rem);
+}
+
+.page-text .img-full {
+  width: 100%;
+}
+
+.page-text img.align-center {
+  margin-inline: auto;
+}
+
+.page-text img.align-right {
+  margin-inline-start: auto;
+}
+
+.page-text .align-left {
+  text-align: start;
+}
+
+.page-text .align-center {
+  text-align: center;
+}
+
+.page-text .align-right {
+  text-align: end;
+}
+
+.page-text table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.page-text th,
+.page-text td {
+  border: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-3);
+  text-align: start;
+}
+
+.page-text blockquote {
+  border-inline-start: 4px solid var(--color-border);
+  margin-inline: 0;
+  padding-inline-start: var(--space-4);
+  color: var(--color-text-muted);
+}

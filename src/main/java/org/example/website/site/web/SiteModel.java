@@ -54,6 +54,12 @@ public class SiteModel {
         return config.name();
     }
 
+    /** The address of the website without a closing slash, for canonical links (ABO-8). */
+    public String baseUrl() {
+        String base = config.publicBaseUrl();
+        return base.endsWith("/") ? base.substring(0, base.length() - 1) : base;
+    }
+
     public List<MenuItem> menu(String currentPath) {
         AccessLevel level = visitor.currentLevel();
         boolean anonymous = level == AccessLevel.PUBLIC;

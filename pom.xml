@@ -101,6 +101,12 @@
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-firestore</artifactId>
     </dependency>
+    <!-- Cleans the HTML of the editable texts with an allowlist (EDT, HRD-5): maintained by OWASP -->
+    <dependency>
+      <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+      <artifactId>owasp-java-html-sanitizer</artifactId>
+      <version>20240325.1</version>
+    </dependency>
     <!-- Argon2id for the password hashes (LOG-16): pure Java, no native code, MIT-style license -->
     <dependency>
       <groupId>org.bouncycastle</groupId>

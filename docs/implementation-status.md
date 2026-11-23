@@ -235,6 +235,20 @@ The 14 classes of `accounts/api` are now `users` (user service and management, t
 - **No `production` approval** for a deployment, as HOS-6 says (automated). The login of the deploy account is bound to the `main` branch, not to the environment.
 - **The first deployment replaces the Google sample page**, which has no health checks: nothing is lost by a failed attempt, the sample page stays.
 
+### Phase 2, slice 1: the `content` core and the About page (EDT-2, EDT-6, EDT-14, EDT-18 partly, ABO-1 to ABO-8, HRD-5)
+
+| What | Requirements | Status | Where | Tests |
+|------|--------------|--------|-------|-------|
+| The four editable texts (`about`, `become-a-member`, `audition`, `agenda`), read and saved through one API; a text that was never saved is empty; admins cannot invent a key | EDT-2, ABO-2 | Done (no editor pages yet) | `content/api/texts` (`TextKey`, `EditableText`, `EditableTexts`), `EditableTextsImpl` | `EditableTextsTest` |
+| The safe HTML allowlist: headings 2 to 4, paragraphs, bold, italic, underline, strikethrough, lists, links (`http`, `https`, `mailto`; other sites open in a new tab with `noopener noreferrer`), quotes, rules, simple tables, images only from our own image storage, a fixed set of alignment and size classes. Scripts, styles, event handlers, iframes, forms, `javascript:` and `data:` links, other classes and images from other sites are removed | EDT-4, EDT-6, EDT-14, HRD-5 | Done | `content/internal/html/HtmlCleaner` (OWASP Java HTML Sanitizer 20240325.1) | `HtmlCleanerTest`: 23 harmful inputs, all formatting kept, cleaning twice changes nothing |
+| A text is cleaned when saved (200 KB limit after cleaning, 1 MB before) and again when shown; saving writes the audit trail (who, which text, never the content); clearing is audited as a clear | EDT-6, HRD-5, LGG-10 | Done | `EditableTextsImpl`, `AuditAction.TEXT_CHANGE`/`TEXT_CLEAR` | `EditableTextsTest` |
+| The texts in Firestore (collection `texts`, one document per key, `schemaVersion` 1) and in memory, behind one repository, with the same cases for both | ARC-5, ARC-6 | Done, **never run against the real Firestore** | `content/internal/store` | `TextStoreContract`, `InMemoryTextStoreTest`, `FirestoreTextStoreTest` (emulator) |
+| The About page is the home page at `/`: fixed title, the saved text or a placeholder, in the menu, no login form, a short cache for anonymous visitors (`public, max-age=60`, `Vary: Cookie`) and `private, no-store` for logged-in ones, canonical address `/`, `/about` moves for good (301) | ABO-1 to ABO-8 | Done (the sitemap is not built yet) | `site/web/AboutResource`, `templates/site/about.html`, `.page-text` styles | `AboutPageTest` |
+
+- **Not built yet in this component:** the editor pages and the editor (EDT-1, EDT-3, EDT-5, EDT-7, EDT-8 beyond the cache), the image library and uploads (EDT-9 to EDT-17), the confirmation for clearing a text (EDT-18). The other three public pages and the sitemap, `robots.txt` and `security.txt`.
+- **Image address:** images in texts must start with `content.image-base-url`, by default `https://storage.googleapis.com/<IMAGES_BUCKET>/` (the images bucket the infrastructure already sets). Check this address against the real bucket when the first image is uploaded.
+- **No manual steps:** the Firestore collection appears when the first text is saved.
+
 ### Phase 1: left out on purpose (to do in the next slices)
 
 | Item | Why it waits |
