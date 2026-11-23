@@ -17,7 +17,7 @@ fail() { echo "FAIL: $1"; failures=$((failures + 1)); }
 # get PATH -> sets $status, writes headers to $tmp/headers and the body to $tmp/body
 get() {
   status=$(curl -sS -m 20 -o "$tmp/body" -D "$tmp/headers" -w '%{http_code}' \
-    -H 'Accept: text/html' "$base$1" 2>"$tmp/error") || status="000"
+    -H "Accept: ${ACCEPT:-text/html}" "$base$1" 2>"$tmp/error") || status="000"
 }
 header() { grep -i "^$1:" "$tmp/headers" | head -1 | cut -d: -f2- | tr -d '\r' | sed 's/^ *//'; }
 
@@ -29,7 +29,11 @@ get /q/health/live
 [ "$status" = "200" ] && pass "live" || fail "/q/health/live answered $status"
 
 # 2. Public pages answer, with the security headers (HRD-6) and a request ID (LGG-3)
-for path in / /agenda /become-a-member /login /forgot-password; do
+for path in / /agenda /become-a-member /privacy /cookies /terms /robots.txt /sitemap.xml /.well-known/security.txt /login /forgot-password; do
+  case "$path" in
+    /robots.txt|/sitemap.xml|/.well-known/security.txt) ACCEPT='*/*' ;; # files, not pages
+    *) ACCEPT='text/html' ;;
+  esac
   get "$path"
   if [ "$status" = "200" ]; then pass "$path answers 200"; else fail "$path answered $status"; continue; fi
   for h in content-security-policy strict-transport-security x-content-type-options referrer-policy \

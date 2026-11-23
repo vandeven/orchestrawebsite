@@ -9,6 +9,7 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.Map;
+import org.example.website.platform.api.LegalConfig;
 import org.example.website.platform.api.PlatformConfig;
 import org.example.website.platform.api.errors.ApplicationError;
 import org.example.website.platform.api.errors.TooManyRequests;
@@ -68,6 +69,8 @@ public class ErrorMapper {
 
     @Inject PlatformConfig config;
 
+    @Inject LegalConfig legal;
+
     @ServerExceptionMapper
     public Response expected(ApplicationError error) {
         if (error.status() >= 500) {
@@ -119,6 +122,10 @@ public class ErrorMapper {
         String page =
                 errorPage
                         .data("name", config.name())
+                        .data("foundationName", legal.foundationName())
+                        .data("foundationAddress", legal.address())
+                        .data("foundationRegistration", legal.registrationNumber())
+                        .data("foundationEmail", legal.contactEmail())
                         .data("status", status)
                         .data("title", text[0])
                         .data("message", text[1])

@@ -281,6 +281,25 @@ The 14 classes of `accounts/api` are now `users` (user service and management, t
 - **The accounts counters were not changed:** login and recovery still use their own store (`attempts`). Moving them onto `RateLimiter` is possible later.
 - **Sending is untested with real Brevo:** the tests use the outbox. Send a real message after the deployment and check that every admin gets it and that replying goes to the sender.
 
+### Phase 2, slice 4: legal pages, footer, cookie notice, and what search engines look for (LEG-1 to LEG-10, HRD-11, plan: Search engines and sharing)
+
+| What | Requirements | Status | Where | Tests |
+|------|--------------|--------|-------|-------|
+| The privacy, cookies and terms pages: public, short cache, a "last updated" date, linked in the footer of every page including the error pages | LEG-1, LEG-2, LEG-10 | Done (a **draft text**, not legal advice: the owner must check it, ideally someone with legal knowledge) | `site/web/LegalResource`, `templates/site/{privacy,cookies,terms}.html`, `platform/error.html` | `LegalPagesTest` |
+| Privacy: who is responsible, the data and why, Google Cloud, Brevo and GitHub, not stored contact messages, the retention table, the rights, one month, the Dutch Data Protection Authority | LEG-3, LEG-4, LEG-5 | Done | `privacy.html` | `LegalPagesTest` |
+| The retention table comes from the values the application uses: session and recovery link from the accounts api, logs, backups and deleted files from `legal.*-days`; a test compares the backup period with `infra/data.tf` | LEG-4 | Done (logs 30 days is the Cloud Logging default and is not set in `infra/`; deleted files 7 days is for the songs of phase 3) | `LegalResource.retention`, `LegalConfig` | `LegalPagesTest.theRetentionTableMatchesTheRealSettings` |
+| The cookies page lists the two cookies (`__Host-session`, `__Host-recovery`) with their lifetimes; a test walks public pages, login, the recovery link and secure pages and fails if a cookie is set that is not on the page (or listed but never set); the short cookie notice is shown until OK, remembered in local storage (not a cookie) | LEG-6 | Done, but the notice has only been tested for its markup, not clicked in a real browser | `cookies.html`, `js/cookie-notice.js` | `LegalPagesTest` |
+| The terms; the member page reminder with a link to the terms | LEG-7, LEG-9 | Done | `terms.html`, `members.html` | `LegalPagesTest` |
+| The footer shows the foundation's name, address, registration number and contact address; the settings are checked at start-up | LEG-8 | Done, with **placeholder values** (`to be provided`, `contact@example.invalid`) until the details exist | `platform/api/LegalConfig`, `site/web/LegalStartup`, `LegalRules` | `LegalPagesTest`, `LegalRulesTest` |
+| `robots.txt` (blocks the secure section and the login pages, points to the sitemap), `sitemap.xml` (the six public pages, `/about` not in it), `/.well-known/security.txt` (contact, expiry half a year ahead, policy, canonical) | plan, HRD-11 | Done | `site/web/SeoResource` | `SearchEnginesTest` |
+| `X-Robots-Tag: noindex, nofollow` on every page behind a login, the login and password pages, and every error page; a canonical address and Open Graph tags (type, name, title, description, a placeholder picture) on every public page | plan | Done | `platform/internal/access/NoIndexFilter`, `layout.html`, `images/social.png` | `SearchEnginesTest` |
+| The deployment smoke tests check the new pages and files | HOS-6 | Done | `scripts/deploy-smoke-test.sh` | `deploy-smoke-test-selftest.sh` |
+
+- **To do when the details exist (open items 4, 5, 9):** the real foundation name, address, registration number and contact and privacy addresses reach the application through `LEGAL_FOUNDATION_NAME`, `LEGAL_ADDRESS`, `LEGAL_REGISTRATION_NUMBER`, `LEGAL_CONTACT_EMAIL`, `LEGAL_PRIVACY_EMAIL` and `LEGAL_SECURITY_CONTACT`. **They are not set in `infra/` yet**, so the live pages show the placeholders. Adding them means new variables in `infra/` and a change to the Cloud Run service (expect the 409, see the runbook). This is a launch blocker.
+- **The social picture is a plain brand-colour placeholder**; replace `images/social.png` when there is a name and a logo.
+- **Not done:** an accessibility check (axe) and a look in a real browser at all public pages; a browser test of the cookie notice; the "last updated" date is a constant that must be changed with every change to the texts.
+- **Layering:** the legal settings are in `platform` (not `site`) so that the error pages can show the footer without depending on the `site` component.
+
 ### Phase 1: left out on purpose (to do in the next slices)
 
 | Item | Why it waits |

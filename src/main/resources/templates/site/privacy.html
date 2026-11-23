@@ -1,0 +1,44 @@
+{#include site/layout}
+  {#title}Privacy | {cdi:site.name}{/title}
+  {#description}Which personal data this website uses, why, and for how long.{/description}
+  {#content}
+    <h1>Privacy</h1>
+    <p class="legal-updated">Last updated: {updated}</p>
+    <div class="page-text">
+    <h2>Who is responsible</h2>
+    <p>This website is run by {cdi:site.foundation.name}, {cdi:site.foundation.address} (registration number {cdi:site.foundation.registration}). For questions about your data, write to <a href="mailto:{privacyEmail}">{privacyEmail}</a>.</p>
+
+    <h2>Which data we use and why</h2>
+    <ul>
+      <li><strong>Accounts.</strong> For members and admins we keep an email address, the role (member, admin or master), the dates the account was made and last used, and the password in a form nobody can read back (a hash). We need this so people can log in and so that we know who may do what.</li>
+      <li><strong>The contact form.</strong> The email address, subject and message you send are emailed to the admins of the website, so they can answer you. The message is not stored on the website.</li>
+      <li><strong>Logs and the admin audit trail.</strong> The server keeps technical logs, and a record of what admins did (for example adding a user). They help us keep the website safe and find problems. Network addresses are never written to the logs as they are.</li>
+      <li><strong>Files and images.</strong> Files that admins put on the website (sheet music, recordings, images in texts) can only contain data that the orchestra is allowed to share. Members' personal data is not in them.</li>
+    </ul>
+
+    <h2>Who receives data</h2>
+    <ul>
+      <li><strong>Google Cloud</strong> hosts the website, the database, the files and the logs, in the European Union (the region europe-west4, Netherlands).</li>
+      <li><strong>Brevo</strong> sends the emails of the website (password links and the messages of the contact form). It is a company in the European Union and keeps delivery records for a limited time under its own policy.</li>
+      <li><strong>GitHub</strong> keeps the code of the website. It receives no personal data.</li>
+    </ul>
+    <p>We do not sell data, we do not use advertising or tracking services, and the website loads nothing from other companies.</p>
+
+    <h2>How long we keep data</h2>
+    <table>
+      <caption class="sr-only">How long data is kept</caption>
+      <thead><tr><th scope="col">Data</th><th scope="col">Kept</th></tr></thead>
+      <tbody>
+        {#for row in retention}
+        <tr><td>{row.data}</td><td>{row.kept}</td></tr>
+        {/for}
+      </tbody>
+    </table>
+    <p>When an admin removes a person, the account is deleted at once. Copies in logs and backups disappear by themselves within the periods above.</p>
+
+    <h2>Your rights</h2>
+    <p>You can ask to see your data, to have it corrected or removed, and you can object to how it is used. Write to <a href="mailto:{privacyEmail}">{privacyEmail}</a>. We answer within one month.</p>
+    <p>If you think we handle your data wrongly, you can complain to the Dutch Data Protection Authority (Autoriteit Persoonsgegevens), <a href="https://autoriteitpersoonsgegevens.nl" rel="noopener noreferrer" target="_blank">autoriteitpersoonsgegevens.nl</a>.</p>
+    </div>
+  {/content}
+{/include}

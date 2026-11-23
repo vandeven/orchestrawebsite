@@ -6,6 +6,15 @@
   <title>{#insert title}{cdi:site.name}{/insert}</title>
   <meta name="description" content="{#insert description}{cdi:site.name}{/insert}">
   <meta name="color-scheme" content="light dark">
+  {#if cdi:site.canonical(currentPath)}
+  <link rel="canonical" href="{cdi:site.canonical(currentPath)}">
+  <meta property="og:url" content="{cdi:site.canonical(currentPath)}">
+  {/if}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{cdi:site.name}">
+  <meta property="og:title" content="{#insert title}{cdi:site.name}{/insert}">
+  <meta property="og:description" content="{#insert description}{cdi:site.name}{/insert}">
+  <meta property="og:image" content="{cdi:site.shareImage}">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/css/tokens.css">
   <link rel="stylesheet" href="/css/base.css">
@@ -14,6 +23,10 @@
 </head>
 <body>
   <a class="skip-link" href="#content">Skip to content</a>
+  <div class="cookie-notice" role="region" aria-label="Cookies" data-cookie-notice hidden>
+    <p>This website only uses the cookies it needs to work, for example to keep you logged in. It does not track you. <a href="/cookies">More about cookies</a></p>
+    <button type="button" class="button" data-cookie-notice-ok>OK</button>
+  </div>
   <header class="site-header">
     <div class="site-header-inner">
       <a class="site-brand" href="/">{cdi:site.name}</a>
@@ -40,7 +53,12 @@
   </main>
   <footer class="site-footer">
     <div class="site-footer-inner">
-      <p>&copy; {cdi:site.name}</p>
+      <p class="site-footer-details">
+        <strong>{cdi:site.foundation.name}</strong><br>
+        {cdi:site.foundation.address}<br>
+        Registration number: {cdi:site.foundation.registration}<br>
+        <a href="mailto:{cdi:site.foundation.email}">{cdi:site.foundation.email}</a>
+      </p>
       <ul class="site-footer-list">
         <li><a href="/privacy">Privacy</a></li>
         <li><a href="/cookies">Cookies</a></li>
@@ -48,6 +66,7 @@
       </ul>
     </div>
   </footer>
+  <script src="/js/cookie-notice.js" defer></script>
   {#insert scripts}{/insert}
 </body>
 </html>
