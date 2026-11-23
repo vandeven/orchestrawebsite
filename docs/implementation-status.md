@@ -249,6 +249,22 @@ The 14 classes of `accounts/api` are now `users` (user service and management, t
 - **Image address:** images in texts must start with `content.image-base-url`, by default `https://storage.googleapis.com/<IMAGES_BUCKET>/` (the images bucket the infrastructure already sets). Check this address against the real bucket when the first image is uploaded.
 - **No manual steps:** the Firestore collection appears when the first text is saved.
 
+### Phase 2, slice 2: the editor (EDT-1 to EDT-8, EDT-18)
+
+| What | Requirements | Status | Where | Tests |
+|------|--------------|--------|-------|-------|
+| Only admins and the master can open the edit pages, save or clear a text; members and anonymous visitors are refused, also when they send requests directly | EDT-1 | Done | `content/web/EditResource` (`@Access(ADMIN)`) | `EditPagesTest` |
+| The list of texts with the page they appear on and the last change in Amsterdam time; an unknown or invented key is a 404 | EDT-2 | Done | `/edit`, `edit-list.html` | `EditPagesTest` |
+| The editor: a visual editor with a toolbar (bold, italic, underline, strikethrough, headings 2 to 4, paragraph, lists, quote, line, link with a check of the address, remove link, simple table, alignment, clear formatting), plain JavaScript on `contenteditable`; the usual keyboard shortcuts; one tab stop in the toolbar with arrow keys; a switch to the HTML view and back keeps the text | EDT-3, EDT-4, EDT-5 | Done, **only checked in a simulated browser** (jsdom), not in a real one | `META-INF/resources/js/editor.js`, `editor.css`, `templates/content/edit.html` | `scripts/tests/editor-test.js` (30 checks, run by hand, see manual B3) |
+| The HTML view warns about HTML that is not allowed, before saving; HTML typed there is cleaned with the same allowlist (in an inert document) before it is shown in the visual editor, so nothing typed can run | EDT-6 | Done (simulated browser) | `editor.js` (`cleanHtml`) | `editor-test.js`: 9 harmful inputs for the warning and for the visual view |
+| The preview looks like the public page (same layout and styles), stores nothing, and has Save and Back to editing | EDT-7 | Done | `edit-preview.html` | `EditPagesTest` |
+| Saving cleans on the server whatever the browser sent, shows exactly what is stored afterwards, refuses a text over 200 KB without changing the old one; the saved text is on the public page | EDT-6, EDT-8 | Done | `EditResource.save` | `EditPagesTest` |
+| Clearing a text asks first: saving an empty text (also one that is empty after cleaning) shows a page that names the text, says what happens on the page and that no earlier version is kept; clearing needs a `POST` with `confirm=yes` | EDT-18 | Done (a confirmation page, not the shared dialog) | `EditResource.clear` (`@Destructive`), `EditableTexts.clear` (`@DestroysData`), `edit-clear.html` | `EditPagesTest` |
+
+- **The text is sent as a plain text body** (`enctype="text/plain"`, `html=<text>`), because a normal form field is limited to 2 KB for every form of the website (the login tests depend on it). The body limit is 2 MB, and a text is refused above 1 MB before cleaning and above 200 KB after.
+- **Without JavaScript** the editor is a plain text area for HTML and everything else works.
+- **Not built yet:** images in the editor and the image library (EDT-9 to EDT-17), the shared confirmation dialog for clearing, and no browser test or accessibility check (axe) has run on the editor. The editor must be tried by hand in a real browser (Chrome, Firefox) before anyone relies on it.
+
 ### Phase 1: left out on purpose (to do in the next slices)
 
 | Item | Why it waits |

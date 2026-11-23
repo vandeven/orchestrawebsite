@@ -83,9 +83,26 @@ class EditableTextsTest {
     @Test
     void clearingATextIsAuditedAsAClear() {
         texts.save(TextKey.AUDITION, "<p>x</p>", admin);
-        texts.save(TextKey.AUDITION, "   ", admin);
+        texts.clear(TextKey.AUDITION, admin);
         assertEquals(AuditAction.TEXT_CLEAR, audited.get(1).action());
         assertTrue(texts.get(TextKey.AUDITION).isEmpty());
+    }
+
+    @Test
+    void savingAnEmptyTextIsRefusedBecauseClearingNeedsAConfirmation() {
+        texts.save(TextKey.ABOUT, "<p>keep</p>", admin);
+        assertThrows(InvalidInput.class, () -> texts.save(TextKey.ABOUT, "  ", admin));
+        assertThrows(
+                InvalidInput.class,
+                () -> texts.save(TextKey.ABOUT, "<script>alert(1)</script>", admin));
+        assertEquals("<p>keep</p>", texts.get(TextKey.ABOUT).html());
+    }
+
+    @Test
+    void cleanShowsWhatWouldBeStoredWithoutStoringIt() {
+        assertEquals("<p>x</p>", texts.clean("<p>x</p><script>y</script>"));
+        assertTrue(texts.get(TextKey.ABOUT).isEmpty());
+        assertTrue(audited.isEmpty());
     }
 
     @Test

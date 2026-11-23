@@ -1,0 +1,29 @@
+{#include site/layout}
+  {#title}Edit: {key.title} - {cdi:site.name}{/title}
+  {#description}Edit a text of the website.{/description}
+  {#head}<link rel="stylesheet" href="/css/editor.css">{/head}
+  {#content}
+    <p><a href="/edit">&larr; All texts</a></p>
+    <h1>Edit: {key.title}</h1>
+    <p>Shown on: {key.shownOn}.</p>
+    {#if notice}
+    <div class="alert {#if notice.error}alert-error{#else}alert-success{/if}" role="{#if notice.error}alert{#else}status{/if}">
+      <span class="alert-title">{#if notice.error}Error{#else}Done{/if}</span>
+      {notice.text}
+    </div>
+    {/if}
+    <form method="post" action="/edit/{key.key}/save" enctype="text/plain" data-editor>
+      <div class="field">
+        <label for="html">Text (HTML)</label>
+        <p class="field-hint" id="html-hint">Without JavaScript you edit the HTML directly. Only formatting the website allows is kept: headings, bold, italic, lists, links, quotes and simple tables.</p>
+        <textarea id="html" name="html" rows="22" spellcheck="true" aria-describedby="html-hint" data-editor-source>{html}</textarea>
+      </div>
+      <div class="button-row">
+        <button type="submit" class="button" formaction="/edit/{key.key}/save">Save</button>
+        <button type="submit" class="button button-secondary" formaction="/edit/{key.key}/preview">Preview</button>
+        <a class="button button-secondary" href="/edit">Cancel</a>
+      </div>
+    </form>
+  {/content}
+  {#scripts}<script src="/js/editor.js" defer></script>{/scripts}
+{/include}
