@@ -265,6 +265,22 @@ The 14 classes of `accounts/api` are now `users` (user service and management, t
 - **Without JavaScript** the editor is a plain text area for HTML and everything else works.
 - **Not built yet:** images in the editor and the image library (EDT-9 to EDT-17), the shared confirmation dialog for clearing, and no browser test or accessibility check (axe) has run on the editor. The editor must be tried by hand in a real browser (Chrome, Firefox) before anyone relies on it.
 
+### Phase 2, slice 3: the Agenda and Become a member pages, and the contact form (AGE-1 to AGE-3, BAM-1 to BAM-5, BAM-12 to BAM-17)
+
+| What | Requirements | Status | Where | Tests |
+|------|--------------|--------|-------|-------|
+| The Agenda page: public, in the menu, one editable text or "There are no performances planned at the moment", short cache for anonymous visitors | AGE-1 to AGE-3, AGE-8 | Done | `site/web/AgendaResource`, `templates/site/agenda.html` | `PublicPagesTest` |
+| The Become a member page: the page text (placeholder when empty), the audition section only when there is audition text, a working `mailto:` link written in the text | BAM-1 to BAM-5, BAM-12 | Done | `site/web/BecomeMemberResource`, `become-a-member.html` | `PublicPagesTest` |
+| The contact form: email address, subject and message, all required, with the exact limits (254, 200, 5,000), a subject on one line, control characters removed, errors next to the fields with the input kept; a hidden field catches programs and looks like success; a short privacy notice that links to the privacy page | BAM-13, BAM-15, BAM-16, BAM-17 | Done | `contact/internal/ContactMessagesImpl`, the form in `become-a-member.html` | `ContactFormTest` |
+| One email per admin and the master, from the website's own address, the sender as reply address; the message is plain text, never markup; nothing is stored or logged; one admin failing does not stop the others, none reached is an error for the sender | BAM-14, BAM-15, BAM-17 | Done | `ContactMessagesImpl`, `Email.replyTo`, `AdminContacts` (accounts api) | `ContactFormTest` |
+| Limits: 5 messages per visitor per hour and `CONTACT_DAILY_LIMIT` (50) per day for the whole site, shared by all instances, counted only for valid messages; a clear "too many messages" answer (429) | BAM-16, HRD-7 | Done | `platform/api/limits/RateLimiter`, `InMemoryRateLimiter`, `FirestoreRateLimiter` (collection `rateLimits`, cleaned by a TTL on `expiresAt`) | `ContactFormTest`, `RateLimiterContract` for memory and the Firestore emulator |
+| The deployment smoke tests also check `/agenda` and `/become-a-member` | HOS-6 | Done | `scripts/deploy-smoke-test.sh` | `deploy-smoke-test-selftest.sh` |
+
+- **One infrastructure change:** the TTL policy for the new collection `rateLimits` (`infra/data.tf`, `infra/tests`). Apply it after the merge (manual A6 / B6): until then expired counters stay in Firestore but are ignored by the code. It is not urgent and does not touch the Cloud Run service.
+- **Not built yet:** the clear-text confirmation for the audition text uses the same confirmation page as the other texts (EDT-18, done in slice 2). The sitemap, the legal pages (the privacy link goes to `/privacy`, which does not exist yet), and an accessibility check (axe) of these pages.
+- **The accounts counters were not changed:** login and recovery still use their own store (`attempts`). Moving them onto `RateLimiter` is possible later.
+- **Sending is untested with real Brevo:** the tests use the outbox. Send a real message after the deployment and check that every admin gets it and that replying goes to the sender.
+
 ### Phase 1: left out on purpose (to do in the next slices)
 
 | Item | Why it waits |

@@ -49,8 +49,10 @@ class BrevoClient {
                         .put("subject", email.subject())
                         .put("textContent", email.text())
                         .put("htmlContent", email.html());
-        if (replyTo != null) {
-            body.put("replyTo", new JsonObject().put("email", replyTo));
+        // The reply address of this message wins over the configured one (contact form, BAM-14)
+        String reply = email.replyTo() != null ? email.replyTo() : replyTo;
+        if (reply != null) {
+            body.put("replyTo", new JsonObject().put("email", reply));
         }
         HttpRequest request =
                 HttpRequest.newBuilder(URI.create(url))

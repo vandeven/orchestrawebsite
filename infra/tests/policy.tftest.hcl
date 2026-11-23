@@ -207,7 +207,7 @@ run "firestore_is_protected_and_in_the_right_place" {
     error_message = "Firestore needs deletion protection (HRD-13)."
   }
   assert {
-    condition     = toset(keys(google_firestore_field.ttl)) == toset(["sessions", "recoveryTokens", "attempts"])
+    condition     = toset(keys(google_firestore_field.ttl)) == toset(["sessions", "recoveryTokens", "attempts", "rateLimits"])
     error_message = "Sessions, recovery tokens and login counters clean themselves up (HOS-3)."
   }
   assert {

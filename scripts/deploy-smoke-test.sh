@@ -29,7 +29,7 @@ get /q/health/live
 [ "$status" = "200" ] && pass "live" || fail "/q/health/live answered $status"
 
 # 2. Public pages answer, with the security headers (HRD-6) and a request ID (LGG-3)
-for path in / /login /forgot-password; do
+for path in / /agenda /become-a-member /login /forgot-password; do
   get "$path"
   if [ "$status" = "200" ]; then pass "$path answers 200"; else fail "$path answered $status"; continue; fi
   for h in content-security-policy strict-transport-security x-content-type-options referrer-policy \

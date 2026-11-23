@@ -14,7 +14,7 @@ resource "google_firestore_database" "main" {
 
 # Automatic cleanup of expired data (HOS-3). The application writes an `expiresAt` moment on each.
 resource "google_firestore_field" "ttl" {
-  for_each = toset(["sessions", "recoveryTokens", "attempts"])
+  for_each = toset(["sessions", "recoveryTokens", "attempts", "rateLimits"])
 
   database   = google_firestore_database.main.name
   collection = each.value

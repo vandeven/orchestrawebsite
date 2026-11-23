@@ -63,7 +63,9 @@ public final class EmailLayout {
                 .append(escape(heading))
                 .append("</h1>");
         for (String paragraph : paragraphs) {
-            html.append("<p style=\"margin:0 0 16px\">").append(escape(paragraph)).append("</p>");
+            html.append("<p style=\"margin:0 0 16px;white-space:pre-line\">")
+                    .append(escape(paragraph))
+                    .append("</p>");
         }
         if (linkUrl != null) {
             html.append("<p style=\"margin:0 0 16px\"><a href=\"")

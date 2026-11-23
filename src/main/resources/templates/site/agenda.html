@@ -1,0 +1,12 @@
+{#include site/layout}
+  {#title}Agenda | {cdi:site.name}{/title}
+  {#description}When and where {cdi:site.name} performs.{/description}
+  {#content}
+    <h1>Agenda</h1>
+    {#if text.empty}
+    <p>There are no performances planned at the moment.</p>
+    {#else}
+    <div class="page-text">{text.html.raw}</div>
+    {/if}
+  {/content}
+{/include}
