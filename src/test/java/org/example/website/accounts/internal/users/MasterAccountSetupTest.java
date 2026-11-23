@@ -53,6 +53,19 @@ public class MasterAccountSetupTest {
     }
 
     @Test
+    void withoutTheMasterSettingsItFailsAndChangesNothing() {
+        config.masterPassword = null;
+        org.junit.jupiter.api.Assertions.assertThrows(
+                IllegalStateException.class, setup::ensureMasterAccount);
+        config.masterPassword = "FAKE-NOT-A-SECRET-master-one";
+        config.masterEmail = null;
+        org.junit.jupiter.api.Assertions.assertThrows(
+                IllegalStateException.class, setup::ensureMasterAccount);
+        assertTrue(storage.findAll().isEmpty());
+        assertTrue(audited.isEmpty());
+    }
+
+    @Test
     void theResultOfTheSetupIsAuditedEveryTime() {
         // LGG-9: the master account setup is part of the audit trail
         setup.ensureMasterAccount();

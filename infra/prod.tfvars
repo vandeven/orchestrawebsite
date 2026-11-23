@@ -13,3 +13,7 @@ site_name            = "PLACEHOLDER_NAME"
 
 # Until a domain exists the website runs on its default address. Set this when it does (HOS-5).
 domain = ""
+
+# TEMPORARY: the website version that is live now still needs the master settings to start. Remove
+# this line after the first successful deployment with the master setup job (manual.md, A6).
+website_has_master_settings = true

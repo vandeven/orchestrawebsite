@@ -7,6 +7,11 @@ resource "google_service_account" "app" {
   display_name = "Orchestra website: the running application"
 }
 
+resource "google_service_account" "master_job" {
+  account_id   = "orchestra-master-job"
+  display_name = "Orchestra website: the master account setup job, the only one that reads MASTER_PASSWORD (HOS-19)"
+}
+
 resource "google_service_account" "deploy" {
   account_id   = "orchestra-deploy"
   display_name = "Orchestra website: deploys new versions of the application (HOS-6)"
@@ -32,6 +37,18 @@ resource "google_project_iam_member" "app" {
   project = var.project_id
   role    = each.value
   member  = "serviceAccount:${google_service_account.app.email}"
+}
+
+# The master setup job: writes Firestore and reads two secrets, and does nothing else. It has no
+# access to the images or files buckets and cannot send mail.
+resource "google_project_iam_member" "master_job" {
+  for_each = toset([
+    "roles/datastore.user",
+    "roles/logging.logWriter",
+  ])
+  project = var.project_id
+  role    = each.value
+  member  = "serviceAccount:${google_service_account.master_job.email}"
 }
 
 # Signed URLs without a key: the service account signs through the IAM Credentials API (HOS-15)
@@ -62,6 +79,12 @@ resource "google_artifact_registry_repository_iam_member" "deploy_pushes_images"
 # The deployment may start revisions that run as the application's service account, nothing else
 resource "google_service_account_iam_member" "deploy_acts_as_app" {
   service_account_id = google_service_account.app.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.deploy.email}"
+}
+
+resource "google_service_account_iam_member" "deploy_acts_as_master_job" {
+  service_account_id = google_service_account.master_job.name
   role               = "roles/iam.serviceAccountUser"
   member             = "serviceAccount:${google_service_account.deploy.email}"
 }

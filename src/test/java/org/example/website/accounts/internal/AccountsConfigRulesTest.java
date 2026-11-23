@@ -76,4 +76,13 @@ class AccountsConfigRulesTest {
             assertFalse(problem.contains("tiny"));
         }
     }
+
+    @Test
+    void theWebsiteDoesNotNeedTheMasterSettings() {
+        assertEquals(List.of(), AccountsConfigRules.webProblems(PEPPER, 4));
+        assertEquals(1, AccountsConfigRules.webProblems("short", 4).size());
+        assertEquals(
+                2, AccountsConfigRules.masterProblems(null, null).size(), "the setup needs both");
+        assertEquals(List.of(), AccountsConfigRules.masterProblems("a@b.co", "x".repeat(12)));
+    }
 }

@@ -23,12 +23,16 @@ class AccountsStartup {
     @Inject MasterAccountSetup masterSetup;
 
     void onStart(@Observes StartupEvent event) {
+        // The website does not get the master settings: only the master setup checks them
         List<String> problems =
-                AccountsConfigRules.problems(
-                        config.passwordPepper(),
-                        config.masterEmail(),
-                        config.masterPassword(),
-                        config.maxConcurrentHashes());
+                config.masterSetupOnStart()
+                        ? AccountsConfigRules.problems(
+                                config.passwordPepper(),
+                                config.masterEmail().orElse(null),
+                                config.masterPassword().orElse(null),
+                                config.maxConcurrentHashes())
+                        : AccountsConfigRules.webProblems(
+                                config.passwordPepper(), config.maxConcurrentHashes());
         if (!problems.isEmpty()) {
             LOG.errorf("Accounts configuration check failed: %s", String.join("; ", problems));
             throw new IllegalStateException(

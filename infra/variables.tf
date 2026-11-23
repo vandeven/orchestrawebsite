@@ -141,8 +141,8 @@ variable "contact_daily_limit" {
   }
 }
 
-variable "master_setup_on_start" {
-  description = "Set up the master account when the application starts. TEMPORARY: the once-per-deployment job (HOS-19) does not exist yet. Remove when it does."
+variable "website_has_master_settings" {
+  description = "TEMPORARY, for the move to the master setup job only: while true the website still gets MASTER_EMAIL and MASTER_PASSWORD, which the OLD application version needs to start. Set it to true in prod.tfvars until the first deployment with the job has worked, then remove that line (the default is the target: the website never has them, HOS-19)."
   type        = bool
-  default     = true
+  default     = false
 }

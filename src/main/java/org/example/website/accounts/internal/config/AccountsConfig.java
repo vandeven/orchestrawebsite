@@ -3,6 +3,7 @@ package org.example.website.accounts.internal.config;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 import java.time.Duration;
+import java.util.Optional;
 
 /** Configuration of the accounts component (ARC-11). Checked when the application starts. */
 @ConfigMapping(prefix = "accounts")
@@ -11,10 +12,14 @@ public interface AccountsConfig {
     /** The secret that is mixed into every password before hashing (LOG-18). Never logged. */
     String passwordPepper();
 
-    String masterEmail();
+    /**
+     * The master account's address. Only the master setup needs it (the job, or development), so
+     * the website does not have it (USR-14).
+     */
+    Optional<String> masterEmail();
 
-    /** The password of the master account (USR-14). Never logged. */
-    String masterPassword();
+    /** The password of the master account (USR-14). Never logged, and not given to the website. */
+    Optional<String> masterPassword();
 
     /** How many password hashes may run at the same time (LOG-23, HOS-24). */
     @WithDefault("4")

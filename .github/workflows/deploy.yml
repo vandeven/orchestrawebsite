@@ -21,6 +21,7 @@ env:
   PROJECT_ID: orchestrawebsite
   REGION: europe-west4
   SERVICE: orchestra-website
+  MASTER_JOB: orchestra-website-master-setup
   IMAGE: europe-west4-docker.pkg.dev/orchestrawebsite/orchestra-website/app
 
 jobs:
@@ -131,6 +132,17 @@ jobs:
       # The smoke tests only read. Without a pass, the traffic stays where it is.
       - name: Smoke tests against the test address
         run: bash scripts/deploy-smoke-test.sh "$TEST_URL"
+
+      # HOS-19, USR-15: the master account is made to match the environment with the new version,
+      # once per deployment. If this fails, the traffic does not move.
+      - name: Set up the master account (job)
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          gcloud run jobs update "$MASTER_JOB" --project "$PROJECT_ID" --region "$REGION" \
+            --image "$IMAGE@$DIGEST" --quiet
+          gcloud run jobs execute "$MASTER_JOB" --project "$PROJECT_ID" --region "$REGION" \
+            --wait --quiet
 
       - name: Send all traffic to the new version
         id: switch
