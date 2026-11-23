@@ -29,7 +29,7 @@ class AboutPageTest {
 
     @AfterEach
     void clearTheText() {
-        texts.save(TextKey.ABOUT, "", accounts.newUser(Role.ADMIN));
+        texts.clear(TextKey.ABOUT, accounts.newUser(Role.ADMIN));
     }
 
     private void write(String html) {

@@ -54,21 +54,38 @@ public class EditableTextsImpl implements EditableTexts {
     }
 
     @Override
-    public EditableText save(TextKey key, String html, UserSummary actor) {
+    public String clean(String html) {
         String raw = html == null ? "" : html;
         if (raw.getBytes(StandardCharsets.UTF_8).length > MAX_RAW_BYTES) {
             throw new InvalidInput("The text is too long");
         }
-        String clean = cleaner.clean(raw).strip();
+        return cleaner.clean(raw).strip();
+    }
+
+    @Override
+    public EditableText save(TextKey key, String html, UserSummary actor) {
+        String clean = clean(html);
+        if (clean.isBlank()) {
+            throw new InvalidInput("An empty text is a clear, which needs a confirmation");
+        }
         if (clean.getBytes(StandardCharsets.UTF_8).length > MAX_CLEAN_BYTES) {
             throw new InvalidInput("The text is too long");
         }
+        return store(key, clean, actor, AuditAction.TEXT_CHANGE);
+    }
+
+    @Override
+    public EditableText clear(TextKey key, UserSummary actor) {
+        return store(key, "", actor, AuditAction.TEXT_CLEAR);
+    }
+
+    private EditableText store(TextKey key, String clean, UserSummary actor, AuditAction action) {
         EditableText saved = new EditableText(key, clean, clock.instant());
         repository.save(saved);
         LOG.infof("Text %s saved (%d characters)", key.key(), clean.length());
         audit.record(
                 new AuditEntry(
-                        clean.isBlank() ? AuditAction.TEXT_CLEAR : AuditAction.TEXT_CHANGE,
+                        action,
                         new AuditEntry.Person(actor.id(), actor.email(), actor.role().name()),
                         null,
                         AuditEntry.Result.SUCCESS,

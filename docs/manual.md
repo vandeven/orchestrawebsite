@@ -246,7 +246,8 @@ export FIRESTORE_EMULATOR_HOST=localhost:8086    # in cmd: set FIRESTORE_EMULATO
 Without `FIRESTORE_EMULATOR_HOST` the Firestore tests are skipped and the build passes without them; the pipeline always runs them. The emulator image is pinned by digest in `scripts/firestore-emulator.sh` (Dependabot does not see it: update the digest by hand now and then, and keep `scripts/firestore-emulator.sh` and the pipeline in step, they use the same script).
 `verify` runs: the Maven Enforcer rules (pinned versions), the compiler with warnings as errors, all tests, the architecture tests (ArchUnit), the formatting check, SpotBugs with Find Security Bugs, the SBOM, and the 80% coverage rule. **Always use `clean`**: a build that does not recompile can hide errors.
 - Architecture tests fail the build when a component reaches into another's `internal` package, a web class uses `internal`, an endpoint lacks `@Access`, or a web method that destroys data lacks `@Destructive` ([architecture](architecture.md)).
-- Browser tests (Playwright) and accessibility checks (axe) are not set up yet.
+- **The editor script** (`src/main/resources/META-INF/resources/js/editor.js`) has its own check in a simulated browser: `scripts/tests/editor-test.js`. It is **not** part of the pipeline, because that would need an npm package (jsdom) in CI. Run it after changing the script: in an empty folder `npm init -y && npm install jsdom`, then from the repository `NODE_PATH=<that folder>/node_modules node scripts/tests/editor-test.js` (in cmd: `set NODE_PATH=...`). It prints `All editor checks passed`.
+- Browser tests (Playwright) and accessibility checks (axe) are not set up yet. The editor has therefore **not been tried in a real browser** yet: try it by hand (B2, log in as the master, Edit pages) after changing it.
 - The checks for `infra/` are in [infra/README.md](../infra/README.md).
 - Every pull request must also pass the security scans ([PLAN](PLAN.md#automatic-tests)).
 

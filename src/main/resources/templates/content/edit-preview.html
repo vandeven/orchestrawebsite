@@ -1,0 +1,25 @@
+{#include site/layout}
+  {#title}Preview: {title} - {cdi:site.name}{/title}
+  {#description}Preview of a text before it is saved.{/description}
+  {#content}
+    <div class="alert alert-warning" role="status">
+      <span class="alert-title">Preview</span>
+      This is how the page will look. Nothing has been saved yet.
+    </div>
+    <form method="post" action="/edit/{key.key}/save" enctype="text/plain">
+      <input type="hidden" name="html" value="{submitted}">
+      <div class="button-row">
+        <button type="submit" class="button">Save</button>
+        <button type="submit" class="button button-secondary" formaction="/edit/{key.key}">Back to editing</button>
+        <a class="button button-secondary" href="/edit/{key.key}">Cancel</a>
+      </div>
+    </form>
+    <hr>
+    <h1>{title}</h1>
+    {#if empty}
+    <p>This text is empty. Saving it clears the text, which asks for a confirmation first.</p>
+    {#else}
+    <div class="page-text">{html.raw}</div>
+    {/if}
+  {/content}
+{/include}

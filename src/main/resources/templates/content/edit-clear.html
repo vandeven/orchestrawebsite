@@ -1,0 +1,26 @@
+{#include site/layout}
+  {#title}Clear text - {cdi:site.name}{/title}
+  {#description}Confirm that you want to clear this text.{/description}
+  {#content}
+    <h1>Clear the text</h1>
+    <p>You are about to clear <strong>{key.title}</strong>. The text is empty after saving it like this.</p>
+    <p>
+      {#if key.key == 'about'}The About page then shows a short message that the text has not been written yet.
+      {#else if key.key == 'audition'}The audition section on the Become a member page is hidden.
+      {#else if key.key == 'agenda'}The Agenda page then says there are no performances planned.
+      {#else}The page then shows a short message that the text has not been written yet.{/if}
+      No earlier version is kept, so the old text cannot be restored.
+    </p>
+    <form method="post" action="/edit/{key.key}/clear">
+      <input type="hidden" name="confirm" value="yes">
+      <div class="button-row">
+        <button type="submit" class="button button-danger">Clear the text</button>
+        <a class="button button-secondary" href="/edit/{key.key}">Cancel</a>
+      </div>
+    </form>
+    <form method="post" action="/edit/{key.key}" enctype="text/plain">
+      <input type="hidden" name="html" value="{submitted}">
+      <div class="button-row"><button type="submit" class="button button-secondary">Back to editing</button></div>
+    </form>
+  {/content}
+{/include}

@@ -1,0 +1,37 @@
+{#include site/layout}
+  {#title}Edit pages - {cdi:site.name}{/title}
+  {#description}Choose a text to edit.{/description}
+  {#content}
+    <h1>Edit pages</h1>
+    {#if notice}
+    <div class="alert {#if notice.error}alert-error{#else}alert-success{/if}" role="{#if notice.error}alert{#else}status{/if}">
+      <span class="alert-title">{#if notice.error}Error{#else}Done{/if}</span>
+      {notice.text}
+    </div>
+    {/if}
+    <p>Choose the text you want to change. The text you save is shown on its page within a minute.</p>
+    <div class="table-wrap">
+      <table class="table-stack" role="table">
+        <caption class="sr-only">The texts of the website</caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">Text</th>
+            <th scope="col" role="columnheader">Shown on</th>
+            <th scope="col" role="columnheader">Last changed</th>
+            <th scope="col" role="columnheader"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          {#for row in rows}
+          <tr role="row">
+            <td role="cell" data-label="Text">{row.title}</td>
+            <td role="cell" data-label="Shown on">{row.shownOn}</td>
+            <td role="cell" data-label="Last changed">{row.changed}</td>
+            <td role="cell" data-label="Actions"><a class="button button-secondary" href="/edit/{row.key}">Edit<span class="sr-only"> {row.title}</span></a></td>
+          </tr>
+          {/for}
+        </tbody>
+      </table>
+    </div>
+  {/content}
+{/include}
