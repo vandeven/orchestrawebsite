@@ -1,7 +1,7 @@
 # Runtime image for the Quarkus application (HOS-1, SEC-9).
 # Build the application first with ./mvnw package; the pipeline does this before building the image.
 # The base image is pinned by digest, and Dependabot updates it (SEC-3, SEC-4).
-FROM eclipse-temurin:21-jre-alpine@sha256:ac05c3c42b7c2f1a52c9bd52f01041fa1958231b15ebeae7420429cbc5baf474
+FROM eclipse-temurin:25-jre-alpine@sha256:69c2a26e9894016e274c880fa542956d005b3755f84db765145185e87405bd89
 
 # The base image is rebuilt only now and then, so its operating system packages can be behind a
 # security fix that already exists (the image scan, SEC-9, fails on those). Upgrading them here
