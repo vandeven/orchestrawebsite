@@ -51,4 +51,22 @@ class StaticFilesTest {
                 .body(not(containsString("XMLHttpRequest")))
                 .body(not(containsString("fetch(")));
     }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(
+            strings = {"/", "/login", "/privacy", "/does-not-exist", "/forgot-password"})
+    void everyStyleSheetScriptAndIconCarriesTheVersionOfTheBuild(String path) {
+        String html = given().accept("text/html").get(path).asString();
+        var assets =
+                org.jsoup.Jsoup.parse(html)
+                        .select("link[rel=stylesheet][href], link[rel=icon][href], script[src]");
+        org.junit.jupiter.api.Assertions.assertFalse(assets.isEmpty());
+        for (var asset : assets) {
+            String address = asset.hasAttr("src") ? asset.attr("src") : asset.attr("href");
+            org.junit.jupiter.api.Assertions.assertTrue(
+                    address.matches("/[a-z/.-]+\\?v=[A-Za-z0-9._-]+"), path + ": " + address);
+            // The address with the version still gives the file
+            given().get(address).then().statusCode(200);
+        }
+    }
 }

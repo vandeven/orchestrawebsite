@@ -1,7 +1,7 @@
 {#include site/layout}
   {#title}Edit: {key.title} - {cdi:site.name}{/title}
   {#description}Edit a text of the website.{/description}
-  {#head}<link rel="stylesheet" href="/css/editor.css">{/head}
+  {#head}<link rel="stylesheet" href="{cdi:site.asset('/css/editor.css')}">{/head}
   {#content}
     <p><a href="/edit">&larr; All texts</a></p>
     <h1>Edit: {key.title}</h1>
@@ -25,5 +25,5 @@
       </div>
     </form>
   {/content}
-  {#scripts}<script src="/js/editor.js" defer></script>{/scripts}
+  {#scripts}<script src="{cdi:site.asset('/js/editor.js')}" defer></script>{/scripts}
 {/include}

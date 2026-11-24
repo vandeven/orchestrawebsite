@@ -227,7 +227,7 @@ class LegalPagesTest {
             assertTrue(notice.hasAttr("hidden"));
             assertEquals("OK", notice.selectFirst("button").text());
             assertEquals("/cookies", notice.selectFirst("a").attr("href"));
-            assertNotNull(page.selectFirst("script[src='/js/cookie-notice.js']"));
+            assertNotNull(page.selectFirst("script[src^='/js/cookie-notice.js?v=']"));
         }
         assertEquals(200, given().get("/js/cookie-notice.js").statusCode());
     }
