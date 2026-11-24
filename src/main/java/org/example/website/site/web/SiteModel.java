@@ -3,6 +3,8 @@ package org.example.website.site.web;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import org.example.website.platform.api.LegalConfig;
@@ -82,6 +84,14 @@ public class SiteModel {
         return currentPath != null && SeoResource.PUBLIC_PAGES.contains(currentPath)
                 ? baseUrl() + currentPath
                 : null;
+    }
+
+    /**
+     * The address of a style sheet, script or icon of this website with the version of the build,
+     * so a browser fetches the new file after each deployment and never keeps an old one.
+     */
+    public String asset(String path) {
+        return path + "?v=" + URLEncoder.encode(config.version(), StandardCharsets.UTF_8);
     }
 
     /** The default picture for shared links (Open Graph). */

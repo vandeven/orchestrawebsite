@@ -122,6 +122,10 @@ public class ErrorMapper {
         String page =
                 errorPage
                         .data("name", config.name())
+                        .data(
+                                "assetVersion",
+                                java.net.URLEncoder.encode(
+                                        config.version(), java.nio.charset.StandardCharsets.UTF_8))
                         .data("foundationName", legal.foundationName())
                         .data("foundationAddress", legal.address())
                         .data("foundationRegistration", legal.registrationNumber())

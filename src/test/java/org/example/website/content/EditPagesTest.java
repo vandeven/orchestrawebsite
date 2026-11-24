@@ -119,9 +119,10 @@ class EditPagesTest {
         texts.save(TextKey.ABOUT, "<p>Hello <b>you</b></p>", accounts.newUser(Role.ADMIN));
         Document page = body(as("ADMIN").get("/edit/about"));
         assertEquals("<p>Hello <b>you</b></p>", page.selectFirst("textarea[name=html]").text());
-        assertEquals(1, page.select("script[src='/js/editor.js']").size());
-        assertTrue(body(as("ADMIN").get("/edit")).select("script[src='/js/editor.js']").isEmpty());
-        assertTrue(body(given().get("/")).select("script[src='/js/editor.js']").isEmpty());
+        assertEquals(1, page.select("script[src^='/js/editor.js?v=']").size());
+        assertTrue(
+                body(as("ADMIN").get("/edit")).select("script[src^='/js/editor.js?v=']").isEmpty());
+        assertTrue(body(given().get("/")).select("script[src^='/js/editor.js?v=']").isEmpty());
     }
 
     @Test

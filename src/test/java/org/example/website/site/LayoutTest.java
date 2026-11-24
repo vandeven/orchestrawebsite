@@ -115,8 +115,8 @@ class LayoutTest {
         assertNotNull(page.selectFirst("meta[name=viewport]"));
         assertEquals(1, page.select("h1").size(), "one main heading");
         assertNotNull(page.selectFirst("main"), "a main landmark");
-        assertNotNull(page.selectFirst("link[rel=stylesheet][href='/css/tokens.css']"));
-        assertNotNull(page.selectFirst("link[rel=stylesheet][href='/css/base.css']"));
+        assertNotNull(page.selectFirst("link[rel=stylesheet][href^='/css/tokens.css?v=']"));
+        assertNotNull(page.selectFirst("link[rel=stylesheet][href^='/css/base.css?v=']"));
         assertNotNull(page.selectFirst("link[rel=icon]"));
     }
 
@@ -190,7 +190,7 @@ class LayoutTest {
     @Test
     void theErrorPagesUseTheSameStylesAsTheRestOfTheWebsite() {
         Document page = page("/test-only/errors/denied", null);
-        assertNotNull(page.selectFirst("link[href='/css/base.css']"));
+        assertNotNull(page.selectFirst("link[href^='/css/base.css?v=']"));
         assertEquals("Access denied", page.selectFirst("h1").text());
     }
 
@@ -200,6 +200,6 @@ class LayoutTest {
         // behavior and the "js" class that collapses the list on phones.
         Document page = page("/", null);
         assertEquals(4, page.select(".site-nav-list a").size());
-        assertEquals("/js/menu.js", page.selectFirst("script[src]").attr("src"));
+        assertEquals("/js/menu.js?v=dev", page.selectFirst("script[src]").attr("src"));
     }
 }

@@ -149,7 +149,7 @@ class AccountWebTest {
         assertTrue(
                 page.selectFirst("[data-toggle-password]").hasAttr("hidden"),
                 "show and hide only with JavaScript");
-        assertEquals("/js/password.js", page.select("script[src]").last().attr("src"));
+        assertEquals("/js/password.js?v=dev", page.select("script[src]").last().attr("src"));
         assertEquals("password-hint", page.selectFirst("#password").attr("aria-describedby"));
     }
 
