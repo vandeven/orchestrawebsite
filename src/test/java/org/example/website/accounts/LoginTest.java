@@ -72,7 +72,7 @@ class LoginTest {
         Document page = Jsoup.parse(given().get("/login").asString());
         var toggle = page.selectFirst("[data-toggle-password]");
         assertTrue(toggle.hasAttr("hidden"), "without JavaScript nobody sees a dead button");
-        assertEquals("/js/password.js", page.select("script[src]").last().attr("src"));
+        assertEquals("/js/password.js?v=dev", page.select("script[src]").last().attr("src"));
         given().get("/js/password.js").then().statusCode(200);
     }
 

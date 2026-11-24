@@ -1,0 +1,56 @@
+{#include site/layout}
+  {#title}Image library - {cdi:site.name}{/title}
+  {#description}The images used in the texts of the website.{/description}
+  {#head}<link rel="stylesheet" href="{cdi:site.asset('/css/editor.css')}">{/head}
+  {#content}
+    <p><a href="/edit">&larr; All texts</a></p>
+    <h1>Image library</h1>
+    {#if notice}
+    <div class="alert alert-success" role="status">
+      <span class="alert-title">Done</span>
+      {notice}
+    </div>
+    {/if}
+
+    <h2>Add an image</h2>
+    <noscript><p class="alert alert-warning">Adding images needs JavaScript, because the image is made smaller in your browser before it is sent.</p></noscript>
+    <form class="image-upload" data-image-upload hidden>
+      <p class="alert alert-warning">Only upload photos of people with their permission, and only images the orchestra may use.</p>
+      <div class="field">
+        <label for="image-file">Image (JPEG, PNG or WebP)</label>
+        <input type="file" id="image-file" name="file" accept="image/jpeg,image/png,image/webp" required>
+        <p class="field-hint">Large images are made smaller in your browser first (at most 2,000 pixels wide). Location data in photos is removed.</p>
+      </div>
+      <div class="field">
+        <label for="image-alt">Description for people who cannot see the image</label>
+        <input type="text" id="image-alt" name="alt" maxlength="{altMax}" autocomplete="off">
+        <p class="field-hint">Required, 1 to {altMax} characters. Say what the image shows.</p>
+      </div>
+      <div class="field field-check">
+        <input type="checkbox" id="image-decorative" name="decorative">
+        <label for="image-decorative">This image is only decoration and needs no description</label>
+      </div>
+      <p class="field-error" id="image-error" role="alert" hidden></p>
+      <p id="image-status" role="status" class="field-hint" hidden></p>
+      <div class="button-row"><button type="submit" class="button">Upload</button></div>
+    </form>
+
+    <h2>Images</h2>
+    {#if rows.size == 0}
+    <p>There are no images yet.</p>
+    {#else}
+    <ul class="image-grid">
+      {#for row in rows}
+      <li class="image-card">
+        <img class="image-thumb" src="{row.url}" alt="{row.alt}" width="{row.width}" height="{row.height}" loading="lazy">
+        <p class="image-alt">{#if row.decorative}<em>Decorative, no description</em>{#else}{row.alt}{/if}</p>
+        <p class="image-meta">{row.width} &times; {row.height} pixels, {row.size}, added {row.uploaded}</p>
+        <p class="image-meta">{#if row.unused}<strong class="badge">Unused</strong>{#else}Used in: {row.usedIn}{/if}</p>
+        <p><a class="button button-secondary" href="/edit/images/{row.id}/delete">Delete<span class="sr-only"> this image</span></a></p>
+      </li>
+      {/for}
+    </ul>
+    {/if}
+  {/content}
+  {#scripts}<script src="{cdi:site.asset('/js/image-upload.js')}" defer></script>{/scripts}
+{/include}

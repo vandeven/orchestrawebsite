@@ -3,6 +3,7 @@ package org.example.website.content;
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -119,9 +120,10 @@ class EditPagesTest {
         texts.save(TextKey.ABOUT, "<p>Hello <b>you</b></p>", accounts.newUser(Role.ADMIN));
         Document page = body(as("ADMIN").get("/edit/about"));
         assertEquals("<p>Hello <b>you</b></p>", page.selectFirst("textarea[name=html]").text());
-        assertEquals(1, page.select("script[src='/js/editor.js']").size());
-        assertTrue(body(as("ADMIN").get("/edit")).select("script[src='/js/editor.js']").isEmpty());
-        assertTrue(body(given().get("/")).select("script[src='/js/editor.js']").isEmpty());
+        assertEquals(1, page.select("script[src^='/js/editor.js?v=']").size());
+        assertTrue(
+                body(as("ADMIN").get("/edit")).select("script[src^='/js/editor.js?v=']").isEmpty());
+        assertTrue(body(given().get("/")).select("script[src^='/js/editor.js?v=']").isEmpty());
     }
 
     @Test
@@ -296,5 +298,29 @@ class EditPagesTest {
         assertEquals(
                 "Our band",
                 Jsoup.parse(given().get("/").asString()).selectFirst(".page-text h2").text());
+    }
+
+    @Test
+    void theEditorKnowsTheImageStorageAndTheLibraryAndLoadsTheUploadScriptFirst() {
+        var library = org.example.website.content.api.images.ImageLibrary.class;
+        Document page = body(as("ADMIN").get("/edit/about"));
+        assertEquals(
+                "https://images.example.test/",
+                page.selectFirst("form[data-editor]").attr("data-image-base"));
+        assertNotNull(page.selectFirst("ul[data-library]"));
+        var scripts = page.select("script[src]").stream().map(e -> e.attr("src")).toList();
+        int upload = indexOf(scripts, "/js/image-upload.js?v=");
+        int editor = indexOf(scripts, "/js/editor.js?v=");
+        assertTrue(upload >= 0 && editor > upload, scripts.toString());
+        assertNotNull(library);
+    }
+
+    private static int indexOf(java.util.List<String> scripts, String start) {
+        for (int i = 0; i < scripts.size(); i++) {
+            if (scripts.get(i).startsWith(start)) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

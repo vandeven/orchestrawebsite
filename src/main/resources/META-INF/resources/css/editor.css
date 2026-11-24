@@ -54,3 +54,82 @@
 .editor-warning {
   margin-top: var(--space-2);
 }
+
+/* The image library (EDT-15 to EDT-17) */
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: var(--space-4);
+  list-style: none;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+}
+
+.image-card {
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.image-thumb {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  max-height: 12rem;
+  object-fit: contain;
+  margin: 0 auto var(--space-2);
+}
+
+.image-alt,
+.image-meta {
+  margin: 0 0 var(--space-2);
+  overflow-wrap: anywhere;
+}
+
+.image-meta {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.badge {
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.field-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The picture dialog of the editor */
+.editor-dialog {
+  max-width: 40rem;
+  width: calc(100% - 2 * var(--space-4));
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.editor-dialog::backdrop {
+  background: var(--color-backdrop);
+}
+
+.editor-dialog .image-grid {
+  max-height: 16rem;
+  overflow: auto;
+}
+
+.image-choice {
+  cursor: pointer;
+}
+
+.image-choice[aria-pressed="true"] {
+  outline: var(--focus-width) solid var(--color-brand);
+}

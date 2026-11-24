@@ -653,7 +653,7 @@ class UserManagementWebTest {
         assertTrue(
                 remove.attr("aria-label").contains(member.email()),
                 "and so does the accessible name of the button");
-        assertEquals("/js/confirm-dialog.js", page.select("script[src]").last().attr("src"));
+        assertEquals("/js/confirm-dialog.js?v=dev", page.select("script[src]").last().attr("src"));
         given().get("/js/confirm-dialog.js").then().statusCode(200);
     }
 

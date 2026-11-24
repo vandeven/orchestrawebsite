@@ -16,6 +16,16 @@ class InMemoryTextStoreTest extends TextStoreContract {
                         }
 
                         @Override
+                        public String imagesBucket() {
+                            return "images";
+                        }
+
+                        @Override
+                        public int uploadsPerHour() {
+                            return 100;
+                        }
+
+                        @Override
                         public boolean allowInMemoryStorage() {
                             return true;
                         }

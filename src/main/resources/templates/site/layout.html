@@ -15,11 +15,11 @@
   <meta property="og:title" content="{#insert title}{cdi:site.name}{/insert}">
   <meta property="og:description" content="{#insert description}{cdi:site.name}{/insert}">
   <meta property="og:image" content="{cdi:site.shareImage}">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/tokens.css">
-  <link rel="stylesheet" href="/css/base.css">
+  <link rel="icon" href="{cdi:site.asset('/favicon.svg')}" type="image/svg+xml">
+  <link rel="stylesheet" href="{cdi:site.asset('/css/tokens.css')}">
+  <link rel="stylesheet" href="{cdi:site.asset('/css/base.css')}">
   {#insert head}{/insert}
-  <script src="/js/menu.js"></script>
+  <script src="{cdi:site.asset('/js/menu.js')}"></script>
 </head>
 <body>
   <a class="skip-link" href="#content">Skip to content</a>
@@ -66,7 +66,7 @@
       </ul>
     </div>
   </footer>
-  <script src="/js/cookie-notice.js" defer></script>
+  <script src="{cdi:site.asset('/js/cookie-notice.js')}" defer></script>
   {#insert scripts}{/insert}
 </body>
 </html>

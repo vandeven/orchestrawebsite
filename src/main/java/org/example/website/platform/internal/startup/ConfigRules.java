@@ -49,6 +49,37 @@ final class ConfigRules {
         return problems;
     }
 
+    /**
+     * The address of the images bucket goes into the Content-Security-Policy header, so it must be
+     * a plain https address ending in a slash, with nothing that could add to the policy (HRD-6).
+     */
+    static boolean validImageOrigin(String value) {
+        String scheme = "https://";
+        if (value == null
+                || value.length() > BASE_URL_MAX
+                || !value.startsWith(scheme)
+                || !value.endsWith("/")
+                || value.length() <= scheme.length() + 1) {
+            return false;
+        }
+        String rest = value.substring(scheme.length());
+        if (!Character.isLetterOrDigit(rest.charAt(0)) || rest.contains("//")) {
+            return false;
+        }
+        for (int i = 0; i < rest.length(); i++) {
+            char c = rest.charAt(i);
+            boolean ok =
+                    (c >= 'a' && c <= 'z')
+                            || (c >= 'A' && c <= 'Z')
+                            || (c >= '0' && c <= '9')
+                            || ".-_~:/".indexOf(c) >= 0;
+            if (!ok) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     static boolean validBaseUrl(String value, boolean localAddressAllowed) {
         if (value == null || value.isEmpty() || value.length() > BASE_URL_MAX) {
             return false;

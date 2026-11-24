@@ -101,6 +101,11 @@
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-firestore</artifactId>
     </dependency>
+    <!-- Cloud Storage: signed upload addresses and checking uploaded images (HOS-14, HOS-22) -->
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-storage</artifactId>
+    </dependency>
     <!-- Cleans the HTML of the editable texts with an allowlist (EDT, HRD-5): maintained by OWASP -->
     <dependency>
       <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>

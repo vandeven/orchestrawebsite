@@ -17,6 +17,12 @@ public interface PlatformConfig {
     @WithDefault("INFO")
     String logLevel();
 
+    /**
+     * The address of the public images bucket, with a closing slash. Pages may show images from
+     * there and the editor may upload there, nothing else leaves the website (HRD-6, HOS-22).
+     */
+    String imageOrigin();
+
     /** The version of this build: the short commit ID and the build time (HOS-35). */
     @WithDefault("dev")
     String version();

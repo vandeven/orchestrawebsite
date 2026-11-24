@@ -10,18 +10,48 @@ const assert = require("assert");
 const script = fs.readFileSync(
   path.join(__dirname, "../../src/main/resources/META-INF/resources/js/editor.js"), "utf8");
 
-function page(initialHtml) {
+const LIBRARY = `<ul hidden data-library>
+  <li data-id="11111111-1111-1111-1111-111111111111" data-url="https://images.example.test/one.png" data-alt="The band" data-width="800" data-height="600"></li>
+  <li data-id="22222222-2222-2222-2222-222222222222" data-url="https://images.example.test/two.webp" data-alt="" data-width="400" data-height="300"></li></ul>`;
+
+// options.uploader: a stand-in for image-upload.js; options.noLibrary: no image storage address
+function page(initialHtml, options) {
+  options = options || {};
   const dom = new JSDOM(
-    `<form data-editor data-image-base="https://images.example.test/" method="post">
+    `<body><form data-editor ${options.noImages ? "" : 'data-image-base="https://images.example.test/"'} method="post">
        <div class="field"><label for="html">Text (HTML)</label><p id="html-hint">hint</p>
        <textarea id="html" name="html" data-editor-source></textarea></div>
-       <button type="submit">Save</button></form>`,
+       <button type="submit">Save</button></form>${LIBRARY}</body>`,
     { runScripts: "outside-only" });
   const { window } = dom;
-  window.document.execCommand = () => true; // jsdom has none; the real browser does
+  // jsdom has no editing commands or modal dialogs; the real browser does. These stand-ins do the
+  // one thing the script needs: insertHTML adds the markup, a dialog opens and closes.
+  window.document.execCommand = (name, ui, argument) => {
+    if (name === "insertHTML") {
+      window.document.querySelector(".editor-visual").insertAdjacentHTML("beforeend", argument);
+    }
+    return true;
+  };
+  window.HTMLDialogElement.prototype.showModal = function () { this.setAttribute("open", ""); };
+  window.HTMLDialogElement.prototype.close = function () {
+    this.removeAttribute("open");
+    this.dispatchEvent(new window.Event("close"));
+  };
+  if (options.uploader) { window.OrchestraImages = { upload: options.uploader }; }
   window.document.getElementById("html").value = initialHtml;
   window.eval(script);
   return window;
+}
+
+function openDialog(w) {
+  click(w, "Image");
+  return w.document.querySelector("dialog.editor-dialog");
+}
+
+function buttonIn(parent, text) {
+  const button = [...parent.querySelectorAll("button")].find((b) => b.textContent === text);
+  assert(button, "no button " + text);
+  return button;
 }
 
 function click(window, text) {
@@ -127,6 +157,119 @@ test("an empty visual editor submits an empty text, also with only line breaks",
   w.document.querySelector(".editor-visual").innerHTML = "<p><br></p><p> </p>";
   w.document.querySelector("form").dispatchEvent(new w.Event("submit", { cancelable: true }));
   assert.strictEqual(w.document.getElementById("html").value, "");
+});
+
+const stub = () => Promise.resolve({ id: "33333333-3333-3333-3333-333333333333", url: "https://images.example.test/new.png", alt: "Uploaded", width: 100, height: 50 });
+
+test("there is no Image button without the image storage or without the upload script", () => {
+  const without = page("", { noImages: true, uploader: stub });
+  assert(![...without.document.querySelectorAll("button")].some((b) => b.textContent === "Image"));
+  const noScript = page("");
+  assert(![...noScript.document.querySelectorAll("button")].some((b) => b.textContent === "Image"));
+});
+
+test("the picture dialog shows the library and starts without a choice", () => {
+  const w = page("", { uploader: stub });
+  const dialog = openDialog(w);
+  assert(dialog.hasAttribute("open"));
+  assert(dialog.getAttribute("aria-labelledby"));
+  const choices = dialog.querySelectorAll(".image-choice");
+  assert.strictEqual(choices.length, 2);
+  assert(choices[0].querySelector("img").getAttribute("alt") === "The band");
+  assert.strictEqual(choices[1].querySelector("img").getAttribute("alt"), "Decorative image");
+  assert(dialog.textContent.includes("Only upload photos of people with their permission"));
+});
+
+test("choosing a library image fills in its description and inserts it with size and alignment", () => {
+  const w = page("", { uploader: stub });
+  const dialog = openDialog(w);
+  dialog.querySelectorAll(".image-choice")[0].click();
+  const alt = [...dialog.querySelectorAll("input[type=text]")][0];
+  assert.strictEqual(alt.value, "The band");
+  dialog.querySelectorAll("select")[0].value = "small";
+  dialog.querySelectorAll("select")[1].value = "left";
+  buttonIn(dialog, "Insert image").click();
+  const img = w.document.querySelector(".editor-visual img");
+  assert.strictEqual(img.getAttribute("src"), "https://images.example.test/one.png");
+  assert.strictEqual(img.getAttribute("alt"), "The band");
+  assert.strictEqual(img.getAttribute("width"), "800");
+  assert.strictEqual(img.getAttribute("class"), "img-small align-left");
+  assert.strictEqual(w.document.querySelector("dialog"), null, "the dialog is removed after closing");
+});
+
+test("a description is required unless the image is marked as decoration", () => {
+  const w = page("", { uploader: stub });
+  const dialog = openDialog(w);
+  dialog.querySelectorAll(".image-choice")[0].click();
+  const alt = [...dialog.querySelectorAll("input[type=text]")][0];
+  alt.value = "   ";
+  buttonIn(dialog, "Insert image").click();
+  const error = dialog.querySelector(".field-error");
+  assert.strictEqual(error.hidden, false);
+  assert(error.textContent.includes("Describe the image"));
+  assert.strictEqual(w.document.querySelector(".editor-visual img"), null);
+  const decorative = dialog.querySelector("input[type=checkbox]");
+  decorative.checked = true;
+  decorative.dispatchEvent(new w.Event("change"));
+  buttonIn(dialog, "Insert image").click();
+  assert.strictEqual(w.document.querySelector(".editor-visual img").getAttribute("alt"), "");
+});
+
+test("an image of the library that is decoration comes with the decoration box ticked", () => {
+  const w = page("", { uploader: stub });
+  const dialog = openDialog(w);
+  dialog.querySelectorAll(".image-choice")[1].click();
+  assert.strictEqual(dialog.querySelector("input[type=checkbox]").checked, true);
+});
+
+test("inserting without choosing or uploading anything says so", () => {
+  const w = page("", { uploader: stub });
+  const dialog = openDialog(w);
+  buttonIn(dialog, "Insert image").click();
+  assert(dialog.querySelector(".field-error").textContent.includes("Choose an image"));
+  buttonIn(dialog, "Cancel").click();
+  assert.strictEqual(w.document.querySelector("dialog"), null);
+  assert.strictEqual(w.document.querySelector(".editor-visual img"), null);
+});
+
+test("a new upload goes through the upload script with the description, then it is inserted", async () => {
+  let called = null;
+  const w = page("", { uploader: (file, alt, decorative) => { called = { file, alt, decorative }; return stub(); } });
+  const dialog = openDialog(w);
+  const fileInput = dialog.querySelector("input[type=file]");
+  Object.defineProperty(fileInput, "files", { value: [{ name: "photo.jpg" }] });
+  fileInput.dispatchEvent(new w.Event("change"));
+  [...dialog.querySelectorAll("input[type=text]")][0].value = "A new photo";
+  buttonIn(dialog, "Insert image").click();
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.deepStrictEqual(called, { file: { name: "photo.jpg" }, alt: "A new photo", decorative: false });
+  const img = w.document.querySelector(".editor-visual img");
+  assert.strictEqual(img.getAttribute("src"), "https://images.example.test/new.png");
+  assert.strictEqual(img.getAttribute("alt"), "A new photo");
+  assert.strictEqual(w.document.querySelector("dialog"), null);
+});
+
+test("a failed upload shows the message and keeps the dialog open", async () => {
+  const w = page("", { uploader: () => Promise.reject(new Error("The file is not an acceptable image")) });
+  const dialog = openDialog(w);
+  const fileInput = dialog.querySelector("input[type=file]");
+  Object.defineProperty(fileInput, "files", { value: [{ name: "x.jpg" }] });
+  [...dialog.querySelectorAll("input[type=text]")][0].value = "x";
+  buttonIn(dialog, "Insert image").click();
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert(dialog.hasAttribute("open"));
+  assert(dialog.querySelector(".field-error").textContent.includes("not an acceptable image"));
+  assert.strictEqual(buttonIn(dialog, "Insert image").disabled, false);
+});
+
+test("images of the website's own storage are kept when saving, images from elsewhere are not", () => {
+  const w = page('<p><img src="https://images.example.test/ok.png" alt="a" class="img-full align-center" width="10" height="5"></p>' +
+                 '<p><img src="https://evil.example/x.png" alt="b"></p>', { uploader: stub });
+  w.document.querySelector("form").dispatchEvent(new w.Event("submit", { cancelable: true }));
+  const value = w.document.getElementById("html").value;
+  assert(value.includes('src="https://images.example.test/ok.png"'), value);
+  assert(value.includes('class="img-full align-center"'), value);
+  assert(!value.includes("evil.example"), value);
 });
 
 test("without the browser feature the plain text area stays", () => {

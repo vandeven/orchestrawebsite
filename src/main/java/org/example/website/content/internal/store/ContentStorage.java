@@ -4,7 +4,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import org.example.website.content.internal.config.ContentConfig;
+import org.example.website.content.internal.store.firestore.FirestoreImages;
 import org.example.website.content.internal.store.firestore.FirestoreTexts;
+import org.example.website.content.internal.store.memory.InMemoryImages;
 import org.example.website.content.internal.store.memory.InMemoryTexts;
 
 /**
@@ -17,10 +19,18 @@ public class ContentStorage {
     @Inject ContentConfig config;
     @Inject InMemoryTexts memory;
     @Inject FirestoreTexts firestore;
+    @Inject InMemoryImages memoryImages;
+    @Inject FirestoreImages firestoreImages;
 
     @Produces
     @ApplicationScoped
     TextRepository texts() {
         return config.allowInMemoryStorage() ? memory : firestore;
+    }
+
+    @Produces
+    @ApplicationScoped
+    ImageRepository images() {
+        return config.allowInMemoryStorage() ? memoryImages : firestoreImages;
     }
 }

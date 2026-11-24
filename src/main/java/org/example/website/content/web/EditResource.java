@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import org.example.website.accounts.api.login.CurrentUser;
 import org.example.website.accounts.api.users.UserSummary;
+import org.example.website.content.api.images.ImageLibrary;
 import org.example.website.content.api.texts.EditableText;
 import org.example.website.content.api.texts.EditableTexts;
 import org.example.website.content.api.texts.TextKey;
@@ -57,6 +58,7 @@ public class EditResource {
     Template clearPage;
 
     @Inject EditableTexts texts;
+    @Inject ImageLibrary images;
     @Inject CurrentUser currentUser;
 
     /** The message after an action. Only a key from this list is accepted from the address. */
@@ -179,7 +181,8 @@ public class EditResource {
                         .data("key", key)
                         .data("html", html)
                         .data("notice", notice)
-                        .data("imageBase", ""),
+                        .data("imageBase", images.baseUrl())
+                        .data("images", images.list().stream().map(ImageResource::row).toList()),
                 status);
     }
 
