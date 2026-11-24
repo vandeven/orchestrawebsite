@@ -1,0 +1,22 @@
+{#include site/layout}
+  {#title}Delete image - {cdi:site.name}{/title}
+  {#description}Confirm that you want to delete this image.{/description}
+  {#content}
+    <h1>Delete the image</h1>
+    <img class="image-thumb" src="{image.url}" alt="{image.alt}" width="{image.width}" height="{image.height}">
+    <p>You are about to delete this image for good. It is removed from the storage and cannot be restored.</p>
+    {#if used}
+    <div class="alert alert-warning" role="alert">
+      <span class="alert-title">Still in use</span>
+      This image is used in: <strong>{image.usedIn}</strong>. After deleting it, those texts show a broken image until you change them.
+    </div>
+    {/if}
+    <form method="post" action="/edit/images/{image.id}/delete">
+      <input type="hidden" name="confirm" value="yes">
+      <div class="button-row">
+        <a class="button button-secondary" href="/edit/images">Cancel</a>
+        <button type="submit" class="button button-danger">Delete the image</button>
+      </div>
+    </form>
+  {/content}
+{/include}

@@ -120,4 +120,32 @@ class ConfigRulesTest {
             assertFalse(p.contains("LOUD"));
         });
     }
+
+    @org.junit.jupiter.api.Test
+    void theImageOriginMustBeAPlainHttpsAddressWithATrailingSlash() {
+        for (String good :
+                new String[] {
+                    "https://storage.googleapis.com/my-bucket/",
+                    "https://images.example.org/",
+                    "https://a.b:8443/x/y/"
+                }) {
+            org.junit.jupiter.api.Assertions.assertTrue(ConfigRules.validImageOrigin(good), good);
+        }
+        for (String bad :
+                new String[] {
+                    null,
+                    "",
+                    "http://images.example.org/",
+                    "https://images.example.org",
+                    "https://x.example/; script-src *",
+                    "https://x.example/ img-src *",
+                    "https://x.example/\r\nSet-Cookie: a=b",
+                    "*",
+                    "https://*.example.org/",
+                    "https:///"
+                }) {
+            org.junit.jupiter.api.Assertions.assertFalse(
+                    ConfigRules.validImageOrigin(bad), String.valueOf(bad));
+        }
+    }
 }

@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.containsString;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.response.ValidatableResponse;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -38,5 +39,15 @@ class SecurityHeadersTest {
         String policy = given().get(path).header("Content-Security-Policy");
         org.junit.jupiter.api.Assertions.assertFalse(policy.contains("unsafe-inline"));
         org.junit.jupiter.api.Assertions.assertFalse(policy.contains("unsafe-eval"));
+    }
+
+    @Test
+    void theImagesBucketIsTheOnlyOtherPlaceImagesAndUploadsMayGo() {
+        String policy = given().get("/").header("Content-Security-Policy");
+        org.junit.jupiter.api.Assertions.assertTrue(
+                policy.contains("img-src 'self' https://images.example.test/;"), policy);
+        org.junit.jupiter.api.Assertions.assertTrue(
+                policy.contains("connect-src 'self' https://images.example.test/;"), policy);
+        org.junit.jupiter.api.Assertions.assertTrue(policy.contains("script-src 'self';"));
     }
 }

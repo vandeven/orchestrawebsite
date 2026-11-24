@@ -31,6 +31,10 @@ public class PlatformStartup {
                         config.logLevel(),
                         !production,
                         config.clientIpProxyHops());
+        if (!ConfigRules.validImageOrigin(config.imageOrigin())) {
+            problems = new java.util.ArrayList<>(problems);
+            problems.add("IMAGES_BASE_URL must be an https:// address that ends with a slash");
+        }
         if (!problems.isEmpty()) {
             LOG.errorf("Configuration check failed: %s", String.join("; ", problems));
             throw new IllegalStateException(
