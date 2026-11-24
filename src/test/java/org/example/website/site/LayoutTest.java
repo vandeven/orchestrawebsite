@@ -97,7 +97,16 @@ class LayoutTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"/", "/does-not-exist", "/test-only/errors/crash"})
+    @CsvSource({
+        "/",
+        "/does-not-exist",
+        "/test-only/errors/crash",
+        "/agenda",
+        "/become-a-member",
+        "/privacy",
+        "/cookies",
+        "/terms"
+    })
     void everyPageHasTheBasics(String path) {
         Document page = page(path, null);
         assertEquals("en", page.selectFirst("html").attr("lang"));
@@ -140,7 +149,7 @@ class LayoutTest {
         assertTrue(footer.text().contains("PLACEHOLDER_NAME"));
         assertEquals(
                 List.of("/privacy", "/cookies", "/terms"),
-                footer.select("a").stream().map(a -> a.attr("href")).toList());
+                footer.select(".site-footer-list a").stream().map(a -> a.attr("href")).toList());
     }
 
     @ParameterizedTest
@@ -157,7 +166,9 @@ class LayoutTest {
                     continue;
                 }
                 assertTrue(
-                        value.startsWith("/") && !value.startsWith("//") || value.startsWith("#"),
+                        value.startsWith("/") && !value.startsWith("//")
+                                || value.startsWith("#")
+                                || value.startsWith("mailto:"),
                         attribute + " stays on this website: " + value);
             }
         }

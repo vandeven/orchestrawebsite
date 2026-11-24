@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
+import org.example.website.platform.api.LegalConfig;
 import org.example.website.platform.api.PlatformConfig;
 import org.example.website.platform.api.access.AccessLevel;
 import org.example.website.platform.api.access.VisitorAccess;
@@ -48,6 +49,8 @@ public class SiteModel {
 
     @Inject PlatformConfig config;
 
+    @Inject LegalConfig legal;
+
     @Inject VisitorAccess visitor;
 
     public String name() {
@@ -58,6 +61,32 @@ public class SiteModel {
     public String baseUrl() {
         String base = config.publicBaseUrl();
         return base.endsWith("/") ? base.substring(0, base.length() - 1) : base;
+    }
+
+    /** The foundation's details for the footer (LEG-8). */
+    public record Foundation(String name, String address, String registration, String email) {}
+
+    public Foundation foundation() {
+        return new Foundation(
+                legal.foundationName(),
+                legal.address(),
+                legal.registrationNumber(),
+                legal.contactEmail());
+    }
+
+    /**
+     * The canonical address of a public page, or nothing for pages behind a login and for the pages
+     * search engines should not list (plan: Search engines and sharing).
+     */
+    public String canonical(String currentPath) {
+        return currentPath != null && SeoResource.PUBLIC_PAGES.contains(currentPath)
+                ? baseUrl() + currentPath
+                : null;
+    }
+
+    /** The default picture for shared links (Open Graph). */
+    public String shareImage() {
+        return baseUrl() + "/images/social.png";
     }
 
     public List<MenuItem> menu(String currentPath) {

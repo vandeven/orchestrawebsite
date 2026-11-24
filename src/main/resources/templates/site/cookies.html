@@ -1,0 +1,21 @@
+{#include site/layout}
+  {#title}Cookies | {cdi:site.name}{/title}
+  {#description}Which cookies this website sets and why.{/description}
+  {#content}
+    <h1>Cookies</h1>
+    <p class="legal-updated">Last updated: {updated}</p>
+    <div class="page-text">
+    <p>This website only sets cookies that it needs to work. It sets no tracking, advertising or analytics cookies, and it loads nothing from other companies. Because of this, you are not asked to agree to cookies. The short notice at the top of the pages only tells you this.</p>
+    <table>
+      <caption class="sr-only">The cookies of this website</caption>
+      <thead><tr><th scope="col">Name</th><th scope="col">Purpose</th><th scope="col">Lifetime</th></tr></thead>
+      <tbody>
+        {#for cookie in cookies}
+        <tr><td><code>{cookie.name}</code></td><td>{cookie.purpose}</td><td>{cookie.lifetime}</td></tr>
+        {/for}
+      </tbody>
+    </table>
+    <p>Your browser also remembers on your own device that you pressed OK on the notice. That is kept in the browser's local storage, not in a cookie, and it is never sent to us.</p>
+    </div>
+  {/content}
+{/include}
