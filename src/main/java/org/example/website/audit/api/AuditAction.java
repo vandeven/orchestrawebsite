@@ -15,7 +15,15 @@ public enum AuditAction {
     TEXT_CHANGE("text.change"),
     TEXT_CLEAR("text.clear"),
     IMAGE_UPLOAD("image.upload"),
-    IMAGE_DELETE("image.delete");
+    IMAGE_DELETE("image.delete"),
+    SONG_ADD("song.add"),
+    SONG_EDIT("song.edit"),
+    SONG_ARCHIVE("song.archive"),
+    SONG_UNARCHIVE("song.unarchive"),
+    SONG_DELETE("song.delete"),
+    FILE_ADD("file.add"),
+    FILE_RENAME("file.rename"),
+    FILE_REMOVE("file.remove");
 
     private final String code;
 
