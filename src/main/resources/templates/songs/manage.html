@@ -1,0 +1,66 @@
+{#include site/layout}
+  {#title}Song management - {cdi:site.name}{/title}
+  {#description}Add, archive and delete songs.{/description}
+  {#head}<link rel="stylesheet" href="{cdi:site.asset('/css/songs.css')}">{/head}
+  {#content}
+    <h1>Song management</h1>
+    {#if notice}
+    <div class="alert alert-success" role="status"><span class="alert-title">Done</span> {notice}</div>
+    {/if}
+    {#if error}
+    <div class="alert alert-error" role="alert"><span class="alert-title">Error</span> {error}</div>
+    {/if}
+
+    <section class="manage-section" aria-labelledby="add-heading">
+      <h2 id="add-heading">Add a song</h2>
+      <p>A new song is active at once, so members see it. Add its files on the next page.</p>
+      <form method="post" action="/songs/manage" novalidate>
+        <div class="field">
+          <label for="song-title">Title</label>
+          <input type="text" id="song-title" name="title" value="{title}" maxlength="{titleMax}" required autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="song-notes">Notes (optional, plain text)</label>
+          <textarea id="song-notes" name="notes" rows="3" maxlength="{notesMax}">{notes}</textarea>
+        </div>
+        <div class="button-row"><button type="submit" class="button">Add song</button></div>
+      </form>
+    </section>
+
+    <section class="manage-section" aria-labelledby="active-heading">
+      <h2 id="active-heading">Active songs ({active.size})</h2>
+      {#if active.size == 0}<p>There are no active songs.</p>{/if}
+      <ul class="song-list">
+        {#for song in active}
+        <li class="song">
+          <h3><a href="/songs/manage/{song.id}">{song.title}</a></h3>
+          <p class="song-meta">{song.files.size} file(s)</p>
+          <div class="manage-actions">
+            <a class="button button-secondary" href="/songs/manage/{song.id}">Edit and files<span class="sr-only"> of {song.title}</span></a>
+            <form method="post" action="/songs/manage/{song.id}/archive"><button type="submit" class="button button-secondary">Archive<span class="sr-only"> {song.title}</span></button></form>
+          </div>
+        </li>
+        {/for}
+      </ul>
+    </section>
+
+    <section class="manage-section" aria-labelledby="archived-heading">
+      <h2 id="archived-heading">Archived songs ({archived.size})</h2>
+      <p>Members do not see these. Nothing is deleted: unarchive a song to make it current again.</p>
+      {#if archived.size == 0}<p>There are no archived songs.</p>{/if}
+      <ul class="song-list">
+        {#for song in archived}
+        <li class="song">
+          <h3><a href="/songs/manage/{song.id}">{song.title}</a></h3>
+          <p class="song-meta">{song.files.size} file(s), archived on {song.changed}</p>
+          <div class="manage-actions">
+            <a class="button button-secondary" href="/songs/manage/{song.id}">Edit and files<span class="sr-only"> of {song.title}</span></a>
+            <form method="post" action="/songs/manage/{song.id}/unarchive"><button type="submit" class="button button-secondary">Unarchive<span class="sr-only"> {song.title}</span></button></form>
+            <a class="button button-danger" href="/songs/manage/{song.id}/delete">Delete<span class="sr-only"> {song.title}</span></a>
+          </div>
+        </li>
+        {/for}
+      </ul>
+    </section>
+  {/content}
+{/include}

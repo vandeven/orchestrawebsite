@@ -2,6 +2,8 @@ package org.example.website.songs.internal.files;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Typed;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Map;
@@ -35,9 +37,9 @@ public class InMemoryFileStorage implements FileStorage {
         return "https://files.example.test/download/"
                 + objectName
                 + "?type="
-                + contentType
+                + URLEncoder.encode(contentType, StandardCharsets.UTF_8)
                 + "&disposition="
-                + contentDisposition.replace(' ', '+')
+                + URLEncoder.encode(contentDisposition, StandardCharsets.UTF_8)
                 + "&valid="
                 + valid.toMinutes();
     }

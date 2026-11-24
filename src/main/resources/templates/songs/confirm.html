@@ -1,0 +1,15 @@
+{#include site/layout}
+  {#title}{heading} - {cdi:site.name}{/title}
+  {#description}Confirm this action.{/description}
+  {#content}
+    <h1>{heading}</h1>
+    <p>{text}</p>
+    <form method="post" action="{action}">
+      <input type="hidden" name="confirm" value="yes">
+      <div class="button-row">
+        <a class="button button-secondary" href="{cancel}">Cancel</a>
+        <button type="submit" class="button button-danger">{button}</button>
+      </div>
+    </form>
+  {/content}
+{/include}

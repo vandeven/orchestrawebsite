@@ -13,11 +13,15 @@ import org.example.website.platform.api.PlatformConfig;
 public class SecurityHeadersFilter {
 
     /** The policy without the images bucket, which is added from the settings. */
-    static String contentSecurityPolicy(String imageOrigin) {
+    static String contentSecurityPolicy(String imageOrigin, String fileOrigin) {
         return "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' "
                 + imageOrigin
                 + "; connect-src 'self' "
                 + imageOrigin
+                + " "
+                + fileOrigin
+                + "; media-src 'self' "
+                + fileOrigin
                 + "; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
     }
 
@@ -36,7 +40,7 @@ public class SecurityHeadersFilter {
     private String policy() {
         String current = policy;
         if (current == null) {
-            current = contentSecurityPolicy(config.imageOrigin());
+            current = contentSecurityPolicy(config.imageOrigin(), config.fileOrigin());
             policy = current;
         }
         return current;

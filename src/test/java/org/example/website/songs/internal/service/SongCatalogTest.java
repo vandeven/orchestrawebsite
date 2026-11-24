@@ -98,8 +98,8 @@ class SongCatalogTest {
                 link.url()
                         .startsWith(
                                 "https://files.example.test/download/songs/" + file.id() + ".pdf"));
-        assertTrue(link.url().contains("disposition=attachment;"), link.url());
-        assertTrue(link.url().contains("type=application/pdf"));
+        assertTrue(link.url().contains("disposition=attachment%3B"), link.url());
+        assertTrue(link.url().contains("type=application%2Fpdf"));
         assertTrue(link.url().contains("valid=15"));
         assertEquals(f.now.plus(Duration.ofMinutes(15)), link.expiresAt());
     }
@@ -111,19 +111,22 @@ class SongCatalogTest {
         SongFile pdf = add(song, FileType.SHEET_MUSIC, "Part", SongFiles.pdf());
         SongFile text = add(song, FileType.LYRICS, "Words", SongFiles.lyrics());
         assertTrue(
-                f.catalog.link(audio.id(), true, f.member).url().contains("disposition=inline;"));
+                f.catalog.link(audio.id(), true, f.member).url().contains("disposition=inline%3B"));
         assertTrue(
                 f.catalog
                         .link(audio.id(), false, f.member)
                         .url()
-                        .contains("disposition=attachment;"));
+                        .contains("disposition=attachment%3B"));
         assertTrue(
-                f.catalog.link(pdf.id(), true, f.member).url().contains("disposition=attachment;"));
+                f.catalog
+                        .link(pdf.id(), true, f.member)
+                        .url()
+                        .contains("disposition=attachment%3B"));
         assertTrue(
                 f.catalog
                         .link(text.id(), true, f.member)
                         .url()
-                        .contains("disposition=attachment;"));
+                        .contains("disposition=attachment%3B"));
     }
 
     @Test

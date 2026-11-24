@@ -44,7 +44,7 @@ done
 pass "security headers checked on the public pages"
 
 # 3. Secure pages send an anonymous visitor to the login page and are never cached (LOG-12)
-for path in /members /users /account /edit /edit/images; do
+for path in /members /users /account /edit /edit/images /songs/manage; do
   get "$path"
   location="$(header location)"
   if [[ "$status" =~ ^30[23]$ ]] && [[ "$location" == *"/login"* ]]; then
