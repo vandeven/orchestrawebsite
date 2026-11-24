@@ -1,0 +1,40 @@
+{#include site/layout}
+  {#title}Member page - {cdi:site.name}{/title}
+  {#description}The songs, sheet music and recordings of {cdi:site.name}.{/description}
+  {#head}<link rel="stylesheet" href="{cdi:site.asset('/css/songs.css')}">{/head}
+  {#content}
+    <h1>Member page</h1>
+    <p class="notice-line">These files are for members of the orchestra only. Please do not share them. See the <a href="/terms">terms of use</a>.</p>
+    {#if songs.size == 0}
+    <p>There are no songs yet. Songs the orchestra is working on will appear here.</p>
+    {#else}
+    <ul class="song-list">
+      {#for song in songs}
+      <li class="song" id="song-{song.id}">
+        <h2>{song.title}</h2>
+        {#if song.notes}<p class="song-notes">{song.notes}</p>{/if}
+        {#if song.groups.size == 0}
+        <p class="song-empty">No files yet.</p>
+        {/if}
+        {#for group in song.groups}
+        <h3>{group.title}</h3>
+        <ul class="file-list">
+          {#for file in group.files}
+          <li class="file">
+            <span class="file-name">{file.name}</span>
+            <span class="file-size">{file.size}</span>
+            <a class="button button-secondary" href="/members/files/{file.id}/download">Download<span class="sr-only"> {file.name}</span></a>
+            {#if group.audio}
+            <audio controls preload="none" src="/members/files/{file.id}/play" aria-label="Play {file.name}"></audio>
+            {/if}
+          </li>
+          {/for}
+        </ul>
+        {/for}
+      </li>
+      {/for}
+    </ul>
+    {/if}
+  {/content}
+  {#scripts}<script src="{cdi:site.asset('/js/audio-player.js')}" defer></script>{/scripts}
+{/include}

@@ -1,0 +1,87 @@
+{#include site/layout}
+  {#title}{song.title} - Song management - {cdi:site.name}{/title}
+  {#description}Edit a song and its files.{/description}
+  {#head}<link rel="stylesheet" href="{cdi:site.asset('/css/songs.css')}">{/head}
+  {#content}
+    <p><a href="/songs/manage">&larr; All songs</a></p>
+    <h1>{song.title}</h1>
+    <p class="song-meta">{#if song.archived}Archived on {song.changed}. Members do not see this song.{#else}Active. Members see this song.{/if}</p>
+    {#if notice}
+    <div class="alert alert-success" role="status"><span class="alert-title">Done</span> {notice}</div>
+    {/if}
+    {#if error}
+    <div class="alert alert-error" role="alert"><span class="alert-title">Error</span> {error}</div>
+    {/if}
+
+    <section class="manage-section" aria-labelledby="edit-heading">
+      <h2 id="edit-heading">Title and notes</h2>
+      <form method="post" action="/songs/manage/{song.id}" novalidate>
+        <div class="field">
+          <label for="song-title">Title</label>
+          <input type="text" id="song-title" name="title" value="{title}" maxlength="{titleMax}" required autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="song-notes">Notes (optional, plain text)</label>
+          <textarea id="song-notes" name="notes" rows="3" maxlength="{notesMax}">{notes}</textarea>
+        </div>
+        <div class="button-row"><button type="submit" class="button">Save</button></div>
+      </form>
+      <div class="manage-actions">
+        {#if song.archived}
+        <form method="post" action="/songs/manage/{song.id}/unarchive"><button type="submit" class="button button-secondary">Unarchive</button></form>
+        <a class="button button-danger" href="/songs/manage/{song.id}/delete">Delete the song</a>
+        {#else}
+        <form method="post" action="/songs/manage/{song.id}/archive"><button type="submit" class="button button-secondary">Archive</button></form>
+        {/if}
+      </div>
+    </section>
+
+    <section class="manage-section" aria-labelledby="files-heading">
+      <h2 id="files-heading">Files</h2>
+      {#if song.files.size == 0}<p>There are no files yet.</p>{/if}
+      <ul class="file-list">
+        {#for file in song.files}
+        <li class="file">
+          <span class="file-name">{file.name}</span>
+          <span class="file-size">{file.type}, {file.size}, added {file.uploaded}</span>
+          <form class="file-rename" method="post" action="/songs/manage/files/{file.id}/rename" novalidate>
+            <div class="field">
+              <label for="name-{file.id}">New name</label>
+              <input type="text" id="name-{file.id}" name="displayName" value="{file.name}" maxlength="{nameMax}" required autocomplete="off">
+            </div>
+            <button type="submit" class="button button-secondary">Rename<span class="sr-only"> {file.name}</span></button>
+          </form>
+          <a class="button button-danger" href="/songs/manage/files/{file.id}/remove">Remove<span class="sr-only"> {file.name}</span></a>
+        </li>
+        {/for}
+      </ul>
+    </section>
+
+    <section class="manage-section" aria-labelledby="upload-heading">
+      <h2 id="upload-heading">Add a file</h2>
+      <noscript><p class="alert alert-warning">Adding files needs JavaScript, because the file is sent straight to the storage from your browser.</p></noscript>
+      <form data-song-upload data-song-id="{song.id}" hidden>
+        <p class="alert alert-warning">Only add files the orchestra is allowed to share with its members.</p>
+        <div class="field">
+          <label for="upload-type">Type</label>
+          <select id="upload-type" name="type">
+            {#for type in types}<option value="{type.code}" data-extension="{type.extension}">{type.title} (.{type.extension})</option>{/for}
+          </select>
+        </div>
+        <div class="field">
+          <label for="upload-file">File (up to 15 MB)</label>
+          <input type="file" id="upload-file" name="file" required>
+        </div>
+        <div class="field">
+          <label for="upload-name">Name members see (for example Soprano or Full recording)</label>
+          <input type="text" id="upload-name" name="displayName" maxlength="{nameMax}" required autocomplete="off">
+        </div>
+        <p class="field-error" id="upload-error" role="alert" hidden></p>
+        <p id="upload-status" role="status" class="field-hint" hidden></p>
+        <progress id="upload-progress" max="100" value="0" hidden aria-label="Upload progress"></progress>
+        <div class="button-row"><button type="submit" class="button">Upload</button></div>
+      </form>
+    </section>
+  {/content}
+  {#scripts}<script src="{cdi:site.asset('/js/song-upload.js')}" defer></script>{/scripts}
+{/include}

@@ -23,6 +23,13 @@ public interface PlatformConfig {
      */
     String imageOrigin();
 
+    /**
+     * The address of the private files bucket, with a closing slash. Pages may play audio from
+     * there and the song management page may upload there, nothing else leaves the website (HRD-6,
+     * HOS-11). The bucket itself is never public: only signed addresses work.
+     */
+    String fileOrigin();
+
     /** The version of this build: the short commit ID and the build time (HOS-35). */
     @WithDefault("dev")
     String version();

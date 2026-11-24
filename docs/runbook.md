@@ -18,6 +18,13 @@ The Google Cloud project has at least two owners (see [hosting](hosting.md), HOS
 2. Send all traffic to the last good revision: `gcloud run services update-traffic SERVICE --region europe-west4 --to-revisions=REVISION=100`.
 3. Check the website, then fix the problem in the repository. Do not merge automatic updates until it is fixed (see [automatic updates](automatic-updates.md), UPD-11).
 
+## A song or a file was deleted by mistake
+Files of a deleted song or a removed file are gone from the website at once, but the bucket keeps them for **7 days** (soft delete, [hosting](hosting.md), HOS-16). The songs and file details in the database are not kept: only the files can come back, and the song has to be added again by hand.
+1. Find the file: `gcloud storage ls --soft-deleted gs://orchestrawebsite-1052386389794-files/songs/`. The names are random IDs and the file type is the ending (`.pdf`, `.mp3`, `.txt`).
+2. Restore it: `gcloud storage restore gs://BUCKET/songs/FILE_ID.pdf#GENERATION` (use the generation number from the list).
+3. Add the song in Song management and add the restored file again by uploading it (download it first with `gcloud storage cp`). The restored copy in the bucket is not linked to any song, so remove it afterwards.
+Images in texts have **no** soft delete (HOS-22): a deleted image is gone for good.
+
 ## Restore data from a backup
 The database has Firestore's own scheduled backups (every Sunday, kept 30 days, [hosting](hosting.md), HOS-10). A restore always creates a **new** database next to the live one; nothing is overwritten. **These steps have to be tried once before launch (see below): until then they are untested.**
 1. List the backups: `gcloud firestore backups list --location=europe-west4`. Note the name of the backup you want (`projects/orchestrawebsite/locations/europe-west4/backups/BACKUP_ID`).

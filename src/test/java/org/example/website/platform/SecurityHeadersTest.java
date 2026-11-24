@@ -47,7 +47,18 @@ class SecurityHeadersTest {
         org.junit.jupiter.api.Assertions.assertTrue(
                 policy.contains("img-src 'self' https://images.example.test/;"), policy);
         org.junit.jupiter.api.Assertions.assertTrue(
-                policy.contains("connect-src 'self' https://images.example.test/;"), policy);
+                policy.contains("connect-src 'self' https://images.example.test/ https://files"),
+                policy);
+        org.junit.jupiter.api.Assertions.assertTrue(
+                policy.contains(
+                        "connect-src 'self' https://images.example.test/ https://files.example.test/;"),
+                policy);
+        org.junit.jupiter.api.Assertions.assertTrue(
+                policy.contains("media-src 'self' https://files.example.test/;"), policy);
+        org.junit.jupiter.api.Assertions.assertFalse(
+                policy.contains(
+                        "img-src 'self' https://images.example.test/ https://files.example.test"),
+                "pictures never come from the private bucket");
         org.junit.jupiter.api.Assertions.assertTrue(policy.contains("script-src 'self';"));
     }
 }

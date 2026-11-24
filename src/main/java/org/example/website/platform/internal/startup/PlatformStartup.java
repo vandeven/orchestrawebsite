@@ -35,6 +35,10 @@ public class PlatformStartup {
             problems = new java.util.ArrayList<>(problems);
             problems.add("IMAGES_BASE_URL must be an https:// address that ends with a slash");
         }
+        if (!ConfigRules.validImageOrigin(config.fileOrigin())) {
+            problems = new java.util.ArrayList<>(problems);
+            problems.add("FILES_BASE_URL must be an https:// address that ends with a slash");
+        }
         if (!problems.isEmpty()) {
             LOG.errorf("Configuration check failed: %s", String.join("; ", problems));
             throw new IllegalStateException(
