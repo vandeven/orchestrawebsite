@@ -10,8 +10,14 @@
   if (!form || !window.fetch || !window.XMLHttpRequest) {
     return;
   }
+  // The ID of the song comes from the page. It is only used when it really is an ID (a UUID), so
+  // nothing else can end up in an address the script sends requests to or navigates to.
+  var songId = form.getAttribute("data-song-id") || "";
+  if (!/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(songId)) {
+    return;
+  }
   form.hidden = false;
-  var base = "/songs/manage/" + form.getAttribute("data-song-id");
+  var base = "/songs/manage/" + songId;
   var type = form.querySelector("#upload-type");
   var file = form.querySelector("#upload-file");
   var name = form.querySelector("#upload-name");

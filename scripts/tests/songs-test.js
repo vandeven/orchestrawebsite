@@ -123,6 +123,15 @@ function submit(window) {
   window.document.querySelector("form").dispatchEvent(new window.Event("submit", { cancelable: true }));
 }
 
+test("a song ID that is not a UUID keeps the form hidden and sends nothing", () => {
+  for (const bad of ["", "../../x", "javascript:alert(1)", "11111111-1111-1111-1111-11111111111", "11111111-1111-1111-1111-1111111111111", "//evil.example/"]) {
+    const dom = new JSDOM(`<form data-song-upload data-song-id="${bad}" hidden></form>`, { runScripts: "outside-only" });
+    dom.window.fetch = () => { throw new Error("must not be called"); };
+    dom.window.eval(uploadScript);
+    assert.strictEqual(dom.window.document.querySelector("form").hidden, true, bad);
+  }
+});
+
 test("the form is shown by the script", () => {
   const { doc } = uploader();
   assert.strictEqual(doc.querySelector("form").hidden, false);
