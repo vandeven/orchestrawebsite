@@ -165,6 +165,204 @@
       "<tr><td>Text</td><td>Text</td></tr></tbody></table><p></p>");
   }
 
+
+  // ---- Adding an image (EDT-9, EDT-12, EDT-13, EDT-14) ----
+  // The library of the page is in the markup. A new upload goes through image-upload.js. Only images
+  // of the website's own storage can be inserted; the server cleans the text again when it is saved.
+  var library = Array.prototype.map.call(document.querySelectorAll("[data-library] li"), function (li) {
+    return {
+      id: li.getAttribute("data-id"), url: li.getAttribute("data-url"), alt: li.getAttribute("data-alt") || "",
+      width: li.getAttribute("data-width"), height: li.getAttribute("data-height")
+    };
+  });
+  var savedRange = null;
+
+  function remember() {
+    var selection = window.getSelection && window.getSelection();
+    savedRange = selection && selection.rangeCount && visual.contains(selection.anchorNode)
+      ? selection.getRangeAt(0).cloneRange() : null;
+  }
+
+  function insertImage(item, alt, size, align) {
+    visual.focus();
+    if (savedRange) {
+      var selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(savedRange);
+    }
+    var img = document.createElement("img");
+    img.setAttribute("src", item.url);
+    img.setAttribute("alt", alt);
+    img.setAttribute("width", item.width);
+    img.setAttribute("height", item.height);
+    img.setAttribute("class", "img-" + size + " align-" + align);
+    document.execCommand("insertHTML", false, img.outerHTML);
+  }
+
+  function element(tag, className, text) {
+    var node = document.createElement(tag);
+    if (className) { node.className = className; }
+    if (text) { node.textContent = text; }
+    return node;
+  }
+
+  function field(labelText, control, hintText) {
+    var wrap = element("div", "field");
+    var label = element("label", null, labelText);
+    control.id = control.id || "editor-field-" + Math.random().toString(36).slice(2, 8);
+    label.setAttribute("for", control.id);
+    wrap.appendChild(label);
+    if (hintText) { wrap.appendChild(element("p", "field-hint", hintText)); }
+    wrap.appendChild(control);
+    return wrap;
+  }
+
+  function select(options, selected) {
+    var control = element("select");
+    options.forEach(function (option) {
+      var node = element("option", null, option[1]);
+      node.value = option[0];
+      if (option[0] === selected) { node.selected = true; }
+      control.appendChild(node);
+    });
+    return control;
+  }
+
+  function openImageDialog(opener) {
+    remember();
+    var dialog = element("dialog", "editor-dialog");
+    var title = element("h2", null, "Add an image");
+    title.id = "editor-image-title";
+    dialog.setAttribute("aria-labelledby", title.id);
+    dialog.appendChild(title);
+    var chosen = null;
+    var chooser = element("fieldset");
+    chooser.appendChild(element("legend", null, "Choose an image from the library"));
+    var altInput = element("input");
+    altInput.type = "text";
+    altInput.maxLength = 250;
+    altInput.autocomplete = "off";
+    var decorative = element("input");
+    decorative.type = "checkbox";
+    if (library.length === 0) {
+      chooser.appendChild(element("p", null, "The library is empty. Upload an image below."));
+    } else {
+      var grid = element("ul", "image-grid");
+      library.forEach(function (item) {
+        var cell = element("li");
+        var button = element("button", "image-choice");
+        button.type = "button";
+        button.setAttribute("aria-pressed", "false");
+        var thumb = element("img", "image-thumb");
+        thumb.setAttribute("src", item.url);
+        thumb.setAttribute("alt", item.alt || "Decorative image");
+        button.appendChild(thumb);
+        button.addEventListener("click", function () {
+          chosen = item;
+          Array.prototype.forEach.call(grid.querySelectorAll("button"), function (other) {
+            other.setAttribute("aria-pressed", other === button ? "true" : "false");
+          });
+          altInput.value = item.alt;
+          decorative.checked = item.alt === "";
+          altInput.disabled = decorative.checked;
+        });
+        cell.appendChild(button);
+        grid.appendChild(cell);
+      });
+      chooser.appendChild(grid);
+    }
+    dialog.appendChild(chooser);
+
+    var uploader = element("fieldset");
+    uploader.appendChild(element("legend", null, "Or upload a new image"));
+    uploader.appendChild(element("p", "alert alert-warning",
+      "Only upload photos of people with their permission, and only images the orchestra may use."));
+    var fileInput = element("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/jpeg,image/png,image/webp";
+    uploader.appendChild(field("Image (JPEG, PNG or WebP)", fileInput,
+      "Large images are made smaller in your browser first."));
+    fileInput.addEventListener("change", function () {
+      if (fileInput.files.length) {
+        chosen = null;
+        Array.prototype.forEach.call(dialog.querySelectorAll(".image-choice"), function (b) {
+          b.setAttribute("aria-pressed", "false");
+        });
+      }
+    });
+    dialog.appendChild(uploader);
+
+    dialog.appendChild(field("Description for people who cannot see the image", altInput,
+      "Required, 1 to 250 characters."));
+    var decorativeWrap = element("div", "field field-check");
+    decorative.id = "editor-decorative";
+    decorativeWrap.appendChild(decorative);
+    var decorativeLabel = element("label", null, "This image is only decoration and needs no description");
+    decorativeLabel.setAttribute("for", decorative.id);
+    decorativeWrap.appendChild(decorativeLabel);
+    decorative.addEventListener("change", function () {
+      altInput.disabled = decorative.checked;
+      if (decorative.checked) { altInput.value = ""; }
+    });
+    dialog.appendChild(decorativeWrap);
+
+    var sizeSelect = select([["small", "Small"], ["medium", "Medium"], ["full", "Full width"]], "medium");
+    var alignSelect = select([["left", "Left"], ["center", "Center"], ["right", "Right"]], "center");
+    dialog.appendChild(field("Size", sizeSelect));
+    dialog.appendChild(field("Alignment", alignSelect));
+
+    var error = element("p", "field-error");
+    error.setAttribute("role", "alert");
+    error.hidden = true;
+    dialog.appendChild(error);
+    var actions = element("div", "button-row");
+    var insert = element("button", "button", "Insert image");
+    insert.type = "button";
+    var cancel = element("button", "button button-secondary", "Cancel");
+    cancel.type = "button";
+    actions.appendChild(insert);
+    actions.appendChild(cancel);
+    dialog.appendChild(actions);
+
+    function fail(message) {
+      error.textContent = message;
+      error.hidden = false;
+    }
+
+    insert.addEventListener("click", function () {
+      error.hidden = true;
+      var file = fileInput.files[0];
+      if (!chosen && !file) { return fail("Choose an image from the library or upload one."); }
+      if (!decorative.checked && !altInput.value.trim()) {
+        return fail("Describe the image, or mark it as decoration.");
+      }
+      var alt = decorative.checked ? "" : altInput.value.trim();
+      if (chosen) {
+        insertImage(chosen, alt, sizeSelect.value, alignSelect.value);
+        dialog.close();
+        return;
+      }
+      insert.disabled = true;
+      window.OrchestraImages.upload(file, alt, decorative.checked).then(function (image) {
+        library.unshift(image);
+        insertImage(image, alt, sizeSelect.value, alignSelect.value);
+        dialog.close();
+      }).catch(function (problem) {
+        insert.disabled = false;
+        fail(problem.message);
+      });
+    });
+    cancel.addEventListener("click", function () { dialog.close(); });
+    dialog.addEventListener("close", function () {
+      dialog.remove();
+      opener.focus();
+    });
+    document.body.appendChild(dialog);
+    dialog.showModal();
+  }
+
+  var canAddImages = !!imageBase && !!window.OrchestraImages
+    && typeof document.createElement("dialog").showModal === "function";
   var tools = [
     ["Bold", command("bold")], ["Italic", command("italic")], ["Underline", command("underline")],
     ["Strikethrough", command("strikeThrough")],
@@ -176,11 +374,14 @@
     ["Align left", command("justifyLeft")], ["Align center", command("justifyCenter")],
     ["Align right", command("justifyRight")], ["Clear formatting", command("removeFormat")]
   ];
+  if (canAddImages) {
+    tools.splice(14, 0, ["Image", function () { openImageDialog(this); }]);
+  }
   var toolButtons = tools.map(function (tool, index) {
     var button = makeButton(tool[0], "editor-button");
     button.tabIndex = index === 0 ? 0 : -1; // one tab stop, arrow keys move inside the toolbar
     button.addEventListener("mousedown", function (event) { event.preventDefault(); }); // keep the selection
-    button.addEventListener("click", tool[1]);
+    button.addEventListener("click", function () { tool[1].call(button); });
     toolbar.appendChild(button);
     return button;
   });

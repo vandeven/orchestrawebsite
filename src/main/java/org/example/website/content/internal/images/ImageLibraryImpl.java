@@ -117,6 +117,11 @@ public class ImageLibraryImpl implements ImageLibrary {
     }
 
     @Override
+    public String baseUrl() {
+        return config.imageBaseUrl();
+    }
+
+    @Override
     public List<ImageInfo> list() {
         List<TextKeyHtml> usage = usage();
         List<ImageInfo> result = new ArrayList<>();

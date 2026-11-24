@@ -39,6 +39,9 @@ public interface ImageLibrary {
      */
     Image complete(UUID id, String contentType, String alt, boolean decorative, UserSummary actor);
 
+    /** The address every image of the library starts with (the public images bucket, HOS-22). */
+    String baseUrl();
+
     /** Every image, newest first, with the texts that use it (EDT-15, EDT-17). */
     List<ImageInfo> list();
 

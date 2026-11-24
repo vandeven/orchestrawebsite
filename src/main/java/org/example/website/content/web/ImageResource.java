@@ -172,7 +172,7 @@ public class ImageResource {
 
     // Helpers
 
-    private static Row row(ImageInfo info) {
+    static Row row(ImageInfo info) {
         Image image = info.image();
         List<String> names = info.usedIn().stream().map(TextKey::title).toList();
         return new Row(

@@ -12,7 +12,7 @@
       {notice.text}
     </div>
     {/if}
-    <form method="post" action="/edit/{key.key}/save" enctype="text/plain" data-editor>
+    <form method="post" action="/edit/{key.key}/save" enctype="text/plain" data-editor data-image-base="{imageBase}">
       <div class="field">
         <label for="html">Text (HTML)</label>
         <p class="field-hint" id="html-hint">Without JavaScript you edit the HTML directly. Only formatting the website allows is kept: headings, bold, italic, lists, links, quotes and simple tables.</p>
@@ -24,6 +24,11 @@
         <a class="button button-secondary" href="/edit">Cancel</a>
       </div>
     </form>
+    <ul hidden data-library>
+      {#for image in images}
+      <li data-id="{image.id}" data-url="{image.url}" data-alt="{image.alt}" data-width="{image.width}" data-height="{image.height}"></li>
+      {/for}
+    </ul>
   {/content}
-  {#scripts}<script src="{cdi:site.asset('/js/editor.js')}" defer></script>{/scripts}
+  {#scripts}<script src="{cdi:site.asset('/js/image-upload.js')}" defer></script><script src="{cdi:site.asset('/js/editor.js')}" defer></script>{/scripts}
 {/include}
