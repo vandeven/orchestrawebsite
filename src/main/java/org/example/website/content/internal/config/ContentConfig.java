@@ -13,6 +13,13 @@ public interface ContentConfig {
      */
     String imageBaseUrl();
 
+    /** The name of the public images bucket in Cloud Storage (HOS-22). */
+    String imagesBucket();
+
+    /** How many upload addresses one person may ask for per hour (HRD-7). */
+    @WithDefault("100")
+    int uploadsPerHour();
+
     /** Allow the in-memory store. Never switched on for a real deployment. */
     @WithDefault("false")
     boolean allowInMemoryStorage();

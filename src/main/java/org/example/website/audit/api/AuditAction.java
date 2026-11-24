@@ -13,7 +13,9 @@ public enum AuditAction {
     AUTH_LOGOUT("auth.logout"),
     MASTER_SETUP("master.setup"),
     TEXT_CHANGE("text.change"),
-    TEXT_CLEAR("text.clear");
+    TEXT_CLEAR("text.clear"),
+    IMAGE_UPLOAD("image.upload"),
+    IMAGE_DELETE("image.delete");
 
     private final String code;
 
