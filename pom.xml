@@ -12,12 +12,12 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
-    <quarkus.platform.version>3.39.5</quarkus.platform.version>
-    <archunit.version>1.4.1</archunit.version>
-    <surefire-plugin.version>3.5.4</surefire-plugin.version>
-    <compiler-plugin.version>3.14.1</compiler-plugin.version>
+    <quarkus.platform.version>3.40.1.2</quarkus.platform.version>
+    <archunit.version>1.5.1</archunit.version>
+    <surefire-plugin.version>3.6.1</surefire-plugin.version>
+    <compiler-plugin.version>3.16.0</compiler-plugin.version>
     <enforcer-plugin.version>3.7.0</enforcer-plugin.version>
-    <spotless-plugin.version>3.11.0</spotless-plugin.version>
+    <spotless-plugin.version>3.12.0</spotless-plugin.version>
     <jacoco-plugin.version>0.8.16</jacoco-plugin.version>
     <coverage.minimum>0.80</coverage.minimum>
     <spotbugs-plugin.version>4.10.5.0</spotbugs-plugin.version>
@@ -27,14 +27,14 @@
     <bouncycastle.version>1.87</bouncycastle.version>
     <!-- Security overrides of versions managed by the Quarkus BOM. Remove each one as soon as the
          Quarkus BOM has the same or a newer version (see docs/implementation-status.md). -->
-    <jackson-bom.version>2.22.3</jackson-bom.version>
-    <guava.version>33.7.2-jre</guava.version>
+    <jackson-bom.version>2.23.0</jackson-bom.version>
+    <guava.version>33.8.0-jre</guava.version>
     <!-- Versions of the Google Cloud client libraries that fit together (Firestore now, Cloud Storage
          later). Imported after the Quarkus BOM, so where both manage a library Quarkus wins. -->
     <google-cloud-libraries-bom.version>26.94.0</google-cloud-libraries-bom.version>
     <!-- Security override: the Google client libraries bring OpenTelemetry 1.62.0 (GHSA-ccrj-gw8r-854m,
          fixed in 1.67.0). Remove it when the libraries-bom has 1.67.0 or newer. -->
-    <opentelemetry-bom.version>1.67.0</opentelemetry-bom.version>
+    <opentelemetry-bom.version>1.68.0</opentelemetry-bom.version>
   </properties>
 
   <dependencyManagement>
@@ -152,27 +152,27 @@
     <plugins>
       <plugin>
         <artifactId>maven-clean-plugin</artifactId>
-        <version>3.2.0</version>
-      </plugin>
-      <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>3.4.0</version>
-      </plugin>
-      <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
         <version>3.5.0</version>
       </plugin>
       <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.5.0</version>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.5.1</version>
+      </plugin>
+      <plugin>
         <artifactId>maven-install-plugin</artifactId>
-        <version>3.1.4</version>
+        <version>3.2.0</version>
       </plugin>
       <plugin>
         <artifactId>maven-deploy-plugin</artifactId>
-        <version>3.1.4</version>
+        <version>3.2.0</version>
       </plugin>
       <plugin>
         <artifactId>maven-site-plugin</artifactId>
-        <version>3.12.1</version>
+        <version>3.22.0</version>
       </plugin>
       <plugin>
         <artifactId>maven-enforcer-plugin</artifactId>
