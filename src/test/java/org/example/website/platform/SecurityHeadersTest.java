@@ -59,7 +59,8 @@ class SecurityHeadersTest {
                 policy.contains(
                         "img-src 'self' https://images.example.test/ https://files.example.test"),
                 "pictures never come from the private bucket");
-        // Pictures from blob: or data: addresses are not allowed. The upload script reads the chosen
+        // Pictures from blob: or data: addresses are not allowed. The upload script reads the
+        // chosen
         // file with createImageBitmap for that reason (see image-upload.js).
         org.junit.jupiter.api.Assertions.assertFalse(policy.contains("blob:"));
         org.junit.jupiter.api.Assertions.assertFalse(policy.contains("data:"));
