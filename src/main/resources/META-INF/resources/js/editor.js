@@ -279,8 +279,8 @@
       "Only upload photos of people with their permission, and only images the orchestra may use."));
     var fileInput = element("input");
     fileInput.type = "file";
-    fileInput.accept = "image/jpeg,image/png,image/webp";
-    uploader.appendChild(field("Image (JPEG, PNG or WebP)", fileInput,
+    fileInput.accept = ".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp";
+    uploader.appendChild(field("Image (.jpg, .jpeg, .png or .webp)", fileInput,
       "Large images are made smaller in your browser first."));
     fileInput.addEventListener("change", function () {
       if (fileInput.files.length) {

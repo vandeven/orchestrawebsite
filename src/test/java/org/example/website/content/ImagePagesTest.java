@@ -232,7 +232,8 @@ class ImagePagesTest {
             assertNotNull(page.selectFirst("label[for=" + id + "]"), id);
         }
         assertEquals(
-                "image/jpeg,image/png,image/webp", page.selectFirst("#image-file").attr("accept"));
+                ".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp",
+                page.selectFirst("#image-file").attr("accept"));
         assertTrue(page.text().contains("Only upload photos of people with their permission"));
         assertTrue(
                 page.selectFirst("form[data-image-upload]").hasAttr("hidden"),

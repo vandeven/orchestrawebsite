@@ -188,7 +188,7 @@ public class ImageLibraryImpl implements ImageLibrary {
     private static String extension(String contentType) {
         String extension = contentType == null ? null : EXTENSIONS.get(contentType);
         if (extension == null) {
-            throw new InvalidInput("Only JPEG, PNG and WebP images are allowed");
+            throw new InvalidInput("Only JPEG (.jpg or .jpeg), PNG and WebP images are allowed");
         }
         return extension;
     }

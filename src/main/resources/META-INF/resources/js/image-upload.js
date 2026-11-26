@@ -8,19 +8,24 @@
   var MAX_WIDTH = 2000;
   var MAX_BYTES = 10 * 1024 * 1024;
 
+  // The file is read with createImageBitmap, which needs no address. Giving an <img> a blob: address
+  // would be blocked by the Content-Security-Policy, which only allows pictures from this website
+  // and the images bucket (HRD-6).
   function resize(file) {
-    return new Promise(function (resolve, reject) {
-      var url = URL.createObjectURL(file);
-      var image = new Image();
-      image.onload = function () {
-        URL.revokeObjectURL(url);
-        var scale = Math.min(1, MAX_WIDTH / image.naturalWidth);
-        var width = Math.max(1, Math.round(image.naturalWidth * scale));
-        var height = Math.max(1, Math.round(image.naturalHeight * scale));
-        var canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext("2d").drawImage(image, 0, 0, width, height);
+    if (typeof window.createImageBitmap !== "function") {
+      return Promise.reject(new Error(
+        "This browser cannot prepare images. Use a recent version of Chrome, Firefox, Edge or Safari."));
+    }
+    return window.createImageBitmap(file).then(function (bitmap) {
+      var scale = Math.min(1, MAX_WIDTH / bitmap.width);
+      var width = Math.max(1, Math.round(bitmap.width * scale));
+      var height = Math.max(1, Math.round(bitmap.height * scale));
+      var canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext("2d").drawImage(bitmap, 0, 0, width, height);
+      if (bitmap.close) { bitmap.close(); }
+      return new Promise(function (resolve, reject) {
         // WebP where the browser can make it; otherwise keep PNG (transparency) or JPEG
         canvas.toBlob(function (webp) {
           if (webp && webp.type === "image/webp") {
@@ -36,12 +41,10 @@
             }
           }, type, 0.85);
         }, "image/webp", 0.85);
-      };
-      image.onerror = function () {
-        URL.revokeObjectURL(url);
-        reject(new Error("This file is not an image the browser can read."));
-      };
-      image.src = url;
+      });
+    }, function () {
+      throw new Error("This file is not an image the browser can read. Use a JPEG, PNG or WebP photo "
+        + "(a photo in another format, such as HEIC, has to be saved as JPEG first).");
     });
   }
 
