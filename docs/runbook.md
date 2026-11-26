@@ -46,6 +46,15 @@ The complete first-time setup, with every command, is in the [manual](manual.md)
 7. Check the website, the uptime check and the alerts. Restore data from a backup if you are rebuilding after a disaster (see "Restore data from a backup").
 A rebuild in a new project is tried once before launch and then once a year (see [instructions](instructions.md)).
 
+## `tofu apply` fails with "Revision named ... with different configuration already exists" (409)
+
+Seen on 2026-11-20. The service carries the name of its latest revision, the pipeline's deployments set it, and OpenTofu ignores that field (`ignore_changes` in `infra/run.tf`) and sends the old name back when it changes the service settings. Cloud Run refuses. Nothing is changed or broken, the website keeps running. Why it happens exactly has not been confirmed, so `run.tf` has not been changed yet.
+
+1. Make the same change on the service directly. It creates a new revision. Example for two environment variables: `gcloud run services update orchestra-website --region europe-west4 --project orchestrawebsite --no-traffic --update-env-vars "NAME=value,OTHER=value"`. Use `--update-secrets` for secrets.
+2. Switch the traffic to that revision by re-running the Deploy workflow (Actions, Deploy, Run workflow on `main`), it builds and switches by itself.
+3. Run `tofu plan -var-file=prod.tfvars`. It must say `No changes`. If it still shows the change, the values in `infra/*.tf` and the service differ: fix the difference by hand, never apply a plan that replaces the live image.
+4. A failed revision (one that never started) cannot be deleted while it is the latest. It disappears from view once a good revision is created.
+
 ## Infrastructure drift alert
 The weekly drift check failed: the real project differs from the code in `infra/`. Look at the plan in the workflow run. Either put the console change in the code through a pull request, or revert it. Do not ignore it: the policy checks only protect what is in the code.
 

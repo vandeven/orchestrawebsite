@@ -200,6 +200,8 @@ The workflow `.github/workflows/deploy.yml` does every deployment, the first one
 
 ### A7. Domain and email
 
+- [ ] **Switch off the IP restriction in Brevo** (Security, Authorized IPs). Cloud Run has no fixed outgoing address, so with the restriction on, every email fails with `The email service refused a message (status 401)` in the log, even with a correct key. After adding or changing the key in Secret Manager, deploy a new revision (re-run the Deploy workflow): the secret is read when a container starts.
+
 - [ ] **Without a domain, use one verified sender.** In Brevo (Senders), add and verify one address you can open. It is personal, so it is not in the repository: set `TF_VAR_mail_sender_address` (like in A3) before every `tofu plan`. Delivery from a free-mail address is poor (spam folders), so this is for testing. With the domain, verify it in Brevo and use an address on it. `mail_provider = "outbox"` in `prod.tfvars` exists only as an emergency fallback: it sends nothing.
 When the domain exists:
 - [ ] Set `domain` in `prod.tfvars`, run `tofu plan` and `tofu apply`, and add the DNS records that the output lists (the domain mapping).
